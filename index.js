@@ -1,4 +1,4 @@
-import { Client, IntentsBitField, Message } from "discord.js";
+import { Client, IntentsBitField } from "discord.js";
 require("dotenv").config();
 
 const client = new Client({
@@ -10,11 +10,11 @@ const client = new Client({
 });
 
 client.on("ready", () => {
-  console.log(`Logged in as ${client.user?.tag}!`);
+  console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on("messageCreate", (message: Message) => {
-  if (message.author.bot) return; // Ignore messages from bots
+client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
 
   if (message.content.startsWith("!ping")) {
     message.reply("Pong!");
