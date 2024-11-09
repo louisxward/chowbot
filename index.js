@@ -21,6 +21,7 @@ client.once(Events.ClientReady, (readyClient) => {
 // MessageCreate
 client.on(Events.MessageCreate, (messageCreate) => {
   console.log("MessageCreate");
+  //console.log(messageCreate);
   if (messageCreate.attachments.size > 0) {
     const firstContentType = messageCreate.attachments.first().contentType;
     console.log("contentType: " + firstContentType);
@@ -30,7 +31,8 @@ client.on(Events.MessageCreate, (messageCreate) => {
       firstContentType.includes("video")
     ) {
       console.log("MessageCreate - has image must react");
-      messageCreate.react("😄");
+      messageCreate.react("<:blobreach:1304553163512352788>");
+      messageCreate.react("<:blobreach:1304553174509817957>");
     }
   }
 });
