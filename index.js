@@ -1,6 +1,6 @@
 // Application: ChowBot
 // Publisher: ChowIndustries
-// Source: https://discordjs.guide/#before-you-begin
+// Source: https://discordjs.guide
 
 const fs = require("node:fs");
 const path = require("node:path");
