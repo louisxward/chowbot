@@ -4,6 +4,6 @@ module.exports = {
   name: Events.ClientReady,
   once: true,
   execute(client) {
-    console.log(`${client.user.tag} INITIALISED`);
+    console.log(`[INFO] ${client.user.tag} INITIALISED`);
   },
 };
