@@ -1,7 +1,13 @@
-// ChowIndustries
-const { Client, Events, GatewayIntentBits } = require("discord.js");
+// Application: ChowBot
+// Publisher: ChowIndustries
+// Source: https://discordjs.guide/#before-you-begin
+
+const fs = require("node:fs");
+const path = require("node:path");
+const { Client, Collection, GatewayIntentBits } = require("discord.js");
 require("dotenv").config();
 
+// Client Init
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -11,25 +17,38 @@ const client = new Client({
   ],
 });
 
-// Event
-// Boot up ChowBot
-client.once(Events.ClientReady, (ready) => {
-  console.log(`${ready.user.tag} INITIALISED`);
-});
+// Import Commands
+client.commands = new Collection();
+const foldersPath = path.join(__dirname, "commands");
+const commandFolders = fs.readdirSync(foldersPath);
 
-// Event
-// Reddit React to Image/Video. !Only checks first attachment!
-client.on(Events.MessageCreate, (messageCreate) => {
-  console.log("redditReact - heard");
-  if (messageCreate.attachments.size == 0) return;
-  if (null == contentType) return;
-  if (contentType.includes("image") || contentType.includes("video")) {
-    console.log("redditReact - content detected must react");
-    messageCreate
-      .react("1304553163512352788")
-      .then(() => messageCreate.react("1304553174509817957"))
-      .catch((error) => console.error("redditReact - failed to react :(", error));
+for (const folder of commandFolders) {
+  const commandsPath = path.join(foldersPath, folder);
+  const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
+  for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    if ("data" in command && "execute" in command) {
+      client.commands.set(command.data.name, command);
+    } else {
+      console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+    }
   }
-});
+}
 
+// Import Events
+const eventsPath = path.join(__dirname, "events");
+const eventFiles = fs.readdirSync(eventsPath).filter((file) => file.endsWith(".js"));
+
+for (const file of eventFiles) {
+  const filePath = path.join(eventsPath, file);
+  const event = require(filePath);
+  if (event.once) {
+    client.once(event.name, (...args) => event.execute(...args));
+  } else {
+    client.on(event.name, (...args) => event.execute(...args));
+  }
+}
+
+// Client Login
 client.login(process.env.DISCORD_TOKEN);
