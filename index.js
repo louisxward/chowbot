@@ -4,7 +4,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { Client, Collection, GatewayIntentBits } = require("discord.js");
+const { Client, Collection, GatewayIntentBits, ActivityType } = require("discord.js");
 require("dotenv").config();
 
 // Client Init
@@ -52,3 +52,6 @@ for (const file of eventFiles) {
 
 // Client Login
 client.login(process.env.TOKEN);
+
+// Client Status
+//client.user.setActivity("activity", { type: ActivityType.Listening });
