@@ -1,9 +1,15 @@
-// Require the necessary discord.js classes
+// ChowIndustries
 const { Client, Events, GatewayIntentBits } = require("discord.js");
 require("dotenv").config();
 
-// Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.MessageContent,
+  ],
+});
 
 // When the client is ready, run this code (only once).
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
@@ -12,5 +18,21 @@ client.once(Events.ClientReady, (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
-// Log in to Discord with your client's token
+// MessageCreate
+client.on(Events.MessageCreate, (messageCreate) => {
+  console.log("MessageCreate");
+  if (messageCreate.attachments.size > 0) {
+    const firstContentType = messageCreate.attachments.first().contentType;
+    console.log("contentType: " + firstContentType);
+    if (null == firstContentType) return;
+    if (
+      firstContentType.includes("image") ||
+      firstContentType.includes("video")
+    ) {
+      console.log("MessageCreate - has image must react");
+      messageCreate.react("😄");
+    }
+  }
+});
+
 client.login(process.env.DISCORD_TOKEN);
