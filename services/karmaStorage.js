@@ -34,4 +34,28 @@ async function getUserKarma(userId) {
   }
 }
 
-module.exports = { updateUserKarma, getUserKarma };
+async function getKarmaLeaderboard(interaction) {
+  console.log("[INFO] getKarmaLeaderboard");
+  try {
+    const fileContent = await fs.readFile(dataFilePath, encoding);
+    const data = JSON.parse(fileContent);
+    console.log(data);
+
+    const hydratedMap = new Map();
+    for (const [userId, karma] of Object.entries(data)) {
+      const username = await interaction.client.users.fetch(userId).tag;
+      hydratedMap.set(username, karma);
+    }
+    console.log(hydratedMap);
+
+    const sortedMap = new Map(Array.from(hydratedMap).sort((a, b) => a[1] - b[1]));
+    console.log(sortedMap);
+
+    return hydratedMap;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+module.exports = { updateUserKarma, getUserKarma, getKarmaLeaderboard };
