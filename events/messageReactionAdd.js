@@ -1,5 +1,5 @@
 const { Events } = require("discord.js");
-const { storeData, retrieveData } = require("../storage.js");
+const { updateUserKarma, getUserKarma } = require("../services/karma.js");
 
 module.exports = {
   name: Events.MessageReactionAdd,
@@ -23,7 +23,7 @@ module.exports = {
     console.log("responseCount: ", count);
     console.log("emojiId: ", reaction._emoji.id);
     console.log("me: ", reaction.me);
-    await storeData(authorId, count);
-    console.log("storeCount: ", await retrieveData(authorId));
+    await updateUserKarma(authorId, count);
+    console.log("storeCount: ", await getUserKarma(authorId));
   },
 };
