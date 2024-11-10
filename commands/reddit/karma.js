@@ -5,7 +5,11 @@ module.exports = {
   data: new SlashCommandBuilder().setName("karma").setDescription("Karma Leaderboard"),
   async execute(interaction) {
     console.log("[INFO] Command - karma");
-    await getKarmaLeaderboard(interaction);
-    await interaction.reply("karma");
+    const leaderboard = await getKarmaLeaderboard(interaction);
+    let leaderboardString = "";
+    for (const [key, value] of leaderboard.entries()) {
+      leaderboardString += `${key}: ${value}\n`;
+    }
+    await interaction.reply({ content: leaderboardString.trim(), ephemeral: true });
   },
 };

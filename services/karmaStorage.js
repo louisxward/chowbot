@@ -39,19 +39,13 @@ async function getKarmaLeaderboard(interaction) {
   try {
     const fileContent = await fs.readFile(dataFilePath, encoding);
     const data = JSON.parse(fileContent);
-    console.log(data);
-
     const hydratedMap = new Map();
     for (const [userId, karma] of Object.entries(data)) {
-      const username = await interaction.client.users.fetch(userId).tag;
-      hydratedMap.set(username, karma);
+      const user = await interaction.client.users.fetch(userId);
+      hydratedMap.set(user.globalName, karma);
     }
-    console.log(hydratedMap);
-
-    const sortedMap = new Map(Array.from(hydratedMap).sort((a, b) => a[1] - b[1]));
-    console.log(sortedMap);
-
-    return hydratedMap;
+    const sortedMap = new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
+    return sortedMap;
   } catch (error) {
     console.error(error);
     return null;

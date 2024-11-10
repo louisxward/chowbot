@@ -1,3 +1,6 @@
+ChowBot
+0.1.0
+
 # Commands
 
 npm i
