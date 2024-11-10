@@ -10,9 +10,10 @@ async function updateUserKarma(userId, value) {
       const fileContent = await fs.readFile(dataFilePath, encoding);
       data = JSON.parse(fileContent);
     } catch (error) {
-      console.log(error);
+      if (error.code !== "ENOENT") console.log(error);
     }
-    data[userId] = data[userId] + value;
+    const currentKarma = data[userId];
+    data[userId] = null == currentKarma ? value : currentKarma + value;
     await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error(error);
@@ -23,7 +24,8 @@ async function getUserKarma(userId) {
   try {
     const fileContent = await fs.readFile(dataFilePath, encoding);
     const data = JSON.parse(fileContent);
-    return data[userId];
+    const karma = data[userId];
+    return null == karma ? 0 : karma;
   } catch (error) {
     console.error(error);
     return null;
