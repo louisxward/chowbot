@@ -4,7 +4,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { Client, Collection, GatewayIntentBits, ActivityType } = require("discord.js");
+const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js");
 require("dotenv").config();
 
 // Client Init
@@ -15,6 +15,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent,
   ],
+  partials: [Partials.Message, Partials.Reaction],
 });
 
 // Import Commands
