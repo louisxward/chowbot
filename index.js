@@ -54,6 +54,3 @@ for (const file of eventFiles) {
 
 // Client Login
 client.login(process.env.TOKEN);
-
-// Client Status
-//client.user.setActivity("activity", { type: ActivityType.Listening });
