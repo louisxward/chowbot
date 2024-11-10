@@ -1,4 +1,5 @@
 const { Events } = require("discord.js");
+const { EMOJI_UPVOTE, EMOJI_DOWNVOTE } = require("../constants.js");
 
 module.exports = {
   name: Events.MessageCreate,
@@ -9,8 +10,8 @@ module.exports = {
     if (contentType.includes("image") || contentType.includes("video")) {
       console.log("[INFO] MessageCreate - redditReact - content detected must react");
       message
-        .react("1304553163512352788")
-        .then(() => message.react("1304553174509817957"))
+        .react(EMOJI_UPVOTE)
+        .then(() => message.react(EMOJI_DOWNVOTE))
         .catch((error) => console.error("[ERROR] MessageCreate - redditReact - failed to react :(", error));
     }
   },

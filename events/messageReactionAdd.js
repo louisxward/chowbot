@@ -1,29 +1,29 @@
 const { Events } = require("discord.js");
 const { updateUserKarma, getUserKarma } = require("../services/karma.js");
+const { EMOJI_UPVOTE, EMOJI_DOWNVOTE } = require("../constants.js");
 
 module.exports = {
   name: Events.MessageReactionAdd,
-  async execute(reaction) {
-    console.log("[INFO] MessageReactionAdd - karmaCounter");
+  async execute(reaction, user) {
+    console.log("[INFO] MessageReactionAdd - karma");
     if (reaction.partial) {
       try {
         await reaction.fetch();
       } catch (error) {
-        console.error("Something went wrong when fetching the message:", error);
+        console.error(error);
         return;
       }
     }
-    //if (!reaction.me) return;
-    // console.log("- - - - - -");
-    // console.log(reaction);
-    // console.log("- - - - - -");
+    if (user.bot) return;
     const authorId = reaction.message.author.id;
-    const count = reaction.count;
+    if (user.id == authorId) return;
+    const emojiId = reaction._emoji.id;
+    if (emojiId == EMOJI_UPVOTE) {
+      await updateUserKarma(authorId, 1);
+    } else if (emojiId == EMOJI_DOWNVOTE) {
+      await updateUserKarma(authorId, -1);
+    }
     console.log("authorId: ", authorId);
-    console.log("responseCount: ", count);
-    console.log("emojiId: ", reaction._emoji.id);
-    console.log("me: ", reaction.me);
-    await updateUserKarma(authorId, count);
-    console.log("storeCount: ", await getUserKarma(authorId));
+    console.log("authorKarma: ", await getUserKarma(authorId));
   },
 };

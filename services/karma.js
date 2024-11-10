@@ -1,36 +1,31 @@
 const fs = require("fs/promises");
 
-const dataFilePath = "./data/karma.json"; // Path to your JSON data file
+const dataFilePath = "./data/karma.json";
+const encoding = "utf8";
 
-async function updateUserKarma(userId, count) {
+async function updateUserKarma(userId, value) {
   try {
-    // 1. Read existing data from the file
     let data = {};
     try {
-      const fileContent = await fs.readFile(dataFilePath, "utf8");
+      const fileContent = await fs.readFile(dataFilePath, encoding);
       data = JSON.parse(fileContent);
-    } catch (readError) {
-      // If the file doesn't exist or is empty, start with an empty object
-      if (readError.code !== "ENOENT") {
-        console.error("Error reading data file:", readError);
-      }
+    } catch (error) {
+      console.log(error);
     }
-    // 2. Update the data with the new key-value pair
-    data[userId] = count;
-    // 3. Write the updated data back to the file
-    await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2)); // Use null, 2 for pretty printing
+    data[userId] = data[userId] + value;
+    await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
   } catch (error) {
-    console.error("Error storing data:", error);
+    console.error(error);
   }
 }
 
 async function getUserKarma(userId) {
   try {
-    const fileContent = await fs.readFile(dataFilePath, "utf8");
+    const fileContent = await fs.readFile(dataFilePath, encoding);
     const data = JSON.parse(fileContent);
     return data[userId];
   } catch (error) {
-    console.error("Error getting data:", error);
+    console.error(error);
     return null;
   }
 }
