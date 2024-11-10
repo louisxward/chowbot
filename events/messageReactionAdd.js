@@ -8,4 +8,3 @@ module.exports = {
     await karmaCounter(reaction, user, true);
   },
 };
-s;
