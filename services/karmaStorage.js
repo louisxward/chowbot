@@ -37,8 +37,14 @@ async function getUserKarma(userId) {
 async function getKarmaLeaderboard(interaction) {
   console.log("[INFO] getKarmaLeaderboard");
   try {
-    const fileContent = await fs.readFile(dataFilePath, encoding);
-    const data = JSON.parse(fileContent);
+    let data = {};
+    try {
+      const fileContent = await fs.readFile(dataFilePath, encoding);
+      data = JSON.parse(fileContent);
+    } catch (error) {
+      if (error.code !== "ENOENT") console.log(error);
+      return null;
+    }
     const hydratedMap = new Map();
     for (const [userId, karma] of Object.entries(data)) {
       const user = await interaction.client.users.fetch(userId);

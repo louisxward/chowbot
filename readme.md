@@ -15,3 +15,8 @@ TOKEN=
 
 CLIENT_ID=
 GUILD_ID=
+
+# Docker
+
+docker build -t chowbot .
+docker run -p 6000:6000 chowbot
