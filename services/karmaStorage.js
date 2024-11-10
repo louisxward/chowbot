@@ -4,6 +4,7 @@ const dataFilePath = "./data/karma.json";
 const encoding = "utf8";
 
 async function updateUserKarma(userId, value) {
+  console.log("[INFO] updateUserKarma");
   try {
     let data = {};
     try {
@@ -21,6 +22,7 @@ async function updateUserKarma(userId, value) {
 }
 
 async function getUserKarma(userId) {
+  console.log("[INFO] getUserKarma");
   try {
     const fileContent = await fs.readFile(dataFilePath, encoding);
     const data = JSON.parse(fileContent);
