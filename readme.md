@@ -1,23 +1,21 @@
-ChowBot
-0.1.1
+# ChowBot
 
-# Commands
+Version: 0.1.1
 
-npm i
-node .
-node deploy-commands.js
-
-# .env
+## Emviorment(.env)
 
 TOKEN=
-
-## Local Testing
-
+<br>
 CLIENT_ID=
+<br>
 GUILD_ID=
 
-# Docker
+## Commands
 
-docker compose build
-docker compose up -d
-docker compose logs -f
+`node deploy-commands.js`
+<br>
+`docker compose build`
+<br>
+`docker compose up -d`
+<br>
+`docker compose logs -f`
