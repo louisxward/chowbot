@@ -3,6 +3,7 @@ const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("../constants.js");
 
 async function karmaCounter(reaction, user, addReaction) {
   console.log("[INFO] karmaCounter");
+  if (user.bot) return;
   if (reaction.partial) {
     try {
       await reaction.fetch();
@@ -11,7 +12,6 @@ async function karmaCounter(reaction, user, addReaction) {
       return;
     }
   }
-  if (user.bot) return;
   const authorId = reaction.message.author.id;
   if (user.id == authorId) return;
   const emojiId = reaction._emoji.id;

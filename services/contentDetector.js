@@ -1,5 +1,6 @@
 async function contentDetector(message) {
   console.log("[INFO] contentDetector");
+  if (message.author.bot) return false;
   if (message.partial) {
     try {
       await message.fetch();
