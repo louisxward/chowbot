@@ -3,7 +3,5 @@ services:
     container_name: chowbot
     restart: unless-stopped
     build: .
-    ports:
-      - "6000:6000"
     volumes:
       - /opt/data/chowbot:/app/data

@@ -1,7 +1,4 @@
-const { updateUserKarma, getUserKarma } = require("./karmaStorage.js");
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("../constants.js");
-
-async function contentDetector(reaction, user, addReaction) {
+async function contentDetector(message) {
   console.log("[INFO] contentDetector");
   if (message.partial) {
     try {
@@ -26,4 +23,4 @@ async function contentDetector(reaction, user, addReaction) {
   return false;
 }
 
-module.exports = { karmaCounter };
+module.exports = { contentDetector };
