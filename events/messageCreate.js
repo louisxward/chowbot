@@ -1,5 +1,5 @@
 const { Events } = require("discord.js");
-const { logger } = require("../logger.js");
+const logger = require("../logger.js");
 const { contentDetector } = require("../services/contentDetector.js");
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("../constants.js");
 

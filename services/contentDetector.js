@@ -1,3 +1,5 @@
+const logger = require("../logger.js");
+
 async function contentDetector(message) {
   console.log("[INFO] contentDetector");
   if (message.author.bot) return false;
@@ -9,6 +11,7 @@ async function contentDetector(message) {
       return false;
     }
   }
+  logger.info(message);
   if (message.embeds.length > 0) {
     const content = message.content;
     if (null != content && !content.includes("tenor.com")) {
