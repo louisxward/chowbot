@@ -11,7 +11,7 @@ module.exports = {
       message
         .react(EMOJI_UPVOTE_ID)
         .then(() => message.react(EMOJI_DOWNVOTE_ID))
-        .catch((error) => console.error(error));
+        .catch((error) => logger.error(error));
     }
   },
 };

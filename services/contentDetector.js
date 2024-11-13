@@ -9,7 +9,7 @@ async function contentDetector(message) {
     try {
       await message.fetch();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   }

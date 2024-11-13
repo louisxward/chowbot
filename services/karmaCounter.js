@@ -10,7 +10,7 @@ async function karmaCounter(reaction, user, addReaction) {
     try {
       await reaction.fetch();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return;
     }
   }

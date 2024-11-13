@@ -37,7 +37,7 @@ for (const folder of commandFolders) {
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
     } else {
-      logger.console.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`);
+      logger.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`);
     }
   }
 }
