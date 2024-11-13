@@ -6,6 +6,8 @@ const encoding = "utf8";
 
 async function updateUserKarma(userId, value) {
   logger.info("function - updateUserKarma");
+  logger.info(`- userId: ${userId}`);
+  logger.info(`- value: ${value}`);
   try {
     let data = {};
     try {

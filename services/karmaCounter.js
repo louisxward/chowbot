@@ -20,8 +20,10 @@ async function karmaCounter(reaction, user, addReaction) {
   logger.info(`- authorId: ${authorId}`);
   logger.info(`- emojiId: ${emojiId}`);
   if (emojiId == EMOJI_UPVOTE_ID) {
+    logger.info("- emoji: upvote");
     await updateUserKarma(authorId, addReaction ? 1 : -1);
   } else if (emojiId == EMOJI_DOWNVOTE_ID) {
+    logger.info("- emoji: downvote");
     await updateUserKarma(authorId, addReaction ? -1 : 1);
   }
 }

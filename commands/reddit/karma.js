@@ -1,10 +1,12 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { getKarmaLeaderboard } = require("../../services/karmaStorage.js");
+const logger = require("logger");
 
 module.exports = {
   data: new SlashCommandBuilder().setName("karma").setDescription("Karma Leaderboard"),
   async execute(interaction) {
-    console.log("[INFO] Command - karma");
+    logger.info("command - karma");
+    logger.info(`- userId: ${interaction.user.id}`);
     const leaderboard = await getKarmaLeaderboard(interaction);
     let replyMessage = "";
     if (null == leaderboard || leaderboard.size == 0) {
