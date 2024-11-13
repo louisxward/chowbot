@@ -1,7 +1,9 @@
 # ChowBot
-Version: 0.1.1
+
+Version: 0.1.2
 
 ## Emviorment(.env)
+
 TOKEN=
 <br>
 CLIENT_ID=
@@ -9,6 +11,7 @@ CLIENT_ID=
 GUILD_ID=
 
 ## Commands
+
 `node deploy-commands.js`
 <br>
 `docker compose build`
