@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js | pino-pretty",
-    "dev": "nodemon index.js | pino-pretty",
+    "dev": "nodemon index.js --ignore ./data | pino-pretty",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "app-module-path": "^2.2.0",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "pino": "^9.5.0",
