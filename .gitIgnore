@@ -3,6 +3,7 @@
 # App
 .env
 /data
+chowbot.log
 
 # Compiled output
 /dist
