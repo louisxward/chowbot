@@ -1,16 +1,9 @@
 const pino = require("pino");
 
-const logger = pino({
-  level: "info",
-  transport: {
-    //target: "pino-pretty",
-    target: "pino/file",
-    options: {
-      colorize: true,
-      translateTime: "SYS:standard",
-      destination: "chowbot.log",
-    },
-  },
+const transport = pino.transport({
+  targets: [{ target: "pino-pretty" }, { target: "pino/file", options: { destination: "./chowbot.log" } }],
 });
+
+const logger = pino(transport);
 
 module.exports = logger;
