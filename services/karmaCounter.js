@@ -5,6 +5,7 @@ const logger = require("logger");
 async function karmaCounter(reaction, user, addReaction) {
   logger.info("function - karmaCounter");
   logger.info(`- addReaction: ${addReaction}`);
+  logger.info(`- messageId: ${reaction.message.id}`);
   if (user.bot) return;
   if (reaction.partial) {
     try {
