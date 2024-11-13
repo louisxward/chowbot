@@ -8,7 +8,7 @@ module.exports = {
   async execute(message) {
     logger.info("event - MessageCreate");
     if (await contentDetector(message)) {
-      message
+      await message
         .react(EMOJI_UPVOTE_ID)
         .then(() => message.react(EMOJI_DOWNVOTE_ID))
         .catch((error) => logger.error(error));
