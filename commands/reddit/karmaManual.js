@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("../../constants.js");
+const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("constants");
 const logger = require("logger");
 
 module.exports = {

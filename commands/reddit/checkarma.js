@@ -6,7 +6,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("checkkarma")
     .setDescription("Check karma - leave blank for yours")
-    .addUserOption((option) => option.setName("whos")),
+    .addUserOption((option) => option.setName("whos").setDescription("whos karma to check")),
   async execute(interaction) {
     logger.info("command - checkKarma");
     const userId = interaction.user.id;
