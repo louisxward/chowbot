@@ -1,6 +1,6 @@
 # ChowBot
 
-Version: 0.1.3
+Version: 0.1.4
 
 ## Emviorment(.env)
 
