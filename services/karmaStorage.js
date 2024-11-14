@@ -4,6 +4,7 @@ const logger = require("logger");
 const dataFilePath = "./data/karma.json";
 const encoding = "utf8";
 
+// ToDo - tidy up file.
 async function updateUserKarma(userId, value) {
   logger.info("function - updateUserKarma");
   logger.info(`- userId: ${userId}`);
@@ -30,7 +31,7 @@ async function getUserKarma(userId) {
     const fileContent = await fs.readFile(dataFilePath, encoding);
     const data = JSON.parse(fileContent);
     const karma = data[userId];
-    return null == karma ? 0 : karma;
+    return karma;
   } catch (error) {
     logger.error(error);
     return null;
@@ -50,8 +51,12 @@ async function getKarmaLeaderboard(interaction) {
     }
     const hydratedMap = new Map();
     for (const [userId, karma] of Object.entries(data)) {
-      const user = await interaction.client.users.fetch(userId);
-      hydratedMap.set(user.globalName, karma);
+      try {
+        const user = await interaction.client.users.fetch(userId);
+        hydratedMap.set(user.globalName, karma);
+      } catch (error) {
+        logger.error(error);
+      }
     }
     const sortedMap = new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
     return sortedMap;

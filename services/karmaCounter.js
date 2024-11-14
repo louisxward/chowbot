@@ -6,6 +6,7 @@ async function karmaCounter(reaction, user, addReaction) {
   logger.info("function - karmaCounter");
   logger.info(`- addReaction: ${addReaction}`);
   logger.info(`- messageId: ${reaction.message.id}`);
+  logger.info(`- userId: ${user.id}`);
   if (user.bot) return;
   if (reaction.partial) {
     try {
@@ -19,7 +20,6 @@ async function karmaCounter(reaction, user, addReaction) {
   if (user.id == authorId) return;
   const emojiId = reaction._emoji.id;
   logger.info(`- authorId: ${authorId}`);
-  logger.info(`- emojiId: ${emojiId}`);
   if (emojiId == EMOJI_UPVOTE_ID) {
     logger.info("- emoji: upvote");
     await updateUserKarma(authorId, addReaction ? 1 : -1);
@@ -27,6 +27,7 @@ async function karmaCounter(reaction, user, addReaction) {
     logger.info("- emoji: downvote");
     await updateUserKarma(authorId, addReaction ? -1 : 1);
   }
+  return;
 }
 
 module.exports = { karmaCounter };
