@@ -27,6 +27,7 @@ async function karmaCounter(reaction, user, addReaction) {
     logger.info("- emoji: downvote");
     await updateUserKarma(authorId, addReaction ? -1 : 1);
   }
+  return;
 }
 
 module.exports = { karmaCounter };
