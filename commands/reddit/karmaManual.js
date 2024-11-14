@@ -1,16 +1,15 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { contentDetector } = require("../../services/contentDetector.js");
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("../../constants.js");
 const logger = require("logger");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("karma_manual")
-    .setDescription("Manually React to message")
+    .setName("react")
+    .setDescription("React to a message in this channel")
     .addStringOption((option) => option.setName("message_id").setDescription("id of the message"))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
   async execute(interaction) {
-    logger.info("command - karmaManual");
+    logger.info("command - react");
     logger.info(`- userId: ${interaction.user.id}`);
     const inputMessageId = interaction.options.getString("message_id") ?? "";
     if (null == inputMessageId || inputMessageId.length == 0) {
@@ -33,7 +32,7 @@ module.exports = {
         .react(EMOJI_UPVOTE_ID)
         .then(() => message.react(EMOJI_DOWNVOTE_ID))
         .catch((error) => logger.error(error));
-      await interaction.reply({ content: "done", ephemeral: true });
+      await interaction.reply({ content: "reacted :P", ephemeral: true });
     }
   },
 };
