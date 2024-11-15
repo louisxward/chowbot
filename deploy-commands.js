@@ -1,9 +1,10 @@
-const { REST, Routes } = require("discord.js");
-const fs = require("node:fs");
-const path = require("node:path");
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
+
+const { REST, Routes } = require("discord.js");
 const logger = require("logger");
+const fs = require("node:fs");
+const path = require("node:path");
 
 logger.info("deploy-commands - import local commands");
 const commands = [];
@@ -23,34 +24,33 @@ for (const folder of commandFolders) {
     }
   }
 }
+
 logger.info("deploy-commands - push local commands");
 const rest = new REST().setToken(process.env.TOKEN);
 (async () => {
   try {
     logger.info(`- Started refreshing ${commands.length} application (/) commands.`);
-
-    //Specific Server
+    // Push Commands
+    // - Specific Server
     const data = await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), {
-      body: commands,
+      body: commands
     });
-
-    //All Servers
+    // - All Servers
     //const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
 
+    // Delete Commmands
+    // - Specific Server
+    // await rest
+    //   .put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: [] })
+    //   .then(() => console.log("Successfully deleted all guild commands."))
+    //   .catch(console.error);
+    // - All Servers
+    // await rest
+    //   .put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] })
+    //   .then(() => console.log("Successfully deleted all application commands."))
+    //   .catch(console.error);
     logger.info(`- Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {
     logger.error(error);
   }
 })();
-//Delete
-// Specific Server
-// rest
-//   .put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: [] })
-//   .then(() => console.log("Successfully deleted all guild commands."))
-//   .catch(console.error);
-
-//All Servers
-// rest
-//   .put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] })
-//   .then(() => console.log("Successfully deleted all application commands."))
-//   .catch(console.error);

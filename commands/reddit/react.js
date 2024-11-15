@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 const logger = require("logger");
+
+const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -37,5 +38,5 @@ module.exports = {
       }
       await interaction.reply({ content: "reacted :P", ephemeral: true });
     }
-  },
+  }
 };

@@ -1,6 +1,6 @@
 const logger = require("logger");
 
-async function contentDetector(message) {
+module.exports = async function contentDetector(message) {
   logger.info("function - contentDetector");
   logger.info(`- authorId: ${message.author.id}`);
   logger.info(`- messageId: ${message.id}`);
@@ -30,6 +30,4 @@ async function contentDetector(message) {
     }
   }
   return false;
-}
-
-module.exports = { contentDetector };
+};

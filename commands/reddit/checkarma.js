@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { getUserKarma } = require("services/karmaStorage");
 const logger = require("logger");
+const { getUserKarma } = require("services/karmaStorage");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -35,5 +35,5 @@ module.exports = {
       logger.error(error);
       await interaction.reply({ content: "im dying help me... pls", ephemeral: true });
     }
-  },
+  }
 };

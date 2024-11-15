@@ -1,5 +1,5 @@
-const fs = require("fs/promises");
 const logger = require("logger");
+const fs = require("fs/promises");
 
 const dataFilePath = "./data/karma.json";
 const encoding = "utf8";

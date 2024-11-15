@@ -7,5 +7,5 @@ module.exports = {
   async execute(client) {
     logger.info(`${client.user.tag} INITIALISED`);
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
-  },
+  }
 };
