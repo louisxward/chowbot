@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { getKarmaLeaderboard } = require("../../services/karmaStorage.js");
 const logger = require("logger");
+const { getKarmaLeaderboard } = require("services/karmaStorage");
 
 module.exports = {
   data: new SlashCommandBuilder().setName("karma").setDescription("Karma leaderboard"),

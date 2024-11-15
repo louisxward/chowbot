@@ -1,6 +1,6 @@
 const { Events } = require("discord.js");
 const logger = require("logger");
-const { contentDetector } = require("../services/contentDetector.js");
+const { contentDetector } = require("services/contentDetector");
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 
 module.exports = {

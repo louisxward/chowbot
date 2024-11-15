@@ -1,5 +1,5 @@
 const { Events } = require("discord.js");
-const { karmaCounter } = require("../services/karmaCounter.js");
+const { karmaCounter } = require("services/karmaCounter");
 const logger = require("logger");
 
 module.exports = {

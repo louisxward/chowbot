@@ -1,4 +1,4 @@
-const { updateUserKarma } = require("./karmaStorage.js");
+const { updateUserKarma } = require("services/karmaStorage");
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 const logger = require("logger");
 
