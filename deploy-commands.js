@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
-const logger = require("./logger.js");
+const logger = require("logger");
 
 logger.info("deploy-commands - import local commands");
 const commands = [];
