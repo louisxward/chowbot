@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("constants");
+const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 const logger = require("logger");
 
 module.exports = {
@@ -28,10 +28,13 @@ module.exports = {
         return;
       }
       logger.info(`- foundMessageId: ${message.id}`);
-      await message
-        .react(EMOJI_UPVOTE_ID)
-        .then(() => message.react(EMOJI_DOWNVOTE_ID))
-        .catch((error) => logger.error(error));
+      try {
+        await message.react(EMOJI_UPVOTE_ID).then(() => message.react(EMOJI_DOWNVOTE_ID));
+      } catch (error) {
+        logger.error(error);
+        await interaction.reply({ content: "didnt work, broken :/", ephemeral: true });
+        return;
+      }
       await interaction.reply({ content: "reacted :P", ephemeral: true });
     }
   },
