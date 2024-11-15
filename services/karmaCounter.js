@@ -1,9 +1,8 @@
 const logger = require("logger");
 const { updateUserKarma } = require("services/karmaStorage");
-
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 
-module.exports = async function karmaCounter(reaction, user, addReaction) {
+async function karmaCounter(reaction, user, addReaction) {
   logger.info("function - karmaCounter");
   logger.info(`- addReaction: ${addReaction}`);
   logger.info(`- messageId: ${reaction.message.id}`);
@@ -29,4 +28,6 @@ module.exports = async function karmaCounter(reaction, user, addReaction) {
     await updateUserKarma(authorId, addReaction ? -1 : 1);
   }
   return;
-};
+}
+
+module.exports = karmaCounter;
