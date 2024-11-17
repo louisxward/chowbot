@@ -1,6 +1,5 @@
 const fs = require("fs/promises");
 
-const dataFilePath = "./data/karma.json";
 const encoding = "utf8";
 
 async function readFile(filePath) {

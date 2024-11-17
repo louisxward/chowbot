@@ -1,69 +1,40 @@
 const logger = require("logger");
-const fs = require("fs/promises");
+const { readFile, writeFile } = require("services/storageHelper");
 
-const dataFilePath = "./data/karma.json";
-const encoding = "utf8";
+const filePath = "./data/karma.json";
 
 // ToDo - tidy up file.
 async function updateUserKarma(userId, value) {
   logger.info("function - updateUserKarma");
   logger.info(`- userId: ${userId}`);
   logger.info(`- value: ${value}`);
-  try {
-    let data = {};
-    try {
-      const fileContent = await fs.readFile(dataFilePath, encoding);
-      data = JSON.parse(fileContent);
-    } catch (error) {
-      if (error.code !== "ENOENT") logger.error(error);
-    }
-    const currentKarma = data[userId];
-    data[userId] = null == currentKarma ? value : currentKarma + value;
-    await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
-  } catch (error) {
-    logger.error(error);
-  }
+  const map = readFile(filePath);
+  const currentKarma = map[userId];
+  map[userId] = null == currentKarma ? value : currentKarma + value;
+  await writeFile(filePath, JSON.stringify(map, null, 2));
 }
 
 async function getUserKarma(userId) {
   logger.info("function - getUserKarma");
-  try {
-    const fileContent = await fs.readFile(dataFilePath, encoding);
-    const data = JSON.parse(fileContent);
-    const karma = data[userId];
-    return karma;
-  } catch (error) {
-    logger.error(error);
-    return null;
-  }
+  logger.info(`- userId: ${userId}`);
+  const map = readFile(filePath);
+  return map[userId];
 }
 
 async function getKarmaLeaderboard(interaction) {
   logger.info("function - getKarmaLeaderboard");
-  try {
-    let data = {};
+  const map = readFile(filePath);
+  const hydratedMap = new Map();
+  for (const [userId, karma] of Object.entries(map)) {
     try {
-      const fileContent = await fs.readFile(dataFilePath, encoding);
-      data = JSON.parse(fileContent);
+      const user = await interaction.client.users.fetch(userId);
+      hydratedMap.set(user.globalName, karma);
     } catch (error) {
-      if (error.code !== "ENOENT") logger.error(error);
-      return null;
+      logger.error(`- skipping userId: ${userId}`);
+      logger.error(error);
     }
-    const hydratedMap = new Map();
-    for (const [userId, karma] of Object.entries(data)) {
-      try {
-        const user = await interaction.client.users.fetch(userId);
-        hydratedMap.set(user.globalName, karma);
-      } catch (error) {
-        logger.error(error);
-      }
-    }
-    const sortedMap = new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
-    return sortedMap;
-  } catch (error) {
-    logger.error(error);
-    return null;
   }
+  return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
 }
 
 module.exports = { updateUserKarma, getUserKarma, getKarmaLeaderboard };
