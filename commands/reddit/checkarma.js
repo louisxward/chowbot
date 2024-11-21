@@ -16,11 +16,11 @@ module.exports = {
     try {
       const whos = interaction.options.getUser("whos");
       checkUserId = whos.id;
-      checkUserName = whos.globalName;
+      checkUserName = whos.displayName;
       logger.info(`- whosId: ${checkUserId}`);
     } catch (error) {
       checkUserId = userId;
-      checkUserName = interaction.user.globalName;
+      checkUserName = interaction.user.displayName;
     }
     try {
       const karma = await getUserKarma(checkUserId);
