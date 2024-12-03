@@ -1,6 +1,8 @@
 # ChowBot
 
-Version: 0.1.5
+Version: 0.1.6
+Publisher: ChowIndustries
+Source: https://discordjs.guide
 
 ## Emviorment(.env)
 

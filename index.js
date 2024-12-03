@@ -1,7 +1,3 @@
-// Application: ChowBot
-// Publisher: ChowIndustries
-// Source: https://discordjs.guide
-
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
 
@@ -11,7 +7,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 // Client Init
-// Needs looking at
+// ToDo - Needs looking at
 logger.info("startup - client init");
 const client = new Client({
   intents: [
