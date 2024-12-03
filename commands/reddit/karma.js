@@ -8,15 +8,14 @@ module.exports = {
     logger.info("command - karma");
     logger.info(`- userId: ${interaction.user.id}`);
     const leaderboard = await getKarmaLeaderboard(interaction);
-    let replyMessage = "";
-    if (null == leaderboard || leaderboard.size == 0) {
-      replyMessage = "Leaderboard is empty";
-    } else {
-      for (const [key, value] of leaderboard.entries()) {
-        replyMessage += `${key}: ${value}\n`;
-      }
-      replyMessage = replyMessage.trim();
+    if (!leaderboard || leaderboard.size == 0) {
+      await interaction.reply({ content: "Leaderboard is empty", ephemeral: true });
+      return;
     }
-    await interaction.reply({ content: replyMessage, ephemeral: true });
-  },
+    let replyMessage = "";
+    for (const [key, value] of leaderboard.entries()) {
+      replyMessage += `${key}: ${value}\n`;
+    }
+    await interaction.reply({ content: replyMessage.trim(), ephemeral: true });
+  }
 };

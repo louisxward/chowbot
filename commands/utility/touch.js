@@ -7,5 +7,5 @@ module.exports = {
     logger.info("command - touch");
     logger.info(`- userId: ${interaction.user.id}`);
     await interaction.reply({ content: "uuuuuuuuhhhhm", ephemeral: true });
-  },
+  }
 };

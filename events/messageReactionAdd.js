@@ -1,11 +1,11 @@
 const { Events } = require("discord.js");
-const { karmaCounter } = require("services/karmaCounter");
 const logger = require("logger");
+const karmaCounter = require("services/karmaCounter");
 
 module.exports = {
   name: Events.MessageReactionAdd,
   async execute(reaction, user) {
     logger.info("event - MessageReactionAdd");
     await karmaCounter(reaction, user, true);
-  },
+  }
 };
