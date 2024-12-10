@@ -1,23 +1,27 @@
 # ChowBot
 
 Version: 0.1.6
+
 Publisher: ChowIndustries
+
 Source: https://discordjs.guide
 
-## Emviorment(.env)
+## Environment(.env place in root)
 
-TOKEN=
-<br>
-CLIENT_ID=
-<br>
-GUILD_ID=
+```
+TOKEN=<BOT_API_KEY>
+CLIENT_ID=<BOT_USER_ID>
+GUILD_ID=<SERVER_ID>
+```
 
 ## Commands
 
-`node deploy-commands.js`
-<br>
-`docker compose build`
-<br>
-`docker compose up -d`
-<br>
-`docker compose logs -f`
+`npm run dev` - dev command restarts on save
+
+`docker compose build` - prod build
+
+`docker compose up -d` - prod deploy
+
+`docker compose logs -f` - prod logs
+
+`node deploy-commands.js` - deploy commands to all servers or just one
