@@ -5,3 +5,4 @@ services:
     build: .
     volumes:
       - /opt/data/chowbot:/app/data
+      - /var/log/chowbot:/app/log

@@ -1,7 +1,7 @@
 const pino = require("pino");
 
 const transport = pino.transport({
-  targets: [{ target: "pino-pretty" }, { target: "pino/file", options: { destination: "./chowbot.log" } }]
+  targets: [{ target: "pino-pretty" }, { target: "pino/file", options: { destination: "./log/chowbot.log" } }]
 });
 
 const logger = pino(transport);

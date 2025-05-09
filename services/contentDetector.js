@@ -14,15 +14,15 @@ async function contentDetector(message) {
     }
   }
   logger.info(`- attachmentsSize: ${message.attachments.size}`);
-  // First time a message with embed is sent. embed is blank.
-  // logger.info(`- embedsLength: ${message.embeds.length}`);
-  // if (message.embeds.length > 0) {
-  //   const content = message.content;
-  //   logger.info(`- content: ${content}`);
-  //   if (!content && !content.includes("tenor.com")) {
-  //     return true;
-  //   }
-  // }
+  //  First time a message with embed is sent. embed is blank.
+  logger.info(`- embedsLength: ${message.embeds.length}`);
+  if (message.embeds.length > 0) {
+    const content = message.content;
+    logger.info(`- content: ${content}`);
+    if (!content && !content.includes("tenor.com")) {
+      return true;
+    }
+  }
   if (message.attachments.size > 0) {
     const contentType = message.attachments.first().contentType;
     logger.info(`- contentType: ${contentType}`);
