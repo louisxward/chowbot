@@ -41,6 +41,7 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+//ToDo - add channelId validation
 async function addServerClearChannel(serverId, channelId) {
   logger.info("function - addServerClearChannel");
   logger.info(`- serverId: ${serverId}`);
