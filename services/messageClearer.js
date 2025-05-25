@@ -11,16 +11,20 @@ async function clearSetChannels(client) {
     logger.info(`- serverId: ${serverId}`);
     logger.info(`- channelId: ${channelId}`);
     if (null == channelId) continue;
-    // ToDo - channel noy found
     const channel = client.channels.cache.get(channelId);
+    if (!channel) {
+      logger.error("channelId not correct");
+      continue;
+    }
     try {
       let messages;
       do {
         messages = await channel.messages.fetch({ limit: 100 });
+        logger.info(`- messagesSize: ${messages.size}`);
         if (messages.size > 0) {
-          await channel.bulkDelete(messages, true);
+          await channel.bulkDelete(messages);
         }
-      } while (messages.size > 0);
+      } while (messages.size >= 2);
       logger.info(`Cleared messages in channel ${channel.name}`);
     } catch (error) {
       logger.error(`- skipping channelId: ${channelId}`);

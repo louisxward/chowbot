@@ -4,7 +4,7 @@ const logger = require("logger");
 const { clearSetChannels } = require("services/messageClearer");
 
 //const CLEAR_INTERVAL = 24 * 60 * 60 * 1000;
-const CLEAR_INTERVAL = 1000;
+const CLEAR_INTERVAL = 5000;
 
 module.exports = {
   name: Events.ClientReady,
@@ -14,8 +14,9 @@ module.exports = {
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
 
     // Message Clearer Job
-    setInterval(async () => {
-      await clearSetChannels(client);
-    }, CLEAR_INTERVAL);
+    // setInterval(async () => {
+    //   await clearSetChannels(client);
+    // }, CLEAR_INTERVAL);
+    await clearSetChannels(client);
   }
 };
