@@ -13,6 +13,7 @@ module.exports = {
     logger.info(`${client.user.tag} INITIALISED`);
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
 
+    //ToDo - change to utc time
     // Message Clearer Job
     // setInterval(async () => {
     //   await clearSetChannels(client);
