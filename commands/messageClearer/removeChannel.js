@@ -7,7 +7,7 @@ module.exports = {
     .setName("removechannel")
     .setDescription("removechannel - remove channel from having messages cleared")
     .addStringOption((option) => option.setName("channel_id").setDescription("id of the channel").setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     logger.info("command - removechannel");
     logger.info(`- userId: ${interaction.user.id}`);
