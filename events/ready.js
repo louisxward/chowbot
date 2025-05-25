@@ -1,7 +1,7 @@
 const { Events, ActivityType } = require("discord.js");
 const logger = require("logger");
 
-const { clearSetChannels } = require("services/messageClearer");
+const { clearSetChannels, addServerClearChannel } = require("services/messageClearer");
 
 //const CLEAR_INTERVAL = 24 * 60 * 60 * 1000;
 const CLEAR_INTERVAL = 5000;
@@ -18,6 +18,7 @@ module.exports = {
     // setInterval(async () => {
     //   await clearSetChannels(client);
     // }, CLEAR_INTERVAL);
-    await clearSetChannels(client);
+    //await clearSetChannels(client);
+    await addServerClearChannel("1309582350849544304", "13327044624727450612");
   }
 };

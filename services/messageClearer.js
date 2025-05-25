@@ -42,13 +42,20 @@ function wait(ms) {
 }
 
 // can be null
-async function updateServerClearChannel(serverId, channelId) {
-  logger.info("function - updateUserKarma");
+async function addServerClearChannel(serverId, channelId) {
+  logger.info("function - addServerClearChannel");
+  const channelIdStr = channelId.toString();
   logger.info(`- serverId: ${serverId}`);
-  logger.info(`- channelId: ${channelId}`);
+  logger.info(`- channelId: ${channelIdStr}`);
   const map = await readFile(filePath);
-  map[serverId] = channelId;
+  const channels = map[serverId];
+  if (channels.includes(channelIdStr)) {
+    logger.info(`- channelId already exists skipping: ${channelIdStr}`);
+    return;
+  }
+  channels.push(channelIdStr);
+  map[serverId] = channels;
   await writeFile(filePath, map);
 }
 
-module.exports = { clearSetChannels, updateServerClearChannel };
+module.exports = { clearSetChannels, addServerClearChannel };
