@@ -12,8 +12,7 @@ module.exports = {
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
     // Create Scheduled timer for deleting all messages in set channels at 05:00 UTC daily
     cron.schedule(
-      //"0 5 * * *",
-      "* * * * *",
+      "0 5 * * *",
       () => {
         scheduledClearer(client);
       },
