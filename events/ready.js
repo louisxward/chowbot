@@ -1,11 +1,21 @@
 const { Events, ActivityType } = require("discord.js");
 const logger = require("logger");
 
+const { clearSetChannels } = require("services/messageClearer");
+
+//const CLEAR_INTERVAL = 24 * 60 * 60 * 1000;
+const CLEAR_INTERVAL = 1000;
+
 module.exports = {
   name: Events.ClientReady,
   once: true,
   async execute(client) {
     logger.info(`${client.user.tag} INITIALISED`);
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
+
+    // Message Clearer Job
+    setInterval(async () => {
+      await clearSetChannels(client);
+    }, CLEAR_INTERVAL);
   }
 };

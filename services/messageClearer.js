@@ -7,7 +7,7 @@ const filePath = "./data/messageClearerConfig.json";
 async function clearSetChannels(client) {
   logger.info("function - clearSetChannels");
   const map = await readFile(filePath);
-  for (const [serverId, channelId] of map.entries()) {
+  for (const [serverId, channelId] of Object.entries(map)) {
     logger.info(`- serverId: ${serverId}`);
     logger.info(`- channelId: ${channelId}`);
     if (null == channelId) continue;
@@ -30,7 +30,7 @@ async function clearSetChannels(client) {
 }
 
 // can be null
-async function updateServerClearChnnel(serverId, channelId) {
+async function updateServerClearChannel(serverId, channelId) {
   logger.info("function - updateUserKarma");
   logger.info(`- serverId: ${serverId}`);
   logger.info(`- channelId: ${channelId}`);
@@ -39,4 +39,4 @@ async function updateServerClearChnnel(serverId, channelId) {
   await writeFile(filePath, map);
 }
 
-module.exports = { clearSetChannels, updateServerClearChnnel };
+module.exports = { clearSetChannels, updateServerClearChannel };
