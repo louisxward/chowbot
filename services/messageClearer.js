@@ -41,19 +41,17 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// can be null
 async function addServerClearChannel(serverId, channelId) {
   logger.info("function - addServerClearChannel");
-  const channelIdStr = channelId.toString();
   logger.info(`- serverId: ${serverId}`);
-  logger.info(`- channelId: ${channelIdStr}`);
+  logger.info(`- channelId: ${channelId}`);
   const map = await readFile(filePath);
   const channels = map[serverId];
-  if (channels.includes(channelIdStr)) {
-    logger.info(`- channelId already exists skipping: ${channelIdStr}`);
+  if (channels.includes(channelId)) {
+    logger.info(`- channelId already exists skipping: ${channelId}`);
     return;
   }
-  channels.push(channelIdStr);
+  channels.push(channelId);
   map[serverId] = channels;
   await writeFile(filePath, map);
 }
