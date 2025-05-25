@@ -48,7 +48,7 @@ async function addServerClearChannel(serverId, channelId) {
   logger.info(`- serverId: ${serverId}`);
   logger.info(`- channelId: ${channelId}`);
   const map = await readFile(filePath);
-  const channels = map[serverId];
+  const channels = null == map[serverId] ? [] : map[serverId];
   if (channels.includes(channelId)) {
     logger.warn(`- channelId already exists skipping: ${channelId}`);
     return false;
@@ -65,7 +65,7 @@ async function removeServerClearChannel(serverId, channelId) {
   logger.info(`- serverId: ${serverId}`);
   logger.info(`- channelId: ${channelId}`);
   const map = await readFile(filePath);
-  const channels = map[serverId];
+  const channels = null == map[serverId] ? [] : map[serverId];
   if (!channels.includes(channelId)) {
     logger.warn(`- channelId does not exist skipping: ${channelId}`);
     return false;
