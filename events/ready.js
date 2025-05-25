@@ -2,7 +2,7 @@ const { Events, ActivityType } = require("discord.js");
 const logger = require("logger");
 const cron = require("node-cron");
 
-const { clearSetChannels } = require("services/messageClearer");
+const { scheduledClearer } = require("services/messageClearer");
 
 module.exports = {
   name: Events.ClientReady,
@@ -15,7 +15,7 @@ module.exports = {
       //"0 5 * * *",
       "* * * * *",
       () => {
-        clearSetChannels(client);
+        scheduledClearer(client);
       },
       {
         timezone: "UTC"

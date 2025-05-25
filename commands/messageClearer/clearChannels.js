@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const logger = require("logger");
-const { clearSetChannels } = require("services/messageClearer");
+const { manualServerClear } = require("services/messageClearer");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,7 +13,7 @@ module.exports = {
     const serverId = interaction.guildId;
     logger.info(`- serverId: ${serverId}`);
     // ToDo - should only clear channels for this server
-    await clearSetChannels(interaction.client);
+    await manualServerClear(interaction.client, serverId);
     await interaction.reply({ content: "channels clearing", ephemeral: true });
   }
 };
