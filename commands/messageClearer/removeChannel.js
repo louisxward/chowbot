@@ -15,10 +15,11 @@ module.exports = {
     logger.info(`- serverId: ${serverId}`);
     const channelId = interaction.options.getString("channel_id");
     logger.info(`- channelId: ${channelId}`);
-    if (await removeServerClearChannel(serverId, channelId)) {
+    try {
+      await removeServerClearChannel(serverId, channelId);
       await interaction.reply({ content: "channel_id has been removed", ephemeral: true });
-    } else {
-      await interaction.reply({ content: "channel_id is already removed", ephemeral: true });
+    } catch (error) {
+      await interaction.reply({ content: error, ephemeral: true });
     }
   }
 };

@@ -52,25 +52,23 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-//adad
-
-//ToDo - add channelId validation
-//ToDo - if file doesnt exist or is blank fails
-async function addServerClearChannel(serverId, channelId) {
+async function addServerClearChannel(client, serverId, channelId) {
   logger.info("function - addServerClearChannel");
   logger.info(`- serverId: ${serverId}`);
   logger.info(`- channelId: ${channelId}`);
+  const channel = client.channels.cache.get(channelId);
+  if (!channel) {
+    throw "doesnt exist";
+  }
   const map = await readFile(filePath);
   const channels = null == map[serverId] ? [] : map[serverId];
   if (channels.includes(channelId)) {
-    logger.warn(`- channelId already exists skipping: ${channelId}`);
-    return false;
+    throw "already exists";
   }
   logger.info(`- adding channelId: ${channelId}`);
   channels.push(channelId);
   map[serverId] = channels;
   await writeFile(filePath, map);
-  return true;
 }
 
 async function removeServerClearChannel(serverId, channelId) {
@@ -80,15 +78,13 @@ async function removeServerClearChannel(serverId, channelId) {
   const map = await readFile(filePath);
   const channels = null == map[serverId] ? [] : map[serverId];
   if (!channels.includes(channelId)) {
-    logger.warn(`- channelId does not exist skipping: ${channelId}`);
-    return false;
+    throw "doesnt exist";
   }
   logger.info(`- removing channelId: ${channelId}`);
   channels.push(channelId);
   const filtered = channels.filter((value) => value !== channelId);
   map[serverId] = filtered;
   await writeFile(filePath, map);
-  return true;
 }
 
 module.exports = { manualServerClear, scheduledClearer, addServerClearChannel, removeServerClearChannel };

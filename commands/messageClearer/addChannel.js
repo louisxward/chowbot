@@ -15,10 +15,17 @@ module.exports = {
     logger.info(`- serverId: ${serverId}`);
     const channelId = interaction.options.getString("channel_id");
     logger.info(`- channelId: ${channelId}`);
-    if (await addServerClearChannel(serverId, channelId)) {
+    // if (await addServerClearChannel(interaction.client, serverId, channelId)) {
+    //   await interaction.reply({ content: "channel_id has been added", ephemeral: true });
+    // } else {
+    //   await interaction.reply({ content: "channel_id is already added", ephemeral: true });
+    // }
+
+    try {
+      await addServerClearChannel(interaction.client, serverId, channelId);
       await interaction.reply({ content: "channel_id has been added", ephemeral: true });
-    } else {
-      await interaction.reply({ content: "channel_id is already added", ephemeral: true });
+    } catch (error) {
+      await interaction.reply({ content: error, ephemeral: true });
     }
   }
 };
