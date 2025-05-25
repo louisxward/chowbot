@@ -5,7 +5,7 @@ const { addServerClearChannel } = require("services/messageClearer");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("addchannel")
-    .setDescription("addchannel - !!!DANGEROUS!!! add channel to clear messages from at 00:00 UTC Daily")
+    .setDescription("addchannel - !!!DANGEROUS!!! add channel to clear messages from at 05:00 UTC Daily")
     .addStringOption((option) => option.setName("channel_id").setDescription("id of the channel").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {

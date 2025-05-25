@@ -42,6 +42,7 @@ function wait(ms) {
 }
 
 //ToDo - add channelId validation
+//ToDo - if file doesnt exist or is blank fails
 async function addServerClearChannel(serverId, channelId) {
   logger.info("function - addServerClearChannel");
   logger.info(`- serverId: ${serverId}`);

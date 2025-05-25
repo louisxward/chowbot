@@ -1,10 +1,8 @@
 const { Events, ActivityType } = require("discord.js");
 const logger = require("logger");
+const cron = require("node-cron");
 
-const { clearSetChannels, addServerClearChannel, removeServerClearChannel } = require("services/messageClearer");
-
-//const CLEAR_INTERVAL = 24 * 60 * 60 * 1000;
-const CLEAR_INTERVAL = 5000;
+const { clearSetChannels } = require("services/messageClearer");
 
 module.exports = {
   name: Events.ClientReady,
@@ -12,12 +10,16 @@ module.exports = {
   async execute(client) {
     logger.info(`${client.user.tag} INITIALISED`);
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
-
-    //ToDo - change to utc time
-    // Message Clearer Job
-    // setInterval(async () => {
-    //   await clearSetChannels(client);
-    // }, CLEAR_INTERVAL);
-    //await clearSetChannels(client);
+    // Create Scheduled timer for deleting all messages in set channels at 05:00 UTC daily
+    cron.schedule(
+      //"0 5 * * *",
+      "* * * * *",
+      () => {
+        clearSetChannels(client);
+      },
+      {
+        timezone: "UTC"
+      }
+    );
   }
 };

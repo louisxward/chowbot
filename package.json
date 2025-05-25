@@ -15,6 +15,7 @@
     "app-module-path": "^2.2.0",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "node-cron": "^4.0.7",
     "pino": "^9.5.0",
     "pino-pretty": "^13.0.0"
   },
