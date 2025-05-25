@@ -1,7 +1,7 @@
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
 
-const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js");
+const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField, PermissionsBitField } = require("discord.js");
 const logger = require("logger");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -15,7 +15,10 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,
+    IntentsBitField.Flags.Guilds,
+    IntentsBitField.Flags.GuildMessages,
+    IntentsBitField.Flags.MessageContent
   ],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.User, Partials.GuildMember]
 });
