@@ -13,24 +13,30 @@ async function clearSetChannels(client) {
     if (null == channelId) continue;
     const channel = client.channels.cache.get(channelId);
     if (!channel) {
-      logger.error("channelId not correct");
+      logger.error(`- skipping channelId: ${channelId}`);
       continue;
     }
-    try {
-      let messages;
-      do {
-        messages = await channel.messages.fetch({ limit: 100 });
-        logger.info(`- messagesSize: ${messages.size}`);
-        if (messages.size > 0) {
-          await channel.bulkDelete(messages);
+    let lastMessageId;
+    while (true) {
+      const messages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
+      if (messages.size === 0) break;
+      logger.info(`- deleting ${messages.size} messages`);
+      for (const message of messages.values()) {
+        try {
+          await message.delete();
+          await wait(500);
+        } catch (error) {
+          logger.error(`- skipping messageId: ${msg.id}`);
+          logger.error(error);
         }
-      } while (messages.size >= 2);
-      logger.info(`Cleared messages in channel ${channel.name}`);
-    } catch (error) {
-      logger.error(`- skipping channelId: ${channelId}`);
-      logger.error(error);
+      }
+      lastMessageId = messages.last()?.id;
     }
   }
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // can be null
