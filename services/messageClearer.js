@@ -50,11 +50,13 @@ async function addServerClearChannel(serverId, channelId) {
   const channels = map[serverId];
   if (channels.includes(channelId)) {
     logger.info(`- channelId already exists skipping: ${channelId}`);
-    return;
+    return false;
   }
+  logger.info(`- adding channelId: ${channelId}`);
   channels.push(channelId);
   map[serverId] = channels;
   await writeFile(filePath, map);
+  return true;
 }
 
 module.exports = { clearSetChannels, addServerClearChannel };

@@ -19,6 +19,6 @@ module.exports = {
     //   await clearSetChannels(client);
     // }, CLEAR_INTERVAL);
     //await clearSetChannels(client);
-    await addServerClearChannel("1309582350849544304", "13327044624727450612");
+    //await addServerClearChannel("1309582350849544304", "13327044624727450612");
   }
 };
