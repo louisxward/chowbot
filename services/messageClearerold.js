@@ -3,47 +3,36 @@ const { readFile, writeFile } = require("services/storageHelper");
 
 const filePath = "./data/messageClearerConfig.json";
 
-async function scheduledClearer(client) {
-  logger.info("function - scheduledClearer");
+//ToDo - have to pass whole client in ?
+async function clearSetChannels(client) {
+  logger.info("function - clearSetChannels");
   const map = await readFile(filePath);
-  for (const [serverId, channelIds] of Object.entries(map)) {
+  for (const [serverId, channels] of Object.entries(map)) {
     logger.info(`- serverId: ${serverId}`);
-    clearChannels(client, channelIds);
-  }
-}
-
-async function manualServerClear(client, serverId) {
-  logger.info("function - manualServerClear");
-  logger.info(`- serverId: ${serverId}`);
-  const map = await readFile(filePath);
-  const channelIds = null == map[serverId] ? [] : map[serverId];
-  clearChannels(client, channelIds);
-}
-
-async function clearChannels(client, channelIds) {
-  for (const channelId of channelIds) {
-    logger.info(`- channelId: ${channelId}`);
-    if (null == channelId) continue;
-    const channel = client.channels.cache.get(channelId);
-    if (!channel) {
-      logger.error(`- skipping channelId: ${channelId}`);
-      continue;
-    }
-    let lastMessageId;
-    while (true) {
-      const messages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
-      if (messages.size === 0) break;
-      logger.info(`- deleting ${messages.size} messages`);
-      for (const message of messages.values()) {
-        try {
-          await message.delete();
-          await wait(500);
-        } catch (error) {
-          logger.error(`- skipping messageId: ${message.id}`);
-          logger.error(error);
-        }
+    for (const channelId of channels) {
+      logger.info(`- channelId: ${channelId}`);
+      if (null == channelId) continue;
+      const channel = client.channels.cache.get(channelId);
+      if (!channel) {
+        logger.error(`- skipping channelId: ${channelId}`);
+        continue;
       }
-      lastMessageId = messages.last()?.id;
+      let lastMessageId;
+      while (true) {
+        const messages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
+        if (messages.size === 0) break;
+        logger.info(`- deleting ${messages.size} messages`);
+        for (const message of messages.values()) {
+          try {
+            await message.delete();
+            await wait(500);
+          } catch (error) {
+            logger.error(`- skipping messageId: ${message.id}`);
+            logger.error(error);
+          }
+        }
+        lastMessageId = messages.last()?.id;
+      }
     }
   }
 }
@@ -51,8 +40,6 @@ async function clearChannels(client, channelIds) {
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
-//adad
 
 //ToDo - add channelId validation
 //ToDo - if file doesnt exist or is blank fails
@@ -91,4 +78,4 @@ async function removeServerClearChannel(serverId, channelId) {
   return true;
 }
 
-module.exports = { manualServerClear, scheduledClearer, addServerClearChannel, removeServerClearChannel };
+module.exports = { clearSetChannels, addServerClearChannel, removeServerClearChannel };
