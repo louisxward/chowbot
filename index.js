@@ -1,10 +1,23 @@
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
 
-const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js");
-const logger = require("logger");
+const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField, PermissionsBitField } = require("discord.js");
+
 const fs = require("node:fs");
 const path = require("node:path");
+
+// Logger
+const loggerPath = path.join(__dirname, "log");
+if (!fs.existsSync(loggerPath)) {
+  fs.mkdirSync(loggerPath, { recursive: true });
+}
+const logger = require("logger");
+
+// Data
+const dataPath = path.join(__dirname, "data");
+if (!fs.existsSync(dataPath)) {
+  fs.mkdirSync(dataPath, { recursive: true });
+}
 
 // Client Init
 // ToDo - Needs looking at
@@ -15,7 +28,10 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,
+    IntentsBitField.Flags.Guilds,
+    IntentsBitField.Flags.GuildMessages,
+    IntentsBitField.Flags.MessageContent
   ],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.User, Partials.GuildMember]
 });
