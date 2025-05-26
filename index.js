@@ -75,7 +75,8 @@ for (const file of eventFiles) {
 }
 
 // SQL
-await init();
+//todo make await ?
+init();
 
 // Client Login
 logger.info("startup - login");
