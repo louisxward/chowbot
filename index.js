@@ -73,7 +73,7 @@ for (const file of eventFiles) {
   }
 }
 
-//SQL
+// SQL
 logger.info("startup - Database");
 const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database(__dirname + "/data/chowbot.db", (error) => {
@@ -97,13 +97,22 @@ try {
     );
     db.run(
       `
+      CREATE TABLE IF NOT EXISTS message (
+        idPk INTEGER PRIMARY KEY AUTOINCREMENT,
+        serverFk INTEGER NOT NULL,
+        userId INTEGER NOT NULL,
+        messageId INTEGER NOT NULL
+      );
+      `
+    );
+    db.run(
+      `
       CREATE TABLE IF NOT EXISTS reaction (
         idPk INTEGER PRIMARY KEY AUTOINCREMENT,
         serverFk INTEGER NOT NULL,
         userId INTEGER NOT NULL,
-        reactionId INTEGER NOT NULL,
         messageId INTEGER NOT NULL,
-        messageUserId INTEGER NOT NULL,
+        reactionId INTEGER NOT NULL,
         value INTEGER NOT NULL
       );
       `
