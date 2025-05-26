@@ -89,9 +89,8 @@ try {
     db.run(
       `
       CREATE TABLE IF NOT EXISTS server (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        createdBy INTEGER,
-        serverDid INTEGER NOT NULL,
+        idPk INTEGER PRIMARY KEY AUTOINCREMENT,
+        serverId INTEGER NOT NULL,
         name TEXT NOT NULL
       );
       `
@@ -99,9 +98,10 @@ try {
     db.run(
       `
       CREATE TABLE IF NOT EXISTS reaction (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        server INTEGER NOT NULL,
-        createdBy INTEGER NOT NULL,
+        idPk INTEGER PRIMARY KEY AUTOINCREMENT,
+        serverFk INTEGER NOT NULL,
+        userId INTEGER NOT NULL,
+        reactionId INTEGER NOT NULL,
         messageId INTEGER NOT NULL,
         messageUserId INTEGER NOT NULL,
         value INTEGER NOT NULL
