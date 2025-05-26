@@ -1,5 +1,6 @@
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
+const { init } = require("services/sqlInitService");
 
 const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField, PermissionsBitField } = require("discord.js");
 
@@ -74,61 +75,8 @@ for (const file of eventFiles) {
 }
 
 // SQL
-logger.info("startup - Database");
-const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database(__dirname + "/data/chowbot.db", (error) => {
-  if (error) {
-    logger.error("- Database failed to connect");
-    logger.error(error);
-    throw error;
-  }
-  logger.info("- Database connected");
-});
+init();
 
-db.serialize(() => {
-  db.run(
-    `
-    CREATE TABLE IF NOT EXISTS Server (
-      id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL
-    );
-    `
-  );
-  db.run(
-    `
-    CREATE TABLE IF NOT EXISTS Message (
-      id INTEGER PRIMARY KEY,
-      serverId INTEGER NOT NULL,
-      userId INTEGER NOT NULL,
-      messageId INTEGER NOT NULL
-    );
-    `
-  );
-  db.run(
-    `
-    CREATE TABLE IF NOT EXISTS Reaction (
-      id INTEGER PRIMARY KEY,
-      userId INTEGER NOT NULL,
-      messageId INTEGER NOT NULL,
-      value INTEGER NOT NULL
-    );
-    `
-  );
-});
-
-// test server
-db.serialize(() => {
-  db.run(
-    `
-    INSERT INTO Server(id, name) values(1309582350849544304,"chowbotdevtalosclone")
-    `,
-    (error) => {
-      if (error) {
-        logger.warn(error.message);
-      }
-    }
-  );
-});
 // Client Login
 logger.info("startup - login");
 client.login(process.env.TOKEN);
