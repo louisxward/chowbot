@@ -73,6 +73,46 @@ for (const file of eventFiles) {
   }
 }
 
+//SQL
+logger.info("startup - Database");
+const sqlite3 = require("sqlite3").verbose();
+const db = new sqlite3.Database(__dirname + "/data/chowbot.db", (error) => {
+  if (error) {
+    logger.error("- Database failed to connect");
+    logger.error(error);
+    throw error;
+  }
+  logger.info("- Database connected");
+});
+try {
+  db.serialize(() => {
+    db.run(
+      `
+      CREATE TABLE IF NOT EXISTS server (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        createdBy INTEGER,
+        serverDid INTEGER NOT NULL,
+        name TEXT NOT NULL
+      );
+      `
+    );
+    db.run(
+      `
+      CREATE TABLE IF NOT EXISTS reaction (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server INTEGER NOT NULL,
+        createdBy INTEGER NOT NULL,
+        messageId INTEGER NOT NULL,
+        messageUserId INTEGER NOT NULL,
+        value INTEGER NOT NULL
+      );
+      `
+    );
+  });
+} catch (error) {
+  logger.error(error);
+}
+
 // Client Login
 logger.info("startup - login");
 client.login(process.env.TOKEN);
