@@ -75,7 +75,7 @@ for (const file of eventFiles) {
 }
 
 // SQL
-init();
+await init();
 
 // Client Login
 logger.info("startup - login");
