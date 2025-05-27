@@ -71,7 +71,12 @@ for (const file of eventFiles) {
 
 // SQL
 //todo make await ?
-init();
+//init();
+
+(async () => {
+  logger.info("startup - Database");
+  init();
+})();
 
 // Client Login
 logger.info("startup - login");
