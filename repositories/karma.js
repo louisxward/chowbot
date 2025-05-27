@@ -13,10 +13,11 @@ async function createKarma(serverId, messageId, messageUserId, reactionUserId, r
 async function updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value) {
   logger.info("repository - updateKarma");
   const db = await connect();
-  await db.run(
+  const result = await db.run(
     "UPDATE Karma SET value = ? WHERE serverId = ? AND messageId = ? AND reactionUserId = ? AND reactionEmojiId = ?",
     [value, serverId, messageId, reactionUserId, reactionEmojiId]
   );
+  return result.changes;
 }
 
 async function getKarmaTotalByUserId(userId) {

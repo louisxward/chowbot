@@ -38,10 +38,7 @@ async function karmaCounter(reaction, user, addReaction) {
 
 async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
   logger.info("function - updateUserKarma");
-  try {
-    await updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value);
-  } catch (error) {
-    logger.error(error);
+  if ((await updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value)) == 0) {
     await createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value);
   }
 }
