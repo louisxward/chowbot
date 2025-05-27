@@ -1,20 +1,26 @@
 const logger = require("logger");
 const { connect } = require("services/databaseService");
 
-async function createKarma(serverId, messageId, messageUserId, reactionUserId, value) {
-  logger.info("startup - createKarma");
+async function createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
+  logger.info("repository - createKarma");
   const db = await connect();
-  await db.run("INSERT INTO Karma (serverId, messageId, messageUserId, reactionUserId, value) VALUES (?, ?, ?, ?, ?)", [
-    serverId,
-    messageId,
-    messageUserId,
-    reactionUserId,
-    value
-  ]);
+  await db.run(
+    "INSERT INTO Karma (serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) VALUES (?, ?, ?, ?, ?, ?)",
+    [serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value]
+  );
+}
+
+async function updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value) {
+  logger.info("repository - updateKarma");
+  const db = await connect();
+  await db.run(
+    "UPDATE Karma SET value = ? WHERE serverId = ? AND messageId = ? AND reactionUserId = ? AND reactionEmojiId = ?",
+    [value, serverId, messageId, reactionUserId, reactionEmojiId]
+  );
 }
 
 async function getKarmaTotalByUserId(userId) {
-  logger.info("startup - getKarmaTotalByUserId");
+  logger.info("repository - getKarmaTotalByUserId");
   const db = await connect();
   const result = await db.get("SELECT SUM(value) as total FROM Karma WHERE messageUserId = ? GROUP BY messageUserId", [
     userId
@@ -22,4 +28,4 @@ async function getKarmaTotalByUserId(userId) {
   return result ? result.total : null;
 }
 
-module.exports = { createKarma, getKarmaTotalByUserId };
+module.exports = { createKarma, updateKarma, getKarmaTotalByUserId };
