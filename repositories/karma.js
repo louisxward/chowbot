@@ -1,7 +1,13 @@
 const logger = require("logger");
-const sqlite3 = require("sqlite3").verbose();
 const { connect } = require("services/sqlInitService");
 
-async function 
+async function createKarma(serverId, messageId, messageUserId, reactionId, reactionUserId, value) {
+  logger.info("startup - createKarma");
+  const db = connect();
+  await db.run(
+    "INSERT INTO Karma (serverId, messageId, messageUserId, reactionId, reactionUserId, value) VALUES (?, ?, ?, ?, ?, ?)",
+    [serverId, messageId, messageUserId, reactionId, reactionUserId, value]
+  );
+}
 
-module.exports = { updateUserKarma, getUserKarma, getKarmaLeaderboard };
+module.exports = { createKarma };
