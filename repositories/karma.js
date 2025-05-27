@@ -13,4 +13,13 @@ async function createKarma(serverId, messageId, messageUserId, reactionUserId, v
   ]);
 }
 
-module.exports = { createKarma };
+async function getKarmaTotalByUserId(userId) {
+  logger.info("startup - getKarmaTotalByUserId");
+  const db = await connect();
+  const result = await db.get("SELECT SUM(value) as total FROM Karma WHERE messageUserId = ? GROUP BY messageUserId", [
+    userId
+  ]);
+  return result ? result.total : null;
+}
+
+module.exports = { createKarma, getKarmaTotalByUserId };

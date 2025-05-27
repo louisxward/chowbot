@@ -1,6 +1,6 @@
 const logger = require("logger");
 const { readFile, writeFile } = require("services/storageHelper");
-const { createKarma } = require("repositories/karma");
+const { createKarma, getKarmaTotalByUserId } = require("repositories/karma");
 
 const filePath = "./data/karma.json";
 
@@ -41,9 +41,7 @@ async function updateUserKarma(serverId, messageId, messageUserId, reactionUserI
 
 async function getUserKarma(userId) {
   logger.info("function - getUserKarma");
-  logger.info(`- userId: ${userId}`);
-  const map = await readFile(filePath);
-  return map[userId];
+  return await getKarmaTotalByUserId(userId);
 }
 
 async function getKarmaLeaderboard(interaction) {
