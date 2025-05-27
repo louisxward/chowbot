@@ -69,10 +69,7 @@ for (const file of eventFiles) {
   }
 }
 
-// SQL
-//todo make await ?
-//init();
-
+// Database
 (async () => {
   logger.info("startup - Database");
   init();
