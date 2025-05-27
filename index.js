@@ -7,11 +7,6 @@ const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField, Permis
 const fs = require("node:fs");
 const path = require("node:path");
 
-// Logger
-const loggerPath = path.join(__dirname, "log");
-if (!fs.existsSync(loggerPath)) {
-  fs.mkdirSync(loggerPath, { recursive: true });
-}
 const logger = require("logger");
 
 // Data
