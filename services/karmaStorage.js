@@ -25,7 +25,13 @@ async function karmaCounter(reaction, user, addReaction) {
   const isUpvote = emojiId === EMOJI_UPVOTE_ID;
   const karmaChange = isUpvote === addReaction ? 1 : -1;
   logger.info(`- emoji: ${isUpvote ? "upvote" : "downvote"}`);
-  await updateUserKarma(reaction.guildId, reaction.message.id, reaction.message.author.id, user.id, karmaChange);
+  await updateUserKarma(
+    reaction.message.guildId,
+    reaction.message.id,
+    reaction.message.author.id,
+    user.id,
+    karmaChange
+  );
 }
 
 async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, value) {
