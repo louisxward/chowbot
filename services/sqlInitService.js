@@ -4,10 +4,7 @@ const { open } = require("sqlite");
 
 async function init() {
   // Connection
-  const db = await open({
-    filename: "./data/chowbot.db",
-    driver: sqlite3.Database
-  });
+  const db = await connect();
   // Table Create
   await db.exec(`
     CREATE TABLE IF NOT EXISTS Servers (
@@ -39,4 +36,12 @@ async function init() {
   }
 }
 
-module.exports = { init };
+async function connect() {
+  const db = await open({
+    filename: "./data/chowbot.db",
+    driver: sqlite3.Database
+  });
+  return db;
+}
+
+module.exports = { init, connect };
