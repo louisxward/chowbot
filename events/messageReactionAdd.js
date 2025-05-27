@@ -1,6 +1,6 @@
 const { Events } = require("discord.js");
 const logger = require("logger");
-const karmaCounter = require("services/karmaCounter");
+const { karmaCounter } = require("services/karmaStorage");
 
 module.exports = {
   name: Events.MessageReactionAdd,
