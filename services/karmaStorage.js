@@ -1,5 +1,6 @@
 const logger = require("logger");
 const { readFile, writeFile } = require("services/storageHelper");
+const { createKarma } = require("repositories/karma");
 
 const filePath = "./data/karma.json";
 

@@ -1,5 +1,5 @@
 const logger = require("logger");
-const { connect } = require("services/sqlInitService");
+const { connect } = require("services/databaseService");
 
 async function createKarma(serverId, messageId, messageUserId, reactionId, reactionUserId, value) {
   logger.info("startup - createKarma");
