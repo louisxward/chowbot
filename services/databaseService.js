@@ -18,7 +18,6 @@ async function init() {
       serverId INTEGER NOT NULL,
       messageId INTEGER NOT NULL,
       messageUserId INTEGER NOT NULL,
-      reactionId INTEGER NOT NULL,
       reactionUserId INTEGER NOT NULL,
       value INTEGER NOT NULL
     );

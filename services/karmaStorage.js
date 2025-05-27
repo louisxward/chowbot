@@ -9,9 +9,6 @@ const KARMA_EMOJIS = [EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID];
 
 async function karmaCounter(reaction, user, addReaction) {
   logger.info("function - karmaCounter");
-  logger.info(`- addReaction: ${addReaction}`);
-  logger.info(`- messageId: ${reaction.message.id}`);
-  logger.info(`- userId: ${user.id}`);
   if (user.bot) return;
   const emojiId = reaction._emoji.id;
   if (!KARMA_EMOJIS.includes(emojiId)) return;
@@ -25,21 +22,15 @@ async function karmaCounter(reaction, user, addReaction) {
   }
   const authorId = reaction.message.author.id;
   if (user.id === authorId) return;
-  logger.info(`- authorId: ${authorId}`);
   const isUpvote = emojiId === EMOJI_UPVOTE_ID;
   const karmaChange = isUpvote === addReaction ? 1 : -1;
   logger.info(`- emoji: ${isUpvote ? "upvote" : "downvote"}`);
-  await updateUserKarma(authorId, karmaChange);
+  await updateUserKarma(reaction.guildId, reaction.message.id, reaction.message.author.id, user.id, karmaChange);
 }
 
-async function updateUserKarma(userId, value) {
+async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, value) {
   logger.info("function - updateUserKarma");
-  logger.info(`- userId: ${userId}`);
-  logger.info(`- value: ${value}`);
-  const map = await readFile(filePath);
-  const currentKarma = map[userId];
-  map[userId] = null == currentKarma ? value : currentKarma + value;
-  await writeFile(filePath, map);
+  await createKarma(serverId, messageId, messageUserId, reactionUserId, value);
 }
 
 async function getUserKarma(userId) {
