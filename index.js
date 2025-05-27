@@ -1,6 +1,6 @@
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
-const { init } = require("services/sqlInitService");
+const { init } = require("services/databaseService");
 
 const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField, PermissionsBitField } = require("discord.js");
 

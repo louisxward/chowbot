@@ -1,7 +1,6 @@
 const { Events, ActivityType } = require("discord.js");
 const logger = require("logger");
 const cron = require("node-cron");
-const { init } = require("services/sqlInitService");
 
 const { scheduledClearer } = require("services/messageClearer");
 

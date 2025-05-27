@@ -26,7 +26,7 @@ async function init() {
   // Dev Data
   // todo - change this to auto add servers on startup or on bot inv
   try {
-    await db.run("INSERT INTO Servers (id, name) VALUES (?, ?)", ["1309582350849544304", "chowbotdevtalosclone"]);
+    await db.run("INSERT INTO Server (id, name) VALUES (?, ?)", ["1309582350849544304", "chowbotdevtalosclone"]);
   } catch (error) {
     logger.warn(error.message);
   }
