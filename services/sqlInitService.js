@@ -21,7 +21,7 @@ async function init() {
     );
     `);
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS Reaction (
+    CREATE TABLE IF NOT EXISTS Karma (
       id INTEGER PRIMARY KEY,
       userId INTEGER NOT NULL,
       messageId INTEGER NOT NULL,
