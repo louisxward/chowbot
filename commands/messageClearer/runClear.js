@@ -9,10 +9,7 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     logger.info("command - runClear");
-    logger.info(`- userId: ${interaction.user.id}`);
-    const serverId = interaction.guildId;
-    logger.info(`- serverId: ${serverId}`);
-    await manualServerClear(interaction.client, serverId);
+    await manualServerClear(interaction.client, interaction.guildId);
     await interaction.reply({ content: "channels clearing", ephemeral: true });
   }
 };

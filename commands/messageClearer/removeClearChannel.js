@@ -10,13 +10,10 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     logger.info("command - removeclearchannel");
-    logger.info(`- userId: ${interaction.user.id}`);
-    const serverId = interaction.guildId;
-    logger.info(`- serverId: ${serverId}`);
     const channelId = interaction.options.getString("channel_id");
     logger.info(`- channelId: ${channelId}`);
     try {
-      await removeServerClearChannel(serverId, channelId);
+      await removeServerClearChannel(interaction.guildId, channelId);
       await interaction.reply({ content: "channel_id has been removed", ephemeral: true });
     } catch (error) {
       logger.error(error);

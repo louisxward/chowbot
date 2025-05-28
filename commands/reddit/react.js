@@ -11,7 +11,6 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
   async execute(interaction) {
     logger.info("command - react");
-    logger.info(`- userId: ${interaction.user.id}`);
     const inputMessageId = interaction.options.getString("message_id");
     logger.info(`- inputMessageId: ${inputMessageId}`);
     try {

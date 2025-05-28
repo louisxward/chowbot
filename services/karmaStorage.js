@@ -40,8 +40,9 @@ async function karmaCalculator(reaction, user, addReaction) {
 
 async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
   logger.info("function - updateUserKarma");
-  logger.info(` - serverId: ${serverId}`);
-  logger.info(` - reactionUserId: ${reactionUserId}`);
+  logger.info(`- serverId: ${serverId}`);
+  logger.info(`- messageId: ${messageId}`);
+  logger.info(`- reactionUserId: ${reactionUserId}`);
   if ((await updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value)) == 0) {
     await createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value);
   }

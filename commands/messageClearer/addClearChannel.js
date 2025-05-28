@@ -10,13 +10,10 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     logger.info("command - addclearchannel");
-    logger.info(`- userId: ${interaction.user.id}`);
-    const serverId = interaction.guildId;
-    logger.info(`- serverId: ${serverId}`);
     const channelId = interaction.options.getString("channel_id");
     logger.info(`- channelId: ${channelId}`);
     try {
-      await addServerClearChannel(interaction.client, serverId, channelId);
+      await addServerClearChannel(interaction.client, interaction.guildId, channelId);
       await interaction.reply({ content: "channel_id has been added", ephemeral: true });
     } catch (error) {
       logger.error(error);

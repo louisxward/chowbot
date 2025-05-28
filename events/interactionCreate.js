@@ -5,6 +5,8 @@ module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
     logger.info("event - InteractionCreate");
+    logger.info(`- serverId: ${interaction.guildId}`);
+    logger.info(`- userId: ${interaction.user.id}`);
     if (!interaction.isChatInputCommand()) return;
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) {
