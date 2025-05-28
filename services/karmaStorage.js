@@ -8,8 +8,8 @@ const filePath = "./data/karma.json";
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 const KARMA_EMOJIS = [EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID];
 
-async function karmaCounter(reaction, user, addReaction) {
-  logger.info("function - karmaCounter");
+async function karmaCalculator(reaction, user, addReaction) {
+  logger.info("function - karmaCalculator");
   if (user.bot) return;
   const emojiId = reaction._emoji.id;
   if (!KARMA_EMOJIS.includes(emojiId)) return;
@@ -40,6 +40,8 @@ async function karmaCounter(reaction, user, addReaction) {
 
 async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
   logger.info("function - updateUserKarma");
+  logger.info(` - serverId: ${serverId}`);
+  logger.info(` - reactionUserId: ${reactionUserId}`);
   if ((await updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value)) == 0) {
     await createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value);
   }
@@ -66,4 +68,4 @@ async function getKarmaLeaderboard(interaction) {
   return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
 }
 
-module.exports = { karmaCounter, updateUserKarma, getUserKarma, getKarmaLeaderboard };
+module.exports = { karmaCalculator, updateUserKarma, getUserKarma, getKarmaLeaderboard };

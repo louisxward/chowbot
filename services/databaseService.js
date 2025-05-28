@@ -30,6 +30,7 @@ async function init() {
   } catch (error) {
     logger.warn(error.message);
   }
+  db.close();
 }
 
 async function connect() {
