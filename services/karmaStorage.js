@@ -32,8 +32,8 @@ async function karmaCalculator(reaction, user, addReaction) {
     reaction.message.guildId,
     reaction.message.id,
     reaction.message.author.id,
-    emojiId,
     user.id,
+    emojiId,
     karmaValue
   );
 }
