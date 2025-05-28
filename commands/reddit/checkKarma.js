@@ -10,7 +10,6 @@ module.exports = {
   async execute(interaction) {
     logger.info("command - checkKarma");
     const userId = interaction.user.id;
-    logger.info(`- userId: ${interaction.user.id}`);
     let checkUserId;
     let checkUserName;
     try {

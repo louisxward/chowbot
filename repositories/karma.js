@@ -8,6 +8,7 @@ async function createKarma(serverId, messageId, messageUserId, reactionUserId, r
     "INSERT INTO Karma (serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) VALUES (?, ?, ?, ?, ?, ?)",
     [serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value]
   );
+  db.close();
 }
 
 async function updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value) {
@@ -17,6 +18,7 @@ async function updateKarma(serverId, messageId, reactionUserId, reactionEmojiId,
     "UPDATE Karma SET value = ? WHERE serverId = ? AND messageId = ? AND reactionUserId = ? AND reactionEmojiId = ?",
     [value, serverId, messageId, reactionUserId, reactionEmojiId]
   );
+  db.close();
   return result.changes;
 }
 
@@ -26,6 +28,7 @@ async function getKarmaTotalByUserId(userId) {
   const result = await db.get("SELECT SUM(value) as total FROM Karma WHERE messageUserId = ? GROUP BY messageUserId", [
     userId
   ]);
+  db.close();
   return result ? result.total : null;
 }
 
