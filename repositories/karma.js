@@ -32,4 +32,12 @@ async function getKarmaTotalByUserId(userId) {
   return result ? result.total : null;
 }
 
-module.exports = { createKarma, updateKarma, getKarmaTotalByUserId };
+async function getKarmaLeaderboardMap() {
+  logger.info("repository - getKarmaLeaderboardMap");
+  const db = await connect();
+  const result = await db.get("SELECT messageUserId as userId, SUM(value) as total FROM Karma GROUP BY messageUserId");
+  db.close();
+  return result;
+}
+
+module.exports = { createKarma, updateKarma, getKarmaTotalByUserId, getKarmaLeaderboardMap };

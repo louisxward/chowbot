@@ -1,6 +1,6 @@
 const logger = require("logger");
 const { readFile, writeFile } = require("services/storageHelper");
-const { createKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+const { createKarma, updateKarma, getKarmaTotalByUserId, getKarmaLeaderboardMap } = require("repositories/karma");
 
 const filePath = "./data/karma.json";
 
@@ -55,12 +55,14 @@ async function getUserKarma(userId) {
 
 async function getKarmaLeaderboard(interaction) {
   logger.info("function - getKarmaLeaderboard");
-  const map = await readFile(filePath);
+  const map = await getKarmaLeaderboardMap();
+  logger.warn(map);
+  //todo readmap
   const hydratedMap = new Map();
-  for (const [userId, karma] of Object.entries(map)) {
+  for (const [userId, total] of Object.entries(map)) {
     try {
       const user = await interaction.client.users.fetch(userId);
-      hydratedMap.set(user.displayName, karma);
+      hydratedMap.set(user.displayName, total);
     } catch (error) {
       logger.error(`- skipping userId: ${userId}`);
       logger.error(error);
