@@ -19,7 +19,7 @@ async function init() {
       messageId INTEGER NOT NULL,
       messageUserId INTEGER NOT NULL,
       reactionUserId INTEGER NOT NULL,
-      reactionEmojiId INTEGER,
+      reactionEmojiId INTEGER NOT NULL,
       value INTEGER NOT NULL
     );
     `);

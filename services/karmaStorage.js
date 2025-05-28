@@ -23,16 +23,18 @@ async function karmaCounter(reaction, user, addReaction) {
   }
   const authorId = reaction.message.author.id;
   if (user.id === authorId) return;
-  const isUpvote = emojiId === EMOJI_UPVOTE_ID;
-  const karmaChange = isUpvote === addReaction ? 1 : -1;
-  logger.info(`- emoji: ${isUpvote ? "upvote" : "downvote"}`);
+  let karmaValue = 0;
+  if (addReaction) {
+    const isUpvote = emojiId === EMOJI_UPVOTE_ID;
+    karmaValue = isUpvote === addReaction ? 1 : -1;
+  }
   await updateUserKarma(
     reaction.message.guildId,
     reaction.message.id,
     reaction.message.author.id,
     emojiId,
     user.id,
-    karmaChange
+    karmaValue
   );
 }
 
