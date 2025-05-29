@@ -42,6 +42,7 @@ async function getKarmaLeaderboardMap() {
   records.forEach((e) => {
     result[e.userId] = e.total;
   });
+  db.close();
   return result;
 }
 
