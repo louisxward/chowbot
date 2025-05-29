@@ -8,18 +8,18 @@ async function init() {
   // Table Create
   await db.exec(`
     CREATE TABLE IF NOT EXISTS Server (
-      id INTEGER PRIMARY KEY,
+      id STRING PRIMARY KEY,
       name TEXT NOT NULL
     );
     `);
   await db.exec(`
     CREATE TABLE IF NOT EXISTS Karma (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      serverId INTEGER NOT NULL,
-      messageId INTEGER NOT NULL,
-      messageUserId INTEGER NOT NULL,
-      reactionUserId INTEGER NOT NULL,
-      reactionEmojiId INTEGER NOT NULL,
+      serverId STRING NOT NULL,
+      messageId STRING NOT NULL,
+      messageUserId STRING NOT NULL,
+      reactionUserId STRING NOT NULL,
+      reactionEmojiId STRING NOT NULL,
       value INTEGER NOT NULL
     );
     `);

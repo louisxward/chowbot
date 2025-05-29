@@ -56,8 +56,6 @@ async function getUserKarma(userId) {
 async function getKarmaLeaderboard(interaction) {
   logger.info("function - getKarmaLeaderboard");
   const map = await getKarmaLeaderboardMap();
-  logger.warn(map);
-  //todo readmap
   const hydratedMap = new Map();
   for (const [userId, total] of Object.entries(map)) {
     try {

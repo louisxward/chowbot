@@ -25,7 +25,7 @@ async function updateKarma(serverId, messageId, reactionUserId, reactionEmojiId,
 async function getKarmaTotalByUserId(userId) {
   logger.info("repository - getKarmaTotalByUserId");
   const db = await connect();
-  const result = await db.get("SELECT SUM(value) as total FROM Karma WHERE messageUserId = ? GROUP BY messageUserId", [
+  const result = await db.get("SELECT SUM(value) AS total FROM Karma WHERE messageUserId = ? GROUP BY messageUserId", [
     userId
   ]);
   db.close();
@@ -35,8 +35,13 @@ async function getKarmaTotalByUserId(userId) {
 async function getKarmaLeaderboardMap() {
   logger.info("repository - getKarmaLeaderboardMap");
   const db = await connect();
-  const result = await db.get("SELECT messageUserId as userId, SUM(value) as total FROM Karma GROUP BY messageUserId");
-  db.close();
+  const result = new Map();
+  const records = await db.all(
+    "SELECT CAST(messageUserId AS TEXT) AS userId, SUM(value) AS total FROM Karma GROUP BY messageUserId"
+  );
+  records.forEach((e) => {
+    result[e.userId] = e.total;
+  });
   return result;
 }
 
