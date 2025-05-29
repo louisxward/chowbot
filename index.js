@@ -71,7 +71,7 @@ for (const file of eventFiles) {
 
 // Database
 (async () => {
-  logger.info("startup - Database");
+  logger.info("startup - database");
   init();
 })();
 
