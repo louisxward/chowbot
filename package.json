@@ -1,6 +1,6 @@
 {
   "name": "chowbot",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "main": "index.js",
   "scripts": {
     "start": "node index.js | pino-pretty",
