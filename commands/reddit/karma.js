@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require("discord.js");
-const logger = require("logger");
 const { getKarmaLeaderboard } = require("services/karmaStorage");
 
 module.exports = {
