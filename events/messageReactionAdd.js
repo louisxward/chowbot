@@ -5,7 +5,6 @@ const { karmaCalculator } = require("services/karmaStorage");
 module.exports = {
   name: Events.MessageReactionAdd,
   async execute(reaction, user) {
-    logger.info("event - MessageReactionAdd");
     await karmaCalculator(reaction, user, true);
   }
 };

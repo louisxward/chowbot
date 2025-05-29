@@ -9,7 +9,6 @@ module.exports = {
     .addStringOption((option) => option.setName("channel_id").setDescription("id of the channel").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
-    logger.info("command - removeclearchannel");
     const channelId = interaction.options.getString("channel_id");
     logger.info(`- channelId: ${channelId}`);
     try {

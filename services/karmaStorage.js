@@ -9,7 +9,6 @@ const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 const KARMA_EMOJIS = [EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID];
 
 async function karmaCalculator(reaction, user, addReaction) {
-  logger.info("function - karmaCalculator");
   if (user.bot) return;
   const emojiId = reaction._emoji.id;
   if (!KARMA_EMOJIS.includes(emojiId)) return;
@@ -53,6 +52,7 @@ async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
+//todo - just use an array
 async function getKarmaLeaderboard(interaction) {
   logger.info("function - getKarmaLeaderboard");
   const map = await getKarmaLeaderboardMap();
