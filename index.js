@@ -1,16 +1,12 @@
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
+const { init } = require("services/databaseService");
 
 const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField, PermissionsBitField } = require("discord.js");
 
 const fs = require("node:fs");
 const path = require("node:path");
 
-// Logger
-const loggerPath = path.join(__dirname, "log");
-if (!fs.existsSync(loggerPath)) {
-  fs.mkdirSync(loggerPath, { recursive: true });
-}
 const logger = require("logger");
 
 // Data
@@ -72,6 +68,12 @@ for (const file of eventFiles) {
     client.on(event.name, (...args) => event.execute(...args));
   }
 }
+
+// Database
+(async () => {
+  logger.info("startup - database");
+  init();
+})();
 
 // Client Login
 logger.info("startup - login");

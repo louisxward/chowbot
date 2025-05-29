@@ -10,13 +10,10 @@ module.exports = {
     .addStringOption((option) => option.setName("message_id").setDescription("id of the message").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
   async execute(interaction) {
-    logger.info("command - react");
-    logger.info(`- userId: ${interaction.user.id}`);
     const inputMessageId = interaction.options.getString("message_id");
     logger.info(`- inputMessageId: ${inputMessageId}`);
     try {
       const message = await interaction.channel.messages.fetch(inputMessageId);
-      logger.info("- found: true");
       await message.react(EMOJI_UPVOTE_ID).then(() => message.react(EMOJI_DOWNVOTE_ID));
       await interaction.reply({ content: "reacted :P", ephemeral: true });
     } catch (error) {
