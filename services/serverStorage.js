@@ -1,5 +1,5 @@
 const logger = require("logger");
-const { createServer } = require("repositories/server");
+const { createServer, deleteServer } = require("repositories/server");
 
 async function botInvited(serverId, serverName, ownerUserId) {
   logger.info("function - botInvited");
@@ -9,4 +9,10 @@ async function botInvited(serverId, serverName, ownerUserId) {
   createServer(serverId, serverName, ownerUserId);
 }
 
-module.exports = { botInvited };
+async function botUnInvited(serverId) {
+  logger.info("function - botUnInvited");
+  logger.info(`- serverId: ${serverId}`);
+  deleteServer(serverId);
+}
+
+module.exports = { botInvited, botUnInvited };

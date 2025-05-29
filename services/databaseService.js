@@ -1,4 +1,3 @@
-const logger = require("logger");
 const sqlite3 = require("sqlite3").verbose();
 const { open } = require("sqlite");
 
@@ -11,8 +10,7 @@ async function init() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       invited TEXT NOT NULL,
-      ownerUserId TEXT NOT NULL,
-      active BOOLEAN NOT NULL
+      ownerUserId TEXT NOT NULL
     );
     `);
   await db.exec(`
@@ -26,13 +24,6 @@ async function init() {
       value INTEGER NOT NULL
     );
     `);
-  // Dev Data
-  // todo - change this to auto add servers on startup or on bot inv
-  try {
-    await db.run("INSERT INTO Server (id, name) VALUES (?, ?)", ["1309582350849544304", "chowbotdevtalosclone"]);
-  } catch (error) {
-    logger.warn(error.message);
-  }
   db.close();
 }
 

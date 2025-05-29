@@ -10,6 +10,7 @@ module.exports = {
   async execute(client) {
     logger.info(`${client.user.tag} INITIALISED`);
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
+    //todo - check what servers the bot has access too, incase someone invited or delete whilst down
     // Create Scheduled timer for deleting all messages in set channels at 05:00 UTC daily
     // todo move to index.js
     cron.schedule(
