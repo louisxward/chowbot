@@ -11,8 +11,8 @@ async function init() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       invited TEXT NOT NULL,
-      inviteUserId TEXT NOT NULL,
-      ownerUserId TEXT NOT NULL
+      ownerUserId TEXT NOT NULL,
+      active BOOLEAN NOT NULL
     );
     `);
   await db.exec(`
