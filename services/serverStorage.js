@@ -4,11 +4,12 @@ const { createServer } = require("repositories/server");
 async function botInvited(guild) {
   logger.info("function - botInvited");
   const serverId = guild.id;
-  const serverName = guild.name;
   logger.info(`- serverId: ${serverId}`);
+  const serverName = guild.name;
   logger.info(`- serverName: ${serverName}`);
-  const ownerId = await guild.fetchOwner().id;
-  logger.info(`- ownerUserId: ${ownerId}`);
+  const ownerUserId = guild.commands.guild.ownerId;
+  logger.info(`- ownerUserId: ${ownerUserId}`);
+  createServer(serverId, serverName, ownerUserId);
 }
 
 module.exports = { botInvited };
