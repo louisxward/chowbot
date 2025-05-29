@@ -1,9 +1,9 @@
 const { Events } = require("discord.js");
-const { karmaCalculator } = require("services/karmaStorage");
+const { botInvited } = require("services/serverStorage");
 
 module.exports = {
   name: Events.GuildCreate,
-  async execute(reaction, user) {
-    await karmaCalculator(reaction, user, true);
+  async execute(guild) {
+    await botInvited(guild);
   }
 };
