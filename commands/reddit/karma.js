@@ -10,8 +10,16 @@ module.exports = {
       return;
     }
     let replyMessage = "";
+    let pos = 0;
+    let posMessage = "";
     for (const [key, value] of leaderboard.entries()) {
-      replyMessage += `${key}: ${value}\n`;
+      pos += 1;
+      if (pos === 1) {
+        posMessage = `! ${pos.toString()}`;
+      } else {
+        posMessage = `${pos.toString()}`;
+      }
+      replyMessage += `${posMessage}. ${key}: ${value}\n`;
     }
     await interaction.reply({ content: replyMessage.trim(), ephemeral: true });
   }
