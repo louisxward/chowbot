@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getKarmaLeaderboard } = require("services/karmaStorage");
 
 module.exports = {
@@ -9,17 +9,20 @@ module.exports = {
       await interaction.reply({ content: "Leaderboard is empty", ephemeral: true });
       return;
     }
-    let replyMessage = "";
+    let replyMessage = "**Karma Leaderboard**\n";
     let pos = 0;
-    let posMessage = "";
+    let medal = null;
     for (const [key, value] of leaderboard.entries()) {
       pos += 1;
+      medal = null;
       if (pos === 1) {
-        posMessage = `! ${pos.toString()}`;
-      } else {
-        posMessage = `${pos.toString()}`;
+        medal = `🥇`;
+      } else if (pos === 2) {
+        medal = `🥈`;
+      } else if (pos === 3) {
+        medal = `🥉`;
       }
-      replyMessage += `${posMessage}. ${key}: ${value}\n`;
+      replyMessage += `${medal ? medal : pos.toString() + ". "} ${pos < 4 ? "**" + key + "**" : key}: ${value}\n`;
     }
     await interaction.reply({ content: replyMessage.trim(), ephemeral: true });
   }
