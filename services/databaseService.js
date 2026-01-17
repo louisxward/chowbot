@@ -24,6 +24,14 @@ async function init() {
       value INTEGER NOT NULL
     );
     `);
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS KarmaWeeklyLeaderboard (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created TEXT NOT NULL, 
+      userId TEXT NOT NULL,
+      value INTEGER NOT NULL
+    );
+    `);
   db.close();
 }
 

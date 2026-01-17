@@ -37,7 +37,8 @@ async function getKarmaLeaderboardMap() {
   const db = await connect();
   const result = new Map();
   const records = await db.all(
-    "SELECT CAST(messageUserId AS TEXT) AS userId, SUM(value) AS total FROM Karma GROUP BY messageUserId"
+    "SELECT CAST(messageUserId AS TEXT) AS userId, SUM(value) AS total FROM Karma " +
+      "GROUP BY messageUserId ORDER BY total DESC"
   );
   records.forEach((e) => {
     result[e.userId] = e.total;

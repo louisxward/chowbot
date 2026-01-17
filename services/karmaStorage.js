@@ -24,14 +24,7 @@ async function karmaCalculator(reaction, user, addReaction) {
     const isUpvote = emojiId === EMOJI_UPVOTE_ID;
     karmaValue = isUpvote === addReaction ? 1 : -1;
   }
-  await updateUserKarma(
-    reaction.message.guildId,
-    reaction.message.id,
-    reaction.message.author.id,
-    user.id,
-    emojiId,
-    karmaValue
-  );
+  await updateUserKarma(reaction.message.guildId, reaction.message.id, authorId, user.id, emojiId, karmaValue);
 }
 
 async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
@@ -62,7 +55,8 @@ async function getKarmaLeaderboard(interaction) {
       logger.error(error);
     }
   }
-  return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
+  //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
+  return hydratedMap;
 }
 
 module.exports = { karmaCalculator, updateUserKarma, getUserKarma, getKarmaLeaderboard };
