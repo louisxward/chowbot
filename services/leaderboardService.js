@@ -19,8 +19,20 @@ async function getKarmaWeeklyLeaderboard() {
   let lines = [];
   const currentMap = getKarmaLeaderboardMap();
   const prevMap = getPreviousKarmaWeeklyLeaderboardMap();
-  for (const [userId, e] of Object.entries(currentMap)) {
+  for (const [userId, currentEntry] of Object.entries(currentMap)) {
     //lines.push();
+    // Current
+    const currentScore = currentEntry.value;
+    const currentIndex = currentEntry.index;
+    // Previous
+    const prevEntry = prevMap.get(userId);
+    const prevScore = prevEntry.value;
+    const prevIndex = prevEntry.index;
+    // Compare
+    const changeScore = currentScore - prevScore;
+    const changeIndex = currentIndex - prevIndex;
+    // Format
+    lines.push(`${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}`);
   }
   return lines.join("\n");
 }

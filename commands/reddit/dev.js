@@ -1,7 +1,12 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require("discord.js");
 const logger = require("logger");
 
-const { getKarmaWeeklyLeaderboardTest, logWeekly, leaderboardFormatter } = require("services/leaderboardService");
+const {
+  getKarmaWeeklyLeaderboardTest,
+  logWeekly,
+  leaderboardFormatter,
+  getKarmaWeeklyLeaderboard
+} = require("services/leaderboardService");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,7 +19,7 @@ module.exports = {
     //await logWeekly();
     logger.info("LEADERBOARD");
     await interaction.deferReply({ ephemeral: true });
-    const leaderboard = await getKarmaWeeklyLeaderboardTest(interaction);
+    const leaderboard = await getKarmaWeeklyLeaderboard(interaction);
     let content = await leaderboardFormatter(leaderboard);
     const embed = new EmbedBuilder().setTitle("Karma Weekly Leaderboard").setDescription(content);
     await interaction.editReply({
