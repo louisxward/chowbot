@@ -93,8 +93,8 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
     } else if (changeIndex < -0) {
       indexString = "🔽";
     }
-    //🔼⏫🔽⏬
 
+    // Concat
     lines.push(
       `${indexString ? indexString : ""}${SPACING}` +
         `${medal ? medal : currentIndex + "."}${SPACING}` +
