@@ -76,7 +76,7 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
 
     // Streak
     let indexString = null;
-    if (!changeIndex) {
+    if (changeIndex === null) {
       indexString = "🐣"; // if user is new
     } else if (changeIndex > 2) {
       indexString = "🔥";
