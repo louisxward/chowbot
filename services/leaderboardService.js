@@ -16,8 +16,13 @@ async function logWeekly() {
 }
 
 async function getKarmaWeeklyLeaderboard() {
+  let lines = [];
   const currentMap = getKarmaLeaderboardMap();
   const prevMap = getPreviousKarmaWeeklyLeaderboardMap();
+  for (const [userId, e] of Object.entries(currentMap)) {
+    //lines.push();
+  }
+  return lines.join("\n");
 }
 
 async function getKarmaWeeklyLeaderboardTest(interaction) {
