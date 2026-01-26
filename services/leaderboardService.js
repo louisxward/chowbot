@@ -17,28 +17,45 @@ async function logWeekly() {
 
 async function getKarmaWeeklyLeaderboard() {
   let lines = [];
-  const currentMap = getKarmaLeaderboardMap();
-  const prevMap = getPreviousKarmaWeeklyLeaderboardMap();
+  const currentMap = await getKarmaLeaderboardMap();
+  const prevMap = await getPreviousKarmaWeeklyLeaderboardMap();
   for (const [userId, currentEntry] of Object.entries(currentMap)) {
+    logger.error(`- userId: ${userId}`);
     //lines.push();
+
     // Current
+    logger.info("current");
     const currentScore = currentEntry.value;
+    logger.error(`- currentScore: ${currentScore}`);
     const currentIndex = currentEntry.index;
+    logger.error(`- currentIndex: ${currentIndex}`);
+
     // Previous
+    logger.info("previous");
+    let prevScore = null;
+    let prevIndex = null;
     const prevEntry = prevMap.get(userId);
-    const prevScore = prevEntry.value;
-    const prevIndex = prevEntry.index;
+    if (prevEntry) {
+      prevScore = prevEntry.value;
+      logger.error(`- prevScore: ${prevScore}`);
+      prevIndex = prevEntry.index;
+      logger.error(`- prevIndex: ${prevIndex}`);
+    }
+
     // Compare
+    logger.info("compare");
     const changeScore = currentScore - prevScore;
     const changeIndex = currentIndex - prevIndex;
+
     // Format
-    lines.push(`${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}`);
+    lines.push(`changeScore / ${currentScore}`);
   }
   return lines.join("\n");
 }
 
 async function getKarmaWeeklyLeaderboardTest(interaction) {
   const map = await getPreviousKarmaWeeklyLeaderboardMap();
+  logger.info(`- map size: ${map.size}`);
   const hydratedMap = new Map();
   for (const [userId, e] of Object.entries(map)) {
     try {

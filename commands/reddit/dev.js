@@ -15,12 +15,19 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     logger.info("DEV COMMAND");
-    logger.info("LOG WEEKLY");
+    // logger.info("LOG WEEKLY");
     //await logWeekly();
+    // logger.info("LEADERBOARD TEST");
+    // await interaction.deferReply({ ephemeral: true });
+    // const leaderboard = await getKarmaWeeklyLeaderboardTest(interaction);
+    // let content = await leaderboardFormatter(leaderboard);
+    // const embed = new EmbedBuilder().setTitle("Karma Weekly Leaderboard").setDescription(content);
+    // await interaction.editReply({
+    //   embeds: [embed]
+    // });
     logger.info("LEADERBOARD");
     await interaction.deferReply({ ephemeral: true });
-    const leaderboard = await getKarmaWeeklyLeaderboard(interaction);
-    let content = await leaderboardFormatter(leaderboard);
+    const content = await getKarmaWeeklyLeaderboard();
     const embed = new EmbedBuilder().setTitle("Karma Weekly Leaderboard").setDescription(content);
     await interaction.editReply({
       embeds: [embed]
