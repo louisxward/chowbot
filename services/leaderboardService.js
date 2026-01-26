@@ -134,10 +134,11 @@ async function leaderboardFormatter(users, map) {
 
 async function sendKarmaWeeklyLeaderboard(client) {
   logger.info("function - sendKarmaWeeklyLeaderboard");
+
   const filePath = "./data/leaderboardWeeklyChannelConfig.json";
   const map = await readFile(filePath);
 
-  if (map === null) {
+  if (Object.keys(map).length === 0) {
     return;
   }
 
