@@ -36,7 +36,7 @@ const rest = new REST().setToken(process.env.TOKEN);
     //   body: commands
     // });
     // - All Servers
-    //const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+    // const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
     // Delete Commmands
     // - Specific Server
     // await rest
