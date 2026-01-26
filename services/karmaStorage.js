@@ -40,8 +40,17 @@ async function updateUserKarma(serverId, messageId, messageUserId, reactionUserI
   }
 }
 
+async function createUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
+  logger.info("function - createUserKarma");
+  logger.info(`- serverId: ${serverId}`);
+  logger.info(`- messageId: ${messageId}`);
+  logger.info(`- reactionUserId: ${reactionUserId}`);
+  logger.info(`- value: ${value}`);
+  await createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value);
+}
+
 async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
-module.exports = { karmaCalculator, updateUserKarma, getUserKarma };
+module.exports = { karmaCalculator, updateUserKarma, getUserKarma, createUserKarma };
