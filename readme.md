@@ -1,10 +1,17 @@
 # ChowBot
 
-Version: 0.2.0
+Version: 0.3.0
 
 Publisher: ChowIndustries
 
 Source: https://discordjs.guide
+
+## Release Notes
+
+- Karma Weekly Leaderboard
+  - /leaderboardweekly
+- You can now commend/report users for Etiquette
+  - /etiquette
 
 ## Environment(.env place in root)
 
