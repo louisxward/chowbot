@@ -8,6 +8,7 @@ const {
 } = require("repositories/karmaWeeklyLeaderboard");
 
 const SPACING = "\u00A0\u00A0\u00A0";
+const JOIN = "\n\n";
 
 async function persistKarmaWeeklyLeaderboard() {
   const created = new Date().toISOString();
@@ -82,7 +83,7 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
         `/${SPACING}${currentScore}`
     );
   }
-  return lines.join("\n\n");
+  return lines.join(JOIN);
 }
 
 async function getKarmaLeaderboardFormatted(users) {
@@ -122,7 +123,7 @@ async function leaderboardFormatter(users, map) {
         `${e.value}`
     );
   }
-  return lines.join("\n\n");
+  return lines.join(JOIN);
 }
 
 module.exports = {
