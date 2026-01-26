@@ -66,7 +66,7 @@ async function leaderboardFormatter(leaderboard) {
   if (!leaderboard || leaderboard.size == 0) {
     return "Empty";
   }
-  let result = "";
+  let lines = [];
   let medal = null;
   for (const [key, e] of leaderboard.entries()) {
     medal = null;
@@ -77,9 +77,9 @@ async function leaderboardFormatter(leaderboard) {
     } else if (e.index === 3) {
       medal = `🥉`;
     }
-    result += `${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}\n`;
+    lines.push(`${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}`);
   }
-  return result;
+  return lines.join("\n");
 }
 
 module.exports = {
