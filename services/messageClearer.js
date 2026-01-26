@@ -7,6 +7,7 @@ async function scheduledClearer(client) {
   logger.info("function - scheduledClearer");
   const map = await readFile(filePath);
   for (const [serverId, channelIds] of Object.entries(map)) {
+    //check this should, just be map.entries()
     logger.info(`- serverId: ${serverId}`);
     clearChannels(client, channelIds);
   }

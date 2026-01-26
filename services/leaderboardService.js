@@ -10,7 +10,7 @@ async function logWeekly() {
   const created = new Date().toISOString();
   logger.info(`- date: ${created}`);
   const map = await getKarmaLeaderboardMap();
-  for (const [userId, e] of Object.entries(map)) {
+  for (const [userId, e] of map.entries()) {
     createKarmaWeeklyLeaderboard(created, userId, e.value);
   }
 }
@@ -18,10 +18,11 @@ async function logWeekly() {
 async function getKarmaWeeklyLeaderboard() {
   let lines = [];
   const currentMap = await getKarmaLeaderboardMap();
+  logger.error(`- currentMap: ${currentMap.size}`);
   const prevMap = await getPreviousKarmaWeeklyLeaderboardMap();
-  for (const [userId, currentEntry] of Object.entries(currentMap)) {
+  logger.error(`- prevMap: ${prevMap.size}`);
+  for (const [userId, currentEntry] of currentMap.entries()) {
     logger.error(`- userId: ${userId}`);
-    //lines.push();
 
     // Current
     logger.info("current");
@@ -57,7 +58,7 @@ async function getKarmaWeeklyLeaderboardTest(interaction) {
   const map = await getPreviousKarmaWeeklyLeaderboardMap();
   logger.info(`- map size: ${map.size}`);
   const hydratedMap = new Map();
-  for (const [userId, e] of Object.entries(map)) {
+  for (const [userId, e] of map.entries()) {
     try {
       const username = await getUsername(interaction, userId);
       hydratedMap.set(username, e);
@@ -72,8 +73,9 @@ async function getKarmaWeeklyLeaderboardTest(interaction) {
 //todo - just use an array
 async function getKarmaLeaderboard(interaction) {
   const map = await getKarmaLeaderboardMap();
+  logger.info(`- map size: ${map.size}`);
   const hydratedMap = new Map();
-  for (const [userId, e] of Object.entries(map)) {
+  for (const [userId, e] of map.entries()) {
     try {
       const username = await getUsername(interaction, userId);
       hydratedMap.set(username, e);
@@ -82,6 +84,7 @@ async function getKarmaLeaderboard(interaction) {
     }
   }
   //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1])); - sorted in sql call, not sure if i like it or not
+  logger.info(`- hydratedMap size: ${hydratedMap.size}`);
   return hydratedMap;
 }
 
