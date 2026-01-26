@@ -10,7 +10,6 @@ const {
 const SPACING = "\u00A0\u00A0\u00A0";
 
 async function persistKarmaWeeklyLeaderboard() {
-  logger.info("persistKarmaWeeklyLeaderboard()");
   const created = new Date().toISOString();
   logger.info(`- date: ${created}`);
   const weekId = await createKarmaWeeklyLeaderboardWeek(created);
@@ -24,46 +23,28 @@ async function persistKarmaWeeklyLeaderboard() {
 async function getKarmaWeeklyLeaderboardFormatted(users) {
   let lines = [];
   const currentMap = await getKarmaLeaderboardMap();
-  logger.error(`- currentMap: ${currentMap.size}`);
   const weekId = await getPreviousWeekId();
   logger.info(`- previous weekId: ${weekId}`);
   const prevMap = await getKarmaWeeklyLeaderboardMapByWeek(weekId);
-  logger.error(`- prevMap: ${prevMap.size}`);
   for (const [userId, currentEntry] of currentMap.entries()) {
-    logger.error(`- userId: ${userId}`);
-
     const username = await getUsername(users, userId);
-
     // Current
-    logger.info("current");
     const currentScore = currentEntry.value;
-    logger.error(`- currentScore: ${currentScore}`);
     const currentIndex = currentEntry.index;
-    logger.error(`- currentIndex: ${currentIndex}`);
-
     // Previous
-    logger.info("previous");
     let prevScore = 0;
     let prevIndex = 0;
     const prevEntry = prevMap.get(userId);
     if (prevEntry) {
       prevScore = prevEntry.value;
-      logger.error(`- prevScore: ${prevScore}`);
       prevIndex = prevEntry.index;
-      logger.error(`- prevIndex: ${prevIndex}`);
     }
-
     // Compare
-    logger.info("compare");
     const changeScore = currentScore - prevScore;
-    logger.error(`- changeScore: ${changeScore}`);
-
     let changeIndex = null;
     if (prevEntry) {
       changeIndex = prevIndex - currentIndex;
     }
-    logger.error(`- changeIndex: ${changeIndex}`);
-
     // Medal
     let medal = null;
     if (currentIndex === 1) {
@@ -73,7 +54,6 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
     } else if (currentIndex === 3) {
       medal = `🥉`;
     }
-
     // Streak
     let indexString = null;
     if (changeIndex === null) {
@@ -93,7 +73,6 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
     } else if (changeIndex < -0) {
       indexString = "🔽";
     }
-
     // Concat
     lines.push(
       `${indexString ? indexString : ""}${SPACING}` +
