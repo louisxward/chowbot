@@ -24,8 +24,8 @@ async function getKarmaLeaderboard(interaction) {
   const hydratedMap = new Map();
   for (const [userId, total] of Object.entries(map)) {
     try {
-      const user = await interaction.client.users.fetch(userId);
-      hydratedMap.set(user.displayName, total);
+      const username = await getUsername(interaction, userId);
+      hydratedMap.set(username, total);
     } catch (error) {
       logger.error(`- skipping userId: ${userId}`);
       logger.error(error);
@@ -33,6 +33,18 @@ async function getKarmaLeaderboard(interaction) {
   }
   //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
   return hydratedMap;
+}
+
+async function getUsername(interaction, userId) {
+  if (!userId) throw error;
+  try {
+    const user = await interaction.client.users.fetch(userId);
+    return user.displayName;
+  } catch (error) {
+    logger.error(`- skipping userId: ${userId}`);
+    logger.error(error);
+  }
+  return userId;
 }
 
 module.exports = { logWeekly, getKarmaLeaderboard, getKarmaWeeklyLeaderboard };
