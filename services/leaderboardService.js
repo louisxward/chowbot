@@ -5,6 +5,8 @@ const {
   getPreviousKarmaWeeklyLeaderboardMap
 } = require("repositories/karmaWeeklyLeaderboard");
 
+const SPACING = "\u00A0\u00A0\u00A0";
+
 async function logWeekly() {
   logger.info("logWeekly()");
   const created = new Date().toISOString();
@@ -52,9 +54,18 @@ async function getKarmaWeeklyLeaderboard(users) {
     const changeIndex = prevIndex - currentIndex;
     logger.error(`- changeIndex: ${changeIndex}`);
 
-    // Format
-    let indexString = null;
+    // Medal
+    let medal = null;
+    if (currentIndex === 1) {
+      medal = `🥇`;
+    } else if (currentIndex === 2) {
+      medal = `🥈`;
+    } else if (currentIndex === 3) {
+      medal = `🥉`;
+    }
 
+    // Streak
+    let indexString = null;
     if (changeIndex > 2) {
       indexString = "🔥";
     } else if (changeIndex > 1) {
@@ -73,7 +84,7 @@ async function getKarmaWeeklyLeaderboard(users) {
     //🔼⏫🔽⏬
 
     lines.push(
-      `${indexString ? indexString : ""} ${currentIndex}. ${currentIndex < 4 ? "**" + username + "**" : username}: ${changeScore > 0 ? "+" + changeScore : changeScore} / ${currentScore}`
+      `${indexString ? indexString : ""}${SPACING}${medal ? medal : currentIndex + "."}${SPACING}${currentIndex < 4 ? "**" + username + "**" : username}:${SPACING}${changeScore > 0 ? "+" + changeScore : changeScore}${SPACING}/${SPACING}${currentScore}`
     );
   }
   return lines.join("\n\n");
@@ -129,9 +140,8 @@ async function leaderboardFormatter(leaderboard) {
     return "Empty";
   }
   let lines = [];
-  let medal = null;
   for (const [key, e] of leaderboard.entries()) {
-    medal = null;
+    let medal = null;
     if (e.index === 1) {
       medal = `🥇`;
     } else if (e.index === 2) {
@@ -139,7 +149,9 @@ async function leaderboardFormatter(leaderboard) {
     } else if (e.index === 3) {
       medal = `🥉`;
     }
-    lines.push(`${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}`);
+    lines.push(
+      `${medal ? medal : e.index.toString() + "."}${SPACING}${e.index < 4 ? "**" + key + "**" : key}:${SPACING}${e.value}`
+    );
   }
   return lines.join("\n\n");
 }
