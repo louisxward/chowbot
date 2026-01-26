@@ -62,4 +62,30 @@ async function getUsername(interaction, userId) {
   return userId;
 }
 
-module.exports = { logWeekly, getKarmaLeaderboard, getKarmaWeeklyLeaderboard, getKarmaWeeklyLeaderboardTest };
+async function leaderboardFormatter(leaderboard) {
+  if (!leaderboard || leaderboard.size == 0) {
+    return "Empty";
+  }
+  let result = "";
+  let medal = null;
+  for (const [key, e] of leaderboard.entries()) {
+    medal = null;
+    if (e.index === 1) {
+      medal = `🥇`;
+    } else if (e.index === 2) {
+      medal = `🥈`;
+    } else if (e.index === 3) {
+      medal = `🥉`;
+    }
+    result += `${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}\n`;
+  }
+  return result;
+}
+
+module.exports = {
+  logWeekly,
+  getKarmaLeaderboard,
+  getKarmaWeeklyLeaderboard,
+  getKarmaWeeklyLeaderboardTest,
+  leaderboardFormatter
+};
