@@ -96,7 +96,11 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
     //🔼⏫🔽⏬
 
     lines.push(
-      `${indexString ? indexString : ""}${SPACING}${medal ? medal : currentIndex + "."}${SPACING}${currentIndex < 4 ? "**" + username + "**" : username}:${SPACING}${changeScore > 0 ? "+" + changeScore : changeScore}${SPACING}/${SPACING}${currentScore}`
+      `${indexString ? indexString : ""}${SPACING}` +
+        `${medal ? medal : currentIndex + "."}${SPACING}` +
+        `${currentIndex < 4 ? "**" + username + "**" : username}:${SPACING}` +
+        `${changeScore > 0 ? "+" + changeScore : changeScore}${SPACING}` +
+        `/${SPACING}${currentScore}`
     );
   }
   return lines.join("\n\n");
@@ -134,7 +138,9 @@ async function leaderboardFormatter(users, map) {
       medal = `🥉`;
     }
     lines.push(
-      `${medal ? medal : e.index.toString() + "."}${SPACING}${e.index < 4 ? "**" + username + "**" : username}:${SPACING}${e.value}`
+      `${medal ? medal : e.index.toString() + "."}${SPACING}` +
+        `${e.index < 4 ? "**" + username + "**" : username}:${SPACING}` +
+        `${e.value}`
     );
   }
   return lines.join("\n\n");
@@ -143,6 +149,5 @@ async function leaderboardFormatter(users, map) {
 module.exports = {
   logWeekly,
   getKarmaLeaderboardFormatted,
-  getKarmaWeeklyLeaderboardFormatted,
-  leaderboardFormatter
+  getKarmaWeeklyLeaderboardFormatted
 };
