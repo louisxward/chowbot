@@ -11,19 +11,17 @@ module.exports = {
     if (!leaderboard || leaderboard.size == 0) {
       replyMessage = "Empty";
     } else {
-      let pos = 0;
       let medal = null;
-      for (const [key, value] of leaderboard.entries()) {
-        pos += 1;
+      for (const [key, e] of leaderboard.entries()) {
         medal = null;
-        if (pos === 1) {
+        if (e.index === 1) {
           medal = `🥇`;
-        } else if (pos === 2) {
+        } else if (e.index === 2) {
           medal = `🥈`;
-        } else if (pos === 3) {
+        } else if (e.index === 3) {
           medal = `🥉`;
         }
-        replyMessage += `${medal ? medal : pos.toString() + ". "} ${pos < 4 ? "**" + key + "**" : key}: ${value}\n`;
+        replyMessage += `${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}\n`;
       }
     }
     const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(replyMessage);
