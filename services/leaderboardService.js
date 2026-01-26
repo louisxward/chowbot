@@ -28,7 +28,6 @@ async function getKarmaLeaderboard(interaction) {
       hydratedMap.set(username, total);
     } catch (error) {
       logger.error(`- skipping userId: ${userId}`);
-      logger.error(error);
     }
   }
   //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
@@ -41,8 +40,7 @@ async function getUsername(interaction, userId) {
     const user = await interaction.client.users.fetch(userId);
     return user.displayName;
   } catch (error) {
-    logger.error(`- skipping userId: ${userId}`);
-    logger.error(error);
+    logger.error(`- cannot find userId: ${userId}`);
   }
   return userId;
 }
