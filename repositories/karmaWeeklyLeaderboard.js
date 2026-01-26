@@ -6,7 +6,7 @@ async function createKarmaWeeklyLeaderboardWeek(created) {
   const db = await connect();
   const result = await db.run("INSERT INTO KarmaWeeklyLeaderboardWeek (created) VALUES (?)", [created]);
   db.close();
-  return result.lastId;
+  return result.lastID;
 }
 
 async function createKarmaWeeklyLeaderboardUser(weekId, userId, value) {
@@ -23,14 +23,14 @@ async function createKarmaWeeklyLeaderboardUser(weekId, userId, value) {
 async function getPreviousWeekId() {
   logger.info("repository - getPreviousWeekId");
   const db = await connect();
-  const record = await db.get("SELECT MAX(id) as id FROM KarmaWeeklyLeaderboard");
+  const record = await db.get("SELECT MAX(id) as id FROM KarmaWeeklyLeaderboardWeek");
   if (!record) throw error;
   db.close();
   return record.id;
 }
 
 async function getKarmaWeeklyLeaderboardMapByWeek(weekId) {
-  logger.info("repository - getPreviousKarmaWeeklyLeaderboardMap");
+  logger.info("repository - getKarmaWeeklyLeaderboardMapByWeek");
   const db = await connect();
   const result = new Map();
   const records = await db.all(

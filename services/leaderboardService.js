@@ -1,8 +1,10 @@
 const logger = require("logger");
 const { getKarmaLeaderboardMap } = require("repositories/karma");
 const {
-  createKarmaWeeklyLeaderboard,
-  getPreviousKarmaWeeklyLeaderboardMap
+  createKarmaWeeklyLeaderboardWeek,
+  createKarmaWeeklyLeaderboardUser,
+  getPreviousWeekId,
+  getKarmaWeeklyLeaderboardMapByWeek
 } = require("repositories/karmaWeeklyLeaderboard");
 
 const SPACING = "\u00A0\u00A0\u00A0";
@@ -11,9 +13,11 @@ async function logWeekly() {
   logger.info("logWeekly()");
   const created = new Date().toISOString();
   logger.info(`- date: ${created}`);
+  const weekId = await createKarmaWeeklyLeaderboardWeek(created);
+  logger.info(`- weekId: ${weekId}`);
   const map = await getKarmaLeaderboardMap();
   for (const [userId, e] of map.entries()) {
-    createKarmaWeeklyLeaderboard(created, userId, e.value);
+    await createKarmaWeeklyLeaderboardUser(weekId, userId, e.value);
   }
 }
 
@@ -21,7 +25,9 @@ async function getKarmaWeeklyLeaderboard(users) {
   let lines = [];
   const currentMap = await getKarmaLeaderboardMap();
   logger.error(`- currentMap: ${currentMap.size}`);
-  const prevMap = await getPreviousKarmaWeeklyLeaderboardMap();
+  const weekId = await getPreviousWeekId();
+  logger.info(`- previous weekId: ${weekId}`);
+  const prevMap = await getKarmaWeeklyLeaderboardMapByWeek(weekId);
   logger.error(`- prevMap: ${prevMap.size}`);
   for (const [userId, currentEntry] of currentMap.entries()) {
     logger.error(`- userId: ${userId}`);

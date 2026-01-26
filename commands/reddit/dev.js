@@ -16,7 +16,7 @@ module.exports = {
   async execute(interaction) {
     logger.info("DEV COMMAND");
     // logger.info("LOG WEEKLY");
-    //await logWeekly();
+    // await logWeekly();
     // logger.info("LEADERBOARD TEST");
     // await interaction.deferReply({ ephemeral: true });
     // const leaderboard = await getKarmaWeeklyLeaderboardTest(interaction);
