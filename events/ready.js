@@ -10,36 +10,46 @@ module.exports = {
   name: Events.ClientReady,
   once: true,
   async execute(client) {
+    // Init
     logger.info(`${client.user.tag} INITIALISED`);
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
-    //todo - check what servers the bot has access too, incase someone invited or delete whilst down
 
     // Scheduled Timers
-    // Daily Clearer - 05:00 UTC
+    //// Daily Clearer - 05:00 UTC
     cron.schedule(
-      //"0 5 * * *",
-      "9 19 * * 0",
+      "0 5 * * *",
       async () => {
         try {
-          logger.info("Starting scheduled message clearance...");
+          logger.info("scheduled - scheduledClearer");
           await scheduledClearer(client);
         } catch (error) {
-          logger.error("Error in scheduledClearer:", error);
+          logger.error(error);
         }
       },
       { timezone: "UTC" }
     );
-
-    // Weekly Leaderboard - Sunday 19:00 UTC
+    //// Send Weekly Leaderboard - Sunday 21:00 UTC
     cron.schedule(
-      //"0 19 * * 0",
-      "5 19 * * 0",
+      "0 21 * * 0",
       async () => {
         try {
-          logger.info("Persisting weekly karma...");
+          logger.info("scheduled - sendKarmaWeeklyLeaderboard");
+          await sendKarmaWeeklyLeaderboard();
+        } catch (error) {
+          logger.error(error);
+        }
+      },
+      { timezone: "UTC" }
+    );
+    //// Persist Weekly Leaderboard - Sunday 23:59 UTC
+    cron.schedule(
+      "59 23 * * 0",
+      async () => {
+        try {
+          logger.info("scheduled - persistKarmaWeeklyLeaderboard");
           await persistKarmaWeeklyLeaderboard();
         } catch (error) {
-          logger.error("Error in persistKarmaWeeklyLeaderboard:", error);
+          logger.error(error);
         }
       },
       { timezone: "UTC" }

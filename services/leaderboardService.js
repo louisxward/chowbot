@@ -11,6 +11,7 @@ const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
 
 async function persistKarmaWeeklyLeaderboard() {
+  logger.info("function - persistKarmaWeeklyLeaderboard");
   const created = new Date().toISOString();
   logger.info(`- date: ${created}`);
   const weekId = await createKarmaWeeklyLeaderboardWeek(created);
@@ -126,8 +127,11 @@ async function leaderboardFormatter(users, map) {
   return lines.join(JOIN);
 }
 
+async function sendKarmaWeeklyLeaderboard() {}
+
 module.exports = {
   persistKarmaWeeklyLeaderboard,
   getKarmaLeaderboardFormatted,
-  getKarmaWeeklyLeaderboardFormatted
+  getKarmaWeeklyLeaderboardFormatted,
+  sendKarmaWeeklyLeaderboard
 };
