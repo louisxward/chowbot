@@ -14,7 +14,7 @@ module.exports = {
     logger.info(`${client.user.tag} INITIALISED`);
     await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
 
-    // Scheduled Timers
+    // Scheduled Timers - ToDo - Move this to somewhere else
     //// Daily Clearer - 05:00 UTC
     cron.schedule(
       "0 5 * * *",
