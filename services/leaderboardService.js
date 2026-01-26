@@ -21,7 +21,7 @@ async function logWeekly() {
   }
 }
 
-async function getKarmaWeeklyLeaderboard(users) {
+async function getKarmaWeeklyLeaderboardFormatted(users) {
   let lines = [];
   const currentMap = await getKarmaLeaderboardMap();
   logger.error(`- currentMap: ${currentMap.size}`);
@@ -102,38 +102,9 @@ async function getKarmaWeeklyLeaderboard(users) {
   return lines.join("\n\n");
 }
 
-async function getKarmaWeeklyLeaderboardTest(users) {
-  const map = await getPreviousKarmaWeeklyLeaderboardMap();
-  logger.info(`- map size: ${map.size}`);
-  const hydratedMap = new Map();
-  for (const [userId, e] of map.entries()) {
-    try {
-      const username = await getUsername(users, userId);
-      hydratedMap.set(username, e);
-    } catch (error) {
-      logger.error(`- skipping userId: ${userId}`);
-    }
-  }
-  //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1])); - sorted in sql call, not sure if i like it or not
-  return hydratedMap;
-}
-
-//todo - just use an array
-async function getKarmaLeaderboard(users) {
+async function getKarmaLeaderboardFormatted(users) {
   const map = await getKarmaLeaderboardMap();
-  logger.info(`- map size: ${map.size}`);
-  const hydratedMap = new Map();
-  for (const [userId, e] of map.entries()) {
-    try {
-      const username = await getUsername(users, userId);
-      hydratedMap.set(username, e);
-    } catch (error) {
-      logger.error(`- skipping userId: ${userId}`);
-    }
-  }
-  //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1])); - sorted in sql call, not sure if i like it or not
-  logger.info(`- hydratedMap size: ${hydratedMap.size}`);
-  return hydratedMap;
+  return await leaderboardFormatter(users, map);
 }
 
 async function getUsername(users, userId) {
@@ -147,12 +118,13 @@ async function getUsername(users, userId) {
   return userId;
 }
 
-async function leaderboardFormatter(leaderboard) {
-  if (!leaderboard || leaderboard.size == 0) {
+async function leaderboardFormatter(users, map) {
+  if (!map || map.size == 0) {
     return "Empty";
   }
   let lines = [];
-  for (const [key, e] of leaderboard.entries()) {
+  for (const [userId, e] of map.entries()) {
+    const username = await getUsername(users, userId);
     let medal = null;
     if (e.index === 1) {
       medal = `🥇`;
@@ -162,7 +134,7 @@ async function leaderboardFormatter(leaderboard) {
       medal = `🥉`;
     }
     lines.push(
-      `${medal ? medal : e.index.toString() + "."}${SPACING}${e.index < 4 ? "**" + key + "**" : key}:${SPACING}${e.value}`
+      `${medal ? medal : e.index.toString() + "."}${SPACING}${e.index < 4 ? "**" + username + "**" : username}:${SPACING}${e.value}`
     );
   }
   return lines.join("\n\n");
@@ -170,8 +142,7 @@ async function leaderboardFormatter(leaderboard) {
 
 module.exports = {
   logWeekly,
-  getKarmaLeaderboard,
-  getKarmaWeeklyLeaderboard,
-  getKarmaWeeklyLeaderboardTest,
+  getKarmaLeaderboardFormatted,
+  getKarmaWeeklyLeaderboardFormatted,
   leaderboardFormatter
 };
