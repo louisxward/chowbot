@@ -12,14 +12,14 @@ async function createKarmaWeeklyLeaderboard(created, userId, value) {
   db.close();
 }
 
-async function getkarmaWeeklyLeaderboardForMap() {
-  logger.info("repository - getkarmaWeeklyLeaderboardForMap");
+async function getPreviousKarmaWeeklyLeaderboardMap() {
+  logger.info("repository - getPreviousKarmaWeeklyLeaderboardMap");
   const db = await connect();
   const result = new Map();
   const records = await db.all(
     "SELECT CAST(userId AS TEXT) AS userId, value AS total FROM KarmaWeeklyLeaderboard " +
-      "GROUP BY userId ORDER BY total DESC"
-  );
+      "GROUP BY userId ORDER BY created DESC"
+  ); // gets the most recent leaderboard
   records.forEach((e) => {
     result[e.userId] = e.total;
   });
@@ -29,5 +29,5 @@ async function getkarmaWeeklyLeaderboardForMap() {
 
 module.exports = {
   createKarmaWeeklyLeaderboard,
-  getkarmaWeeklyLeaderboardForMap
+  getPreviousKarmaWeeklyLeaderboardMap
 };

@@ -1,17 +1,21 @@
 const logger = require("logger");
+const { getKarmaLeaderboardMap } = require("repositories/karma");
+const {
+  createKarmaWeeklyLeaderboard,
+  getPreviousKarmaWeeklyLeaderboardMap
+} = require("repositories/karmaWeeklyLeaderboard");
 
-async function test() {
-  logger.info("repository - getKarmaLeaderboardMap");
-  const db = await connect();
-  const result = new Map();
-  const records = await db.all(
-    "SELECT CAST(messageUserId AS TEXT) AS userId, SUM(value) AS total FROM Karma GROUP BY messageUserId"
-  );
-  records.forEach((e) => {
-    result[e.userId] = e.total;
-  });
-  db.close();
-  return result;
+async function logWeekly() {
+  const created = new Date().toISOString();
+  const map = getKarmaLeaderboardMap();
+  for (const [userId, total] of Object.entries(map)) {
+    createKarmaWeeklyLeaderboard(created, userId, total);
+  }
 }
 
-module.exports = { test };
+async function getKarmaWeeklyLeaderboard() {
+  const currentMap = getKarmaLeaderboardMap();
+  const prevMap = getPreviousKarmaWeeklyLeaderboardMap();
+}
+
+module.exports = { logWeekly };
