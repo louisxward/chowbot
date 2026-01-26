@@ -20,8 +20,10 @@ async function getPreviousKarmaWeeklyLeaderboardMap() {
     "SELECT CAST(userId AS TEXT) AS userId, value AS total FROM KarmaWeeklyLeaderboard " +
       "GROUP BY userId ORDER BY created DESC, total DESC"
   ); // gets the most recent leaderboard
+  let index = 0;
   records.forEach((e) => {
-    result[e.userId] = e.total;
+    index += 1;
+    result[e.userId] = { index: index, value: e.total };
   });
   db.close();
   return result;
