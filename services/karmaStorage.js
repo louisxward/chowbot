@@ -1,5 +1,7 @@
 const logger = require("logger");
-const { createKarma, updateKarma, getKarmaTotalByUserId, getKarmaLeaderboardMap } = require("repositories/karma");
+const { createKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+
+// todo rename this to karmaService
 
 //todo needs to become .env
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
@@ -18,20 +20,13 @@ async function karmaCalculator(reaction, user, addReaction) {
     }
   }
   const authorId = reaction.message.author.id;
-  if (user.id === authorId) return;
+  if (user.id === authorId) return; //todo - remove reaction aswell?
   let karmaValue = 0;
   if (addReaction) {
     const isUpvote = emojiId === EMOJI_UPVOTE_ID;
     karmaValue = isUpvote === addReaction ? 1 : -1;
   }
-  await updateUserKarma(
-    reaction.message.guildId,
-    reaction.message.id,
-    reaction.message.author.id,
-    user.id,
-    emojiId,
-    karmaValue
-  );
+  await updateUserKarma(reaction.message.guildId, reaction.message.id, authorId, user.id, emojiId, karmaValue);
 }
 
 async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
@@ -45,24 +40,17 @@ async function updateUserKarma(serverId, messageId, messageUserId, reactionUserI
   }
 }
 
+async function createUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
+  logger.info("function - createUserKarma");
+  logger.info(`- serverId: ${serverId}`);
+  logger.info(`- messageId: ${messageId}`);
+  logger.info(`- reactionUserId: ${reactionUserId}`);
+  logger.info(`- value: ${value}`);
+  await createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value);
+}
+
 async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
-//todo - just use an array
-async function getKarmaLeaderboard(interaction) {
-  const map = await getKarmaLeaderboardMap();
-  const hydratedMap = new Map();
-  for (const [userId, total] of Object.entries(map)) {
-    try {
-      const user = await interaction.client.users.fetch(userId);
-      hydratedMap.set(user.displayName, total);
-    } catch (error) {
-      logger.error(`- skipping userId: ${userId}`);
-      logger.error(error);
-    }
-  }
-  return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
-}
-
-module.exports = { karmaCalculator, updateUserKarma, getUserKarma, getKarmaLeaderboard };
+module.exports = { karmaCalculator, updateUserKarma, getUserKarma, createUserKarma };

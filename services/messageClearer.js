@@ -6,7 +6,11 @@ const filePath = "./data/messageClearerConfig.json";
 async function scheduledClearer(client) {
   logger.info("function - scheduledClearer");
   const map = await readFile(filePath);
+  if (Object.keys(map).length === 0) {
+    return;
+  }
   for (const [serverId, channelIds] of Object.entries(map)) {
+    //check this should, just be map.entries()
     logger.info(`- serverId: ${serverId}`);
     clearChannels(client, channelIds);
   }
@@ -24,7 +28,7 @@ async function clearChannels(client, channelIds) {
   for (const channelId of channelIds) {
     logger.info(`- channelId: ${channelId}`);
     if (null == channelId) continue;
-    const channel = client.channels.cache.get(channelId);
+    const channel = await client.channels.cache.get(channelId);
     if (!channel) {
       logger.error(`- skipping channelId: ${channelId}`);
       continue;

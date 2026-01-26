@@ -2,6 +2,8 @@ const { SlashCommandBuilder } = require("discord.js");
 const logger = require("logger");
 const { getUserKarma } = require("services/karmaStorage");
 
+// todo tidy this, rename this
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("checkkarma")

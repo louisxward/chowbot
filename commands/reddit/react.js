@@ -6,7 +6,7 @@ const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("react")
-    .setDescription("React to a message in this channel")
+    .setDescription("Manually react to a message in this channel")
     .addStringOption((option) => option.setName("message_id").setDescription("id of the message").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
   async execute(interaction) {

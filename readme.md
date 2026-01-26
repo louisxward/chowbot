@@ -1,12 +1,21 @@
 # ChowBot
 
-Version: 0.2.0
+Version: 0.3.0
 
 Publisher: ChowIndustries
 
 Source: https://discordjs.guide
 
-## Environment(.env place in root)
+## Release Notes
+
+- Karma Weekly Leaderboard
+  - /leaderboardweekly
+- You can now commend/report users for Etiquette
+  - /etiquette
+
+## Development
+
+### Environment(.env place in root)
 
 ```
 TOKEN=<BOT_API_KEY>
@@ -14,7 +23,7 @@ CLIENT_ID=<BOT_USER_ID>
 GUILD_ID=<SERVER_ID>
 ```
 
-## Commands
+### Commands
 
 `npm run dev` - dev command restarts on save
 

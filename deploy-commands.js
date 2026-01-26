@@ -29,15 +29,14 @@ logger.info("deploy-commands - push local commands");
 const rest = new REST().setToken(process.env.TOKEN);
 (async () => {
   try {
-    logger.info(`- Started refreshing ${commands.length} application (/) commands.`);
+    //logger.info(`- Started refreshing ${commands.length} application (/) commands.`);
     // Push Commands
     // - Specific Server
-    const data = await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), {
-      body: commands
-    });
+    // const data = await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), {
+    //   body: commands
+    // });
     // - All Servers
     //const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
-
     // Delete Commmands
     // - Specific Server
     // await rest
@@ -49,7 +48,7 @@ const rest = new REST().setToken(process.env.TOKEN);
     //   .put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] })
     //   .then(() => console.log("Successfully deleted all application commands."))
     //   .catch(console.error);
-    logger.info(`- Successfully reloaded ${data.length} application (/) commands.`);
+    //logger.info(`- Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {
     logger.error(error);
   }

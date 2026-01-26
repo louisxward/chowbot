@@ -15,6 +15,7 @@ async function readFile(filePath) {
   }
   return data;
 }
+
 async function writeFile(filePath, data) {
   logger.info("function - writeFile");
   logger.info(`- filePath: ${filePath}`);
