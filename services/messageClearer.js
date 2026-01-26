@@ -25,7 +25,7 @@ async function clearChannels(client, channelIds) {
   for (const channelId of channelIds) {
     logger.info(`- channelId: ${channelId}`);
     if (null == channelId) continue;
-    const channel = client.channels.cache.get(channelId);
+    const channel = await client.channels.cache.get(channelId);
     if (!channel) {
       logger.error(`- skipping channelId: ${channelId}`);
       continue;

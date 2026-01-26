@@ -6,6 +6,8 @@ const {
   getPreviousWeekId,
   getKarmaWeeklyLeaderboardMapByWeek
 } = require("repositories/karmaWeeklyLeaderboard");
+const { EmbedBuilder } = require("discord.js");
+const { readFile } = require("services/storageHelper");
 
 const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
@@ -23,11 +25,14 @@ async function persistKarmaWeeklyLeaderboard() {
 }
 
 async function getKarmaWeeklyLeaderboardFormatted(users) {
-  let lines = [];
   const currentMap = await getKarmaLeaderboardMap();
+  if (currentMap.size === 0) {
+    return "Empty";
+  }
   const weekId = await getPreviousWeekId();
   logger.info(`- previous weekId: ${weekId}`);
   const prevMap = await getKarmaWeeklyLeaderboardMapByWeek(weekId);
+  let lines = [];
   for (const [userId, currentEntry] of currentMap.entries()) {
     const username = await getUsername(users, userId);
     // Current
@@ -127,7 +132,37 @@ async function leaderboardFormatter(users, map) {
   return lines.join(JOIN);
 }
 
-async function sendKarmaWeeklyLeaderboard() {}
+async function sendKarmaWeeklyLeaderboard(client) {
+  logger.info("function - sendKarmaWeeklyLeaderboard");
+  const filePath = "./data/leaderboardWeeklyChannelConfig.json";
+  const map = await readFile(filePath);
+
+  if (map === null) {
+    return;
+  }
+
+  const content = await getKarmaWeeklyLeaderboardFormatted(client.users);
+  const embed = new EmbedBuilder().setTitle("Karma Weekly Leaderboard").setDescription(content);
+
+  for (const [serverId, channelIds] of Object.entries(map)) {
+    logger.info(`- serverId: ${serverId}`);
+    logger.info(`- channelIds Length: ${channelIds.length}`);
+    for (const channelId of channelIds) {
+      logger.info(`- channelId: ${channelId}`);
+      if (null == channelId) continue;
+      const channel = await client.channels.cache.get(channelId);
+      if (!channel) {
+        logger.error(`- skipping channelId: ${channelId}`);
+        continue;
+      }
+      try {
+        await channel.send({ embeds: [embed] });
+      } catch (error) {
+        logger.error(error);
+      }
+    }
+  }
+}
 
 module.exports = {
   persistKarmaWeeklyLeaderboard,
