@@ -33,8 +33,8 @@ async function getKarmaWeeklyLeaderboard() {
 
     // Previous
     logger.info("previous");
-    let prevScore = null;
-    let prevIndex = null;
+    let prevScore = 0;
+    let prevIndex = 0;
     const prevEntry = prevMap.get(userId);
     if (prevEntry) {
       prevScore = prevEntry.value;
@@ -46,10 +46,26 @@ async function getKarmaWeeklyLeaderboard() {
     // Compare
     logger.info("compare");
     const changeScore = currentScore - prevScore;
+    logger.error(`- changeScore: ${changeScore}`);
     const changeIndex = currentIndex - prevIndex;
+    logger.error(`- changeIndex: ${changeIndex}`);
 
     // Format
-    lines.push(`changeScore / ${currentScore}`);
+    let indexString = null;
+
+    if (changeIndex > 2) {
+      indexString = "🔥";
+    } else if (changeIndex > 1) {
+      indexString = "^^";
+    } else if (changeIndex > 0) {
+      indexString = "^";
+    } else if (changeIndex === 0) {
+      indexString = "\\-";
+    }
+
+    lines.push(
+      `${indexString ? indexString : ""} \\# ${prevIndex} \\# ${currentIndex}. \\# ${userId}: \\# ${changeScore} \\# /  \\# ${currentScore}`
+    );
   }
   return lines.join("\n");
 }
