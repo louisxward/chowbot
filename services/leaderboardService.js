@@ -15,7 +15,7 @@ async function logWeekly() {
   }
 }
 
-async function getKarmaWeeklyLeaderboard() {
+async function getKarmaWeeklyLeaderboard(users) {
   let lines = [];
   const currentMap = await getKarmaLeaderboardMap();
   logger.error(`- currentMap: ${currentMap.size}`);
@@ -23,6 +23,8 @@ async function getKarmaWeeklyLeaderboard() {
   logger.error(`- prevMap: ${prevMap.size}`);
   for (const [userId, currentEntry] of currentMap.entries()) {
     logger.error(`- userId: ${userId}`);
+
+    const username = await getUsername(users, userId);
 
     // Current
     logger.info("current");
@@ -56,31 +58,34 @@ async function getKarmaWeeklyLeaderboard() {
     if (changeIndex > 2) {
       indexString = "🔥";
     } else if (changeIndex > 1) {
-      indexString = "^^";
+      indexString = "⏫";
     } else if (changeIndex > 0) {
-      indexString = "^";
+      indexString = "🔼";
     } else if (changeIndex === 0) {
-      indexString = "\\-";
+      indexString = "↔️";
+    } else if (changeIndex < -2) {
+      indexString = "💩";
     } else if (changeIndex < -1) {
-      indexString = "vv";
+      indexString = "⏬";
     } else if (changeIndex < -0) {
-      indexString = "v";
+      indexString = "🔽";
     }
+    //🔼⏫🔽⏬
 
     lines.push(
-      `${indexString ? indexString : ""} \\# ${prevIndex} \\# ${currentIndex}. \\# ${userId}: \\# ${changeScore} \\# /  \\# ${currentScore}`
+      `${indexString ? indexString : ""} ${currentIndex}. ${username}: ${changeScore > 0 ? "+" + changeScore : changeScore} / ${currentScore}`
     );
   }
   return lines.join("\n");
 }
 
-async function getKarmaWeeklyLeaderboardTest(interaction) {
+async function getKarmaWeeklyLeaderboardTest(users) {
   const map = await getPreviousKarmaWeeklyLeaderboardMap();
   logger.info(`- map size: ${map.size}`);
   const hydratedMap = new Map();
   for (const [userId, e] of map.entries()) {
     try {
-      const username = await getUsername(interaction, userId);
+      const username = await getUsername(users, userId);
       hydratedMap.set(username, e);
     } catch (error) {
       logger.error(`- skipping userId: ${userId}`);
@@ -91,13 +96,13 @@ async function getKarmaWeeklyLeaderboardTest(interaction) {
 }
 
 //todo - just use an array
-async function getKarmaLeaderboard(interaction) {
+async function getKarmaLeaderboard(users) {
   const map = await getKarmaLeaderboardMap();
   logger.info(`- map size: ${map.size}`);
   const hydratedMap = new Map();
   for (const [userId, e] of map.entries()) {
     try {
-      const username = await getUsername(interaction, userId);
+      const username = await getUsername(users, userId);
       hydratedMap.set(username, e);
     } catch (error) {
       logger.error(`- skipping userId: ${userId}`);
@@ -108,10 +113,10 @@ async function getKarmaLeaderboard(interaction) {
   return hydratedMap;
 }
 
-async function getUsername(interaction, userId) {
+async function getUsername(users, userId) {
   if (!userId) throw error;
   try {
-    const user = await interaction.client.users.fetch(userId);
+    const user = await users.fetch(userId);
     return user.displayName;
   } catch (error) {
     logger.error(`- cannot find userId: ${userId}`);

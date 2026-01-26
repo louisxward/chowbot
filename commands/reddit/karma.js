@@ -5,7 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder().setName("karma").setDescription("Karma leaderboard"),
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
-    const leaderboard = await getKarmaLeaderboard(interaction);
+    const leaderboard = await getKarmaLeaderboard(interaction.client.users);
     let content = await leaderboardFormatter(leaderboard);
     const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(content);
     await interaction.editReply({

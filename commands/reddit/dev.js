@@ -27,7 +27,7 @@ module.exports = {
     // });
     logger.info("LEADERBOARD");
     await interaction.deferReply({ ephemeral: true });
-    const content = await getKarmaWeeklyLeaderboard();
+    const content = await getKarmaWeeklyLeaderboard(interaction.client.users);
     const embed = new EmbedBuilder().setTitle("Karma Weekly Leaderboard").setDescription(content);
     await interaction.editReply({
       embeds: [embed]
