@@ -4,7 +4,7 @@ const cron = require("node-cron");
 
 const { scheduledClearer } = require("services/messageClearer");
 
-const { persistKarmaWeeklyLeaderboard } = require("services/leaderboardService");
+const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 
 module.exports = {
   name: Events.ClientReady,
@@ -17,7 +17,7 @@ module.exports = {
     // Scheduled Timers - ToDo - Move this to somewhere else
     //// Daily Clearer - 05:00 UTC
     cron.schedule(
-      "* * * * *",
+      "0 5 * * *",
       async () => {
         try {
           logger.info("scheduled - scheduledClearer");
@@ -34,7 +34,7 @@ module.exports = {
       async () => {
         try {
           logger.info("scheduled - sendKarmaWeeklyLeaderboard");
-          await sendKarmaWeeklyLeaderboard();
+          await sendKarmaWeeklyLeaderboard(client);
         } catch (error) {
           logger.error(error);
         }
