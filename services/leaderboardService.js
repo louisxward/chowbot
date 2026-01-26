@@ -9,8 +9,8 @@ const {
 
 const SPACING = "\u00A0\u00A0\u00A0";
 
-async function logWeekly() {
-  logger.info("logWeekly()");
+async function persistKarmaWeeklyLeaderboard() {
+  logger.info("persistKarmaWeeklyLeaderboard()");
   const created = new Date().toISOString();
   logger.info(`- date: ${created}`);
   const weekId = await createKarmaWeeklyLeaderboardWeek(created);
@@ -147,7 +147,7 @@ async function leaderboardFormatter(users, map) {
 }
 
 module.exports = {
-  logWeekly,
+  persistKarmaWeeklyLeaderboard,
   getKarmaLeaderboardFormatted,
   getKarmaWeeklyLeaderboardFormatted
 };

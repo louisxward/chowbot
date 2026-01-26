@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require("discord.js");
 const logger = require("logger");
 
-const { logWeekly, getKarmaWeeklyLeaderboardFormatted } = require("services/leaderboardService");
+const { persistKarmaWeeklyLeaderboard, getKarmaWeeklyLeaderboardFormatted } = require("services/leaderboardService");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -11,7 +11,7 @@ module.exports = {
   async execute(interaction) {
     logger.info("DEV COMMAND");
     // logger.info("LOG WEEKLY");
-    // await logWeekly();
+    // await persistKarmaWeeklyLeaderboard();
     logger.info("LEADERBOARD");
     await interaction.deferReply({ ephemeral: true });
     const content = await getKarmaWeeklyLeaderboardFormatted(interaction.client.users);
