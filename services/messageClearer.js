@@ -6,6 +6,9 @@ const filePath = "./data/messageClearerConfig.json";
 async function scheduledClearer(client) {
   logger.info("function - scheduledClearer");
   const map = await readFile(filePath);
+  if (Object.keys(map).length === 0) {
+    return;
+  }
   for (const [serverId, channelIds] of Object.entries(map)) {
     //check this should, just be map.entries()
     logger.info(`- serverId: ${serverId}`);
