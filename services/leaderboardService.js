@@ -57,7 +57,11 @@ async function getKarmaWeeklyLeaderboard(users) {
     logger.info("compare");
     const changeScore = currentScore - prevScore;
     logger.error(`- changeScore: ${changeScore}`);
-    const changeIndex = prevIndex - currentIndex;
+
+    let changeIndex = null;
+    if (prevEntry) {
+      changeIndex = prevIndex - currentIndex;
+    }
     logger.error(`- changeIndex: ${changeIndex}`);
 
     // Medal
@@ -72,7 +76,9 @@ async function getKarmaWeeklyLeaderboard(users) {
 
     // Streak
     let indexString = null;
-    if (changeIndex > 2) {
+    if (!changeIndex) {
+      indexString = "🐣"; // if user is new
+    } else if (changeIndex > 2) {
       indexString = "🔥";
     } else if (changeIndex > 1) {
       indexString = "⏫";
