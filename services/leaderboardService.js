@@ -85,7 +85,9 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
       `${indexString ? indexString : ""}${SPACING}` +
         `${medal ? medal : currentIndex + "."}${SPACING}` +
         `${currentIndex < 4 ? "**" + username + "**" : username}:${SPACING}` +
+        `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
         `${changeScore > 0 ? "+" + changeScore : changeScore}${SPACING}` +
+        `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
         `/${SPACING}${currentScore}`
     );
   }
