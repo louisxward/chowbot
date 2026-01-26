@@ -147,7 +147,6 @@ async function sendKarmaWeeklyLeaderboard(client) {
 
   for (const [serverId, channelIds] of Object.entries(map)) {
     logger.info(`- serverId: ${serverId}`);
-    logger.info(`- channelIds Length: ${channelIds.length}`);
     for (const channelId of channelIds) {
       logger.info(`- channelId: ${channelId}`);
       if (null == channelId) continue;

@@ -17,7 +17,7 @@ module.exports = {
     // Scheduled Timers - ToDo - Move this to somewhere else
     //// Daily Clearer - 05:00 UTC
     cron.schedule(
-      "0 5 * * *",
+      "* * * * *",
       async () => {
         try {
           logger.info("scheduled - scheduledClearer");
