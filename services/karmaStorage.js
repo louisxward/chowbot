@@ -1,5 +1,7 @@
 const logger = require("logger");
-const { createKarma, updateKarma, getKarmaTotalByUserId, getKarmaLeaderboardMap } = require("repositories/karma");
+const { createKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+
+// todo rename this to karmaService
 
 //todo needs to become .env
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
@@ -42,21 +44,4 @@ async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
-//todo - just use an array
-async function getKarmaLeaderboard(interaction) {
-  const map = await getKarmaLeaderboardMap();
-  const hydratedMap = new Map();
-  for (const [userId, total] of Object.entries(map)) {
-    try {
-      const user = await interaction.client.users.fetch(userId);
-      hydratedMap.set(user.displayName, total);
-    } catch (error) {
-      logger.error(`- skipping userId: ${userId}`);
-      logger.error(error);
-    }
-  }
-  //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
-  return hydratedMap;
-}
-
-module.exports = { karmaCalculator, updateUserKarma, getUserKarma, getKarmaLeaderboard };
+module.exports = { karmaCalculator, updateUserKarma, getUserKarma };

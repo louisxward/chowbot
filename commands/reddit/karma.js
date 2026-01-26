@@ -1,9 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { getKarmaLeaderboard } = require("services/karmaStorage");
+const { getKarmaLeaderboard } = require("services/leaderboardService");
 
 module.exports = {
   data: new SlashCommandBuilder().setName("karma").setDescription("Karma leaderboard"),
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const leaderboard = await getKarmaLeaderboard(interaction);
     let replyMessage = "";
     if (!leaderboard || leaderboard.size == 0) {
@@ -25,6 +27,8 @@ module.exports = {
       }
     }
     const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(replyMessage);
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await interaction.editReply({
+      embeds: [embed]
+    });
   }
 };

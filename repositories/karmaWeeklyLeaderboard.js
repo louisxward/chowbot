@@ -18,7 +18,7 @@ async function getPreviousKarmaWeeklyLeaderboardMap() {
   const result = new Map();
   const records = await db.all(
     "SELECT CAST(userId AS TEXT) AS userId, value AS total FROM KarmaWeeklyLeaderboard " +
-      "GROUP BY userId ORDER BY created DESC"
+      "GROUP BY userId ORDER BY created DESC, total DESC"
   ); // gets the most recent leaderboard
   records.forEach((e) => {
     result[e.userId] = e.total;
