@@ -65,7 +65,7 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
     let indexString = null;
     if (changeIndex === null) {
       indexString = "🐣"; // if user is new
-    } else if (changeIndex > 2) {
+    } else if (changeIndex > 2 && changeScore > 0) {
       indexString = "🔥";
     } else if (changeIndex > 1) {
       indexString = "⏫";
@@ -73,7 +73,7 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
       indexString = "🔼";
     } else if (changeIndex === 0) {
       indexString = "↔️";
-    } else if (changeIndex < -2) {
+    } else if (changeIndex < -2 && changeScore < 0) {
       indexString = "💩";
     } else if (changeIndex < -1) {
       indexString = "⏬";
