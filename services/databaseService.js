@@ -24,6 +24,9 @@ async function init() {
       value INTEGER NOT NULL
     );
     `);
+  // await db.exec(`
+  //   DROP TABLE KarmaWeeklyLeaderboard
+  //   `);
   await db.exec(`
     CREATE TABLE IF NOT EXISTS KarmaWeeklyLeaderboard (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

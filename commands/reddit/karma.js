@@ -5,7 +5,6 @@ module.exports = {
   data: new SlashCommandBuilder().setName("karma").setDescription("Karma leaderboard"),
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
-
     const leaderboard = await getKarmaLeaderboard(interaction);
     let replyMessage = "";
     if (!leaderboard || leaderboard.size == 0) {

@@ -20,6 +20,21 @@ async function getKarmaWeeklyLeaderboard() {
   const prevMap = getPreviousKarmaWeeklyLeaderboardMap();
 }
 
+async function getKarmaWeeklyLeaderboardTest(interaction) {
+  const map = await getPreviousKarmaWeeklyLeaderboardMap();
+  const hydratedMap = new Map();
+  for (const [userId, e] of Object.entries(map)) {
+    try {
+      const username = await getUsername(interaction, userId);
+      hydratedMap.set(username, e);
+    } catch (error) {
+      logger.error(`- skipping userId: ${userId}`);
+    }
+  }
+  //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1])); - sorted in sql call, not sure if i like it or not
+  return hydratedMap;
+}
+
 //todo - just use an array
 async function getKarmaLeaderboard(interaction) {
   const map = await getKarmaLeaderboardMap();
@@ -47,4 +62,4 @@ async function getUsername(interaction, userId) {
   return userId;
 }
 
-module.exports = { logWeekly, getKarmaLeaderboard, getKarmaWeeklyLeaderboard };
+module.exports = { logWeekly, getKarmaLeaderboard, getKarmaWeeklyLeaderboard, getKarmaWeeklyLeaderboardTest };
