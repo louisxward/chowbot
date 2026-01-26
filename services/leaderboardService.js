@@ -47,7 +47,7 @@ async function getKarmaWeeklyLeaderboard() {
     logger.info("compare");
     const changeScore = currentScore - prevScore;
     logger.error(`- changeScore: ${changeScore}`);
-    const changeIndex = currentIndex - prevIndex;
+    const changeIndex = prevIndex - currentIndex;
     logger.error(`- changeIndex: ${changeIndex}`);
 
     // Format
@@ -61,6 +61,10 @@ async function getKarmaWeeklyLeaderboard() {
       indexString = "^";
     } else if (changeIndex === 0) {
       indexString = "\\-";
+    } else if (changeIndex < -1) {
+      indexString = "vv";
+    } else if (changeIndex < -0) {
+      indexString = "v";
     }
 
     lines.push(
