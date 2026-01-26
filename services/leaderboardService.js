@@ -73,10 +73,10 @@ async function getKarmaWeeklyLeaderboard(users) {
     //🔼⏫🔽⏬
 
     lines.push(
-      `${indexString ? indexString : ""} ${currentIndex}. ${username}: ${changeScore > 0 ? "+" + changeScore : changeScore} / ${currentScore}`
+      `${indexString ? indexString : ""} ${currentIndex}. ${currentIndex < 4 ? "**" + username + "**" : username}: ${changeScore > 0 ? "+" + changeScore : changeScore} / ${currentScore}`
     );
   }
-  return lines.join("\n");
+  return lines.join("\n\n");
 }
 
 async function getKarmaWeeklyLeaderboardTest(users) {
@@ -141,7 +141,7 @@ async function leaderboardFormatter(leaderboard) {
     }
     lines.push(`${medal ? medal : e.index.toString() + ". "} ${e.index < 4 ? "**" + key + "**" : key}: ${e.value}`);
   }
-  return lines.join("\n");
+  return lines.join("\n\n");
 }
 
 module.exports = {
