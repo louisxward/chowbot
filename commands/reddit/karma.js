@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { getKarmaLeaderboard } = require("services/leaderboardService");
+const { getKarmaLeaderboard, logWeekly } = require("services/leaderboardService");
 
 module.exports = {
   data: new SlashCommandBuilder().setName("karma").setDescription("Karma leaderboard"),

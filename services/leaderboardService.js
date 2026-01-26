@@ -6,10 +6,12 @@ const {
 } = require("repositories/karmaWeeklyLeaderboard");
 
 async function logWeekly() {
+  logger.info("logWeekly()");
   const created = new Date().toISOString();
-  const map = getKarmaLeaderboardMap();
-  for (const [userId, total] of Object.entries(map)) {
-    createKarmaWeeklyLeaderboard(created, userId, total);
+  logger.info(`- date: ${created}`);
+  const map = await getKarmaLeaderboardMap();
+  for (const [userId, e] of Object.entries(map)) {
+    createKarmaWeeklyLeaderboard(created, userId, e.value);
   }
 }
 
@@ -22,10 +24,10 @@ async function getKarmaWeeklyLeaderboard() {
 async function getKarmaLeaderboard(interaction) {
   const map = await getKarmaLeaderboardMap();
   const hydratedMap = new Map();
-  for (const [userId, total] of Object.entries(map)) {
+  for (const [userId, e] of Object.entries(map)) {
     try {
       const username = await getUsername(interaction, userId);
-      hydratedMap.set(username, total);
+      hydratedMap.set(username, e);
     } catch (error) {
       logger.error(`- skipping userId: ${userId}`);
     }
