@@ -30,7 +30,7 @@ async function getKarmaLeaderboard(interaction) {
       logger.error(`- skipping userId: ${userId}`);
     }
   }
-  //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1]));
+  //return new Map(Array.from(hydratedMap).sort((a, b) => b[1] - a[1])); - sorted in sql call, not sure if i like it or not
   return hydratedMap;
 }
 
