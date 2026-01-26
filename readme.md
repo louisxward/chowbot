@@ -13,7 +13,9 @@ Source: https://discordjs.guide
 - You can now commend/report users for Etiquette
   - /etiquette
 
-## Environment(.env place in root)
+## Development
+
+### Environment(.env place in root)
 
 ```
 TOKEN=<BOT_API_KEY>
@@ -21,7 +23,7 @@ CLIENT_ID=<BOT_USER_ID>
 GUILD_ID=<SERVER_ID>
 ```
 
-## Commands
+### Commands
 
 `npm run dev` - dev command restarts on save
 
