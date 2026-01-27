@@ -41,8 +41,15 @@ async function getKarmaLeaderboardMap() {
       "GROUP BY messageUserId ORDER BY total DESC"
   );
   let index = 0;
+  let minValue = null;
   records.forEach((e) => {
-    index += 1;
+    if (!minValue || minValue > e.total) {
+      minValue = e.total;
+      index += 1;
+    }
+    logger.info("min: " + minValue);
+    logger.info("total: " + e.total);
+    logger.info("index: " + index);
     result.set(e.userId, { index: index, value: e.total });
   });
   db.close();

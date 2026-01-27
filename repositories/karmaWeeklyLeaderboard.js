@@ -40,8 +40,15 @@ async function getKarmaWeeklyLeaderboardMapByWeek(weekId) {
     [weekId]
   ); // gets the most recent leaderboard, we could store the pos too instead of cacling
   let index = 0;
+  let minValue = null;
   records.forEach((e) => {
-    index += 1;
+    if (!minValue || minValue > e.total) {
+      minValue = e.total;
+      index += 1;
+    }
+    logger.info("min: " + minValue);
+    logger.info("total: " + e.total);
+    logger.info("index: " + index);
     result.set(e.userId, { index: index, value: e.total });
   });
   db.close();

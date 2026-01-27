@@ -94,11 +94,6 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
   return lines.join(JOIN);
 }
 
-async function getKarmaLeaderboardFormatted(users) {
-  const map = await getKarmaLeaderboardMap();
-  return await leaderboardFormatter(users, map);
-}
-
 async function getUsername(users, userId) {
   if (!userId) throw error;
   try {
@@ -108,30 +103,6 @@ async function getUsername(users, userId) {
     logger.error(`- cannot find userId: ${userId}`);
   }
   return userId;
-}
-
-async function leaderboardFormatter(users, map) {
-  if (!map || map.size == 0) {
-    return "Empty";
-  }
-  let lines = [];
-  for (const [userId, e] of map.entries()) {
-    const username = await getUsername(users, userId);
-    let medal = null;
-    if (e.index === 1) {
-      medal = `🥇`;
-    } else if (e.index === 2) {
-      medal = `🥈`;
-    } else if (e.index === 3) {
-      medal = `🥉`;
-    }
-    lines.push(
-      `${medal ? medal : e.index.toString() + "."}${SPACING}` +
-        `${e.index < 4 ? "**" + username + "**" : username}:${SPACING}` +
-        `${e.value}`
-    );
-  }
-  return lines.join(JOIN);
 }
 
 async function sendKarmaWeeklyLeaderboard(client) {
@@ -168,7 +139,6 @@ async function sendKarmaWeeklyLeaderboard(client) {
 
 module.exports = {
   persistKarmaWeeklyLeaderboard,
-  getKarmaLeaderboardFormatted,
   getKarmaWeeklyLeaderboardFormatted,
   sendKarmaWeeklyLeaderboard
 };
