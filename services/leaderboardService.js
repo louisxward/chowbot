@@ -145,7 +145,7 @@ async function sendKarmaWeeklyLeaderboard(client) {
   }
 
   const content = await getKarmaWeeklyLeaderboardFormatted(client.users);
-  const embed = new EmbedBuilder().setTitle("Karma Weekly Leaderboard").setDescription(content);
+  const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(content);
 
   for (const [serverId, channelIds] of Object.entries(map)) {
     logger.info(`- serverId: ${serverId}`);
