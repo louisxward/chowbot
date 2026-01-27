@@ -30,11 +30,13 @@ async function contentDetector(message) {
     }
   }
   for (const attachments of message.attachments) {
-    if (
-      attachments.contentType &&
-      (attachments.contentType.includes("image") || attachments.contentType.includes("video"))
-    ) {
-      return true;
+    for (const attachment of attachments) {
+      if (
+        attachment.contentType &&
+        (attachment.contentType.includes("image") || attachment.contentType.includes("video"))
+      ) {
+        return true;
+      }
     }
   }
 
