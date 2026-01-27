@@ -30,24 +30,27 @@ const rest = new REST().setToken(process.env.TOKEN);
 (async () => {
   try {
     //logger.info(`- Started refreshing ${commands.length} application (/) commands.`);
-    // Push Commands
-    // - Specific Server
+
+    // Specific Server
+    //// Push Commands
     // const data = await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), {
     //   body: commands
     // });
-    // - All Servers
-    //const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
-    // Delete Commmands
-    // - Specific Server
+    //// Delete Commmands
     // await rest
     //   .put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: [] })
     //   .then(() => console.log("Successfully deleted all guild commands."))
     //   .catch(console.error);
-    // - All Servers
-    // await rest
-    //   .put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] })
-    //   .then(() => console.log("Successfully deleted all application commands."))
-    //   .catch(console.error);
+
+    // All Servers
+    //// Delete Commands
+    await rest
+      .put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] })
+      .then(() => console.log("Successfully deleted all application commands."))
+      .catch(console.error);
+    //// Push Commmands
+    const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+
     //logger.info(`- Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {
     logger.error(error);

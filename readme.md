@@ -1,6 +1,6 @@
 # ChowBot
 
-Version: 0.3.0
+Version: 0.3.1
 
 Publisher: ChowIndustries
 
@@ -8,8 +8,8 @@ Source: https://discordjs.guide
 
 ## Release Notes
 
-- Karma Weekly Leaderboard
-  - /leaderboardweekly
+- Karma Leaderboard Update
+  - /leaderboard
 - You can now commend/report users for Etiquette
   - /etiquette
 
