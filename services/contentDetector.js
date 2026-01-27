@@ -14,7 +14,6 @@ async function contentDetector(message) {
     }
   }
   for (const embed of message.embeds) {
-    logger.info(embed.url);
     // todo move include to config file
     if (
       embed.url &&
@@ -31,7 +30,6 @@ async function contentDetector(message) {
     }
   }
   for (const attachments of message.attachments) {
-    logger.info(attachments.contentType);
     if (
       attachments.contentType &&
       (attachments.contentType.includes("image") || attachments.contentType.includes("video"))

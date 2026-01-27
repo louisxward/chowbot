@@ -7,7 +7,7 @@ const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 module.exports = {
   name: Events.MessageUpdate,
   async execute(oldMessage, newMessage) {
-    logger.info("update");
+    //todo oldMessage - check if not existing
     if (await contentDetector(newMessage)) {
       await newMessage
         .react(EMOJI_UPVOTE_ID)

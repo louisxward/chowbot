@@ -7,7 +7,6 @@ const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 module.exports = {
   name: Events.MessageCreate,
   async execute(message) {
-    logger.info("create");
     if (await contentDetector(message)) {
       await message
         .react(EMOJI_UPVOTE_ID)
