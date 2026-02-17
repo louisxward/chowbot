@@ -22,7 +22,7 @@ module.exports = {
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-      { name: "Gaming w/ Henry", type: ActivityType.Playing }
+      { name: "Gaming w/ Henry", type: ActivityType.Watching }
     ];
     let currentIndex = 0;
     cron.schedule(
