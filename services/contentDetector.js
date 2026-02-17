@@ -1,8 +1,8 @@
 const logger = require("logger");
 
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
+require("dotenv").config();
 
-async function contentDetector(message) {
+function contentDetector(message) {
   logger.info("function - contentDetector");
   logger.info(`- authorId: ${message.author.id}`);
   logger.info(`- messageId: ${message.id}`);
@@ -52,12 +52,34 @@ async function handleEvent(message, update) {
       return;
     }
   }
-  if (update && !checkMessageAge) {
+  const hasAllReactions =
+    hasReaction(message, process.env.EMOJI_UPVOTE_ID) && hasReaction(message, process.env.EMOJI_DOWNVOTE_ID);
+  // checkMessageAge fix for weird issue where bot started reacting to old posts
+  if (update && (hasAllReactions || !checkMessageAge(message))) {
     return;
   }
-  if (contentDetector) {
-    //react
+  if (contentDetector(message)) {
+    try {
+      await addKarmaReactions(message);
+    } catch (error) {
+      logger.error(error);
+    }
   }
 }
 
-module.exports = { contentDetector };
+function hasReaction(message, emojiId) {
+  return message.reactions.cache.get(emojiId)?.users.cache.has(message.client.user.id);
+}
+
+async function addKarmaReactions(message) {
+  await safeReact(message, process.env.EMOJI_UPVOTE_ID);
+  await safeReact(message, process.env.EMOJI_DOWNVOTE_ID);
+}
+
+async function safeReact(message, emojiId) {
+  if (!hasReaction(message, emojiId)) {
+    await message.react(emojiId);
+  }
+}
+
+module.exports = { handleEvent, addKarmaReactions };

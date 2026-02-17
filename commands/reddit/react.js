@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const logger = require("logger");
-
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
+const { addKarmaReactions } = require("services/contentDetector");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -12,13 +11,15 @@ module.exports = {
   async execute(interaction) {
     const inputMessageId = interaction.options.getString("message_id");
     logger.info(`- inputMessageId: ${inputMessageId}`);
+    let message = null;
     try {
-      const message = await interaction.channel.messages.fetch(inputMessageId);
-      await message.react(EMOJI_UPVOTE_ID).then(() => message.react(EMOJI_DOWNVOTE_ID));
-      await interaction.reply({ content: "reacted :P", ephemeral: true });
+      message = await interaction.channel.messages.fetch(inputMessageId);
     } catch (error) {
       logger.error(error);
       await interaction.reply({ content: "message_id is invalid", ephemeral: true });
+      return;
     }
+    await addKarmaReactions(message);
+    await interaction.reply({ content: "reacted :P", ephemeral: true });
   }
 };
