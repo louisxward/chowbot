@@ -10,11 +10,36 @@ module.exports = {
   name: Events.ClientReady,
   once: true,
   async execute(client) {
-    // Init
     logger.info(`${client.user.tag} INITIALISED`);
-    await client.user.setActivity("DrankDrankDrank By Nettspend", { type: ActivityType.Listening });
-
     // Scheduled Timers - ToDo - Move this to somewhere else
+    // Statuses - Hourly
+    const statuses = [
+      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "yo momma", type: ActivityType.Playing },
+      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "Gaming w/ Henry", type: ActivityType.Playing }
+    ];
+    let currentIndex = 0;
+    cron.schedule(
+      "0 0 * * *",
+      async () => {
+        try {
+          const status = statuses[currentIndex];
+          await client.user.setActivity(status.name, { type: status.type });
+          currentIndex = (currentIndex + 1) % statuses.length;
+        } catch (error) {
+          logger.error(error);
+        }
+      },
+      { timezone: "UTC" }
+    );
+    await client.user.setActivity(statuses[0].name, { type: statuses[0].type });
+    currentIndex = 1;
     //// Daily Clearer - 05:00 UTC
     cron.schedule(
       "0 5 * * *",
@@ -28,7 +53,7 @@ module.exports = {
       },
       { timezone: "UTC" }
     );
-    //// Send Weekly Leaderboard - Sunday 21:00 UTC
+    //// Send/Persist Weekly Leaderboard - Sunday 21:00 UTC
     cron.schedule(
       "0 21 * * 0",
       async () => {
@@ -38,13 +63,6 @@ module.exports = {
         } catch (error) {
           logger.error(error);
         }
-      },
-      { timezone: "UTC" }
-    );
-    //// Persist Weekly Leaderboard - Sunday 23:59 UTC
-    cron.schedule(
-      "59 23 * * 0",
-      async () => {
         try {
           logger.info("scheduled - persistKarmaWeeklyLeaderboard");
           await persistKarmaWeeklyLeaderboard();
