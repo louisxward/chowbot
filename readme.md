@@ -1,6 +1,6 @@
 # ChowBot
 
-Version: 0.3.1
+Version: 0.3.2
 
 Publisher: ChowIndustries
 
@@ -21,6 +21,8 @@ Source: https://discordjs.guide
 TOKEN=<BOT_API_KEY>
 CLIENT_ID=<BOT_USER_ID>
 GUILD_ID=<SERVER_ID>
+EMOJI_UPVOTE_ID=
+EMOJI_DOWNVOTE_ID=
 ```
 
 ### Commands

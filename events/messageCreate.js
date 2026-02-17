@@ -1,17 +1,10 @@
 const { Events } = require("discord.js");
-const logger = require("logger");
-const contentDetector = require("services/contentDetector");
-
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
+const { handleMessageEvent } = require("services/contentDetector");
+require("dotenv").config();
 
 module.exports = {
   name: Events.MessageCreate,
   async execute(message) {
-    if (await contentDetector(message)) {
-      await message
-        .react(EMOJI_UPVOTE_ID)
-        .then(() => message.react(EMOJI_DOWNVOTE_ID))
-        .catch((error) => logger.error(error));
-    }
+    await handleMessageEvent(message, false);
   }
 };
