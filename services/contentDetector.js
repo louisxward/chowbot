@@ -1,18 +1,11 @@
 const logger = require("logger");
 
+const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
+
 async function contentDetector(message) {
   logger.info("function - contentDetector");
   logger.info(`- authorId: ${message.author.id}`);
   logger.info(`- messageId: ${message.id}`);
-  if (message.author.bot) return false;
-  if (message.partial) {
-    try {
-      await message.fetch();
-    } catch (error) {
-      logger.error(error);
-      return false;
-    }
-  }
   for (const embed of message.embeds) {
     // todo move include to config file
     if (
@@ -43,4 +36,28 @@ async function contentDetector(message) {
   return false;
 }
 
-module.exports = contentDetector;
+function checkMessageAge(message) {
+  const oneDayInMs = 24 * 60 * 60 * 1000;
+  const isTooOld = Date.now() - message.createdTimestamp > oneDayInMs;
+  return !isTooOld;
+}
+
+async function handleEvent(message, update) {
+  if (message.author.bot) return;
+  if (message.partial) {
+    try {
+      await message.fetch();
+    } catch (error) {
+      logger.error(error);
+      return;
+    }
+  }
+  if (update && !checkMessageAge) {
+    return;
+  }
+  if (contentDetector) {
+    //react
+  }
+}
+
+module.exports = { contentDetector };

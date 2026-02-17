@@ -1,12 +1,13 @@
 const { Events } = require("discord.js");
 const logger = require("logger");
-const contentDetector = require("services/contentDetector");
+const { contentDetector } = require("services/contentDetector");
 
 const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 
 module.exports = {
   name: Events.MessageUpdate,
   async execute(oldMessage, newMessage) {
+    logger.info("!!message update");
     //todo oldMessage - check if not existing
     if (await contentDetector(newMessage)) {
       await newMessage
