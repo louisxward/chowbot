@@ -2,20 +2,35 @@ require("dotenv").config();
 require("app-module-path").addPath(__dirname);
 const { init } = require("services/databaseService");
 
-const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField, PermissionsBitField } = require("discord.js");
+const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField } = require("discord.js"); //PermissionsBitField
 
 const fs = require("node:fs");
 const path = require("node:path");
 
 const logger = require("logger");
 
+// Check Envs
+logger.info("startup - check envs");
+const REQUIRED_VARS = ["TOKEN", "CLIENT_ID", "EMOJI_UPVOTE_ID", "EMOJI_DOWNVOTE_ID"]; //todo: validate emojis
+
+function validateEnv() {
+  const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    logger.fatal(
+      { missingVariables: missing },
+      `- missing required environment variables in .env: ${missing.join(", ")}`
+    );
+    process.exit(1);
+  }
+}
+
+validateEnv();
+
 // Data
 const dataPath = path.join(__dirname, "data");
 if (!fs.existsSync(dataPath)) {
   fs.mkdirSync(dataPath, { recursive: true });
 }
-
-// Client Init
 // ToDo - Needs looking at
 logger.info("startup - client init");
 const client = new Client({

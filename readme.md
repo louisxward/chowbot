@@ -1,6 +1,6 @@
 # ChowBot
 
-Version: 0.3.2
+Version: 0.3.3
 
 Publisher: ChowIndustries
 
@@ -18,9 +18,9 @@ Source: https://discordjs.guide
 ### Environment(.env place in root)
 
 ```
-TOKEN=<BOT_API_KEY>
-CLIENT_ID=<BOT_USER_ID>
-GUILD_ID=<SERVER_ID>
+TOKEN=
+CLIENT_ID=
+?GUILD_ID=
 EMOJI_UPVOTE_ID=
 EMOJI_DOWNVOTE_ID=
 ```
@@ -32,7 +32,5 @@ EMOJI_DOWNVOTE_ID=
 `docker compose build` - prod build
 
 `docker compose up -d` - prod deploy
-
-`docker compose logs -f` - prod logs
 
 `node deploy-commands.js` - deploy commands to all servers or just one
