@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 const logger = require("logger");
-const { getUserKarma } = require("services/karmaStorage");
+const { getUserKarma } = require("services/karmaService");
 
 // todo tidy this, rename this
 

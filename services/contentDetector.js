@@ -38,8 +38,9 @@ async function handleMessageEvent(message, isUpdate) {
   if (message.partial) {
     try {
       await message.fetch();
-    } catch (e) {
-      return logger.error(e);
+    } catch (error) {
+      logger.error(error);
+      return;
     }
   }
   if (isUpdate && !checkMessageAge(message)) {
