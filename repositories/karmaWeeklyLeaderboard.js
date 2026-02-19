@@ -46,9 +46,6 @@ async function getKarmaWeeklyLeaderboardMapByWeek(weekId) {
       minValue = e.total;
       index += 1;
     }
-    logger.info("min: " + minValue);
-    logger.info("total: " + e.total);
-    logger.info("index: " + index);
     result.set(e.userId, { index: index, value: e.total });
   });
   db.close();

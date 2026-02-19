@@ -1,13 +1,13 @@
 const logger = require("logger");
 const { createKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+require("dotenv").config();
 
-// todo rename this to karmaService
+const EMOJI_UPVOTE_ID = process.env.EMOJI_UPVOTE_ID;
+const EMOJI_DOWNVOTE_ID = process.env.EMOJI_DOWNVOTE_ID;
 
-//todo needs to become .env
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
 const KARMA_EMOJIS = [EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID];
 
-async function karmaCalculator(reaction, user, addReaction) {
+async function handleEvent(reaction, user, addReaction) {
   if (user.bot) return;
   const emojiId = reaction._emoji.id;
   if (!KARMA_EMOJIS.includes(emojiId)) return;
@@ -15,12 +15,12 @@ async function karmaCalculator(reaction, user, addReaction) {
     try {
       await reaction.fetch();
     } catch (error) {
-      logger.error(`Error fetching partial reaction: ${error}`);
+      logger.error(error);
       return;
     }
   }
   const authorId = reaction.message.author.id;
-  if (user.id === authorId) return; //todo - remove reaction aswell?
+  //if (user.id === authorId) return;
   let karmaValue = 0;
   if (addReaction) {
     const isUpvote = emojiId === EMOJI_UPVOTE_ID;
@@ -53,4 +53,4 @@ async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
-module.exports = { karmaCalculator, updateUserKarma, getUserKarma, createUserKarma };
+module.exports = { handleEvent, updateUserKarma, getUserKarma, createUserKarma };
