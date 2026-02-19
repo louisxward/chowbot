@@ -1,10 +1,12 @@
 const logger = require("logger");
 const { createKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+require("dotenv").config();
 
 // todo rename this to karmaService
 
-//todo needs to become .env
-const { EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID } = require("appConstants");
+const EMOJI_UPVOTE_ID = process.env.EMOJI_UPVOTE_ID;
+const EMOJI_DOWNVOTE_ID = process.env.EMOJI_DOWNVOTE_ID;
+
 const KARMA_EMOJIS = [EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID];
 
 async function karmaCalculator(reaction, user, addReaction) {
@@ -20,7 +22,7 @@ async function karmaCalculator(reaction, user, addReaction) {
     }
   }
   const authorId = reaction.message.author.id;
-  if (user.id === authorId) return; //todo - remove reaction aswell?
+  if (user.id === authorId) return;
   let karmaValue = 0;
   if (addReaction) {
     const isUpvote = emojiId === EMOJI_UPVOTE_ID;
