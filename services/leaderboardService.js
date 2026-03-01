@@ -6,11 +6,12 @@ const {
   getPreviousWeekId,
   getKarmaWeeklyLeaderboardMapByWeek
 } = require("repositories/karmaWeeklyLeaderboard");
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, escapeMarkdown } = require("discord.js");
 const { readFile } = require("services/storageHelper");
 
 const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
+const LRM = "\u200E";
 
 async function persistKarmaWeeklyLeaderboard() {
   logger.info("function - persistKarmaWeeklyLeaderboard");
@@ -81,15 +82,15 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
       indexString = "🔽";
     }
     // Concat
-    lines.push(
+    const line =
       `${indexString ? indexString : ""}${SPACING}` +
-        `${medal ? medal : currentIndex + "."}${SPACING}` +
-        `${currentIndex < 4 ? "**" + username + "**" : username}:${SPACING}` +
-        `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
-        `${changeScore > 0 ? "+" + changeScore : changeScore}${SPACING}` +
-        `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
-        `/${SPACING}${currentScore}`
-    );
+      `${medal ? medal : currentIndex + "."}${SPACING}` +
+      `${currentIndex < 4 ? "**" + username + "**" : username}:${SPACING}` +
+      `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
+      `${changeScore > 0 ? "+" + changeScore : changeScore}${SPACING}` +
+      `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
+      `/${SPACING}${currentScore}`;
+    lines.push(line);
   }
   return lines.join(JOIN);
 }
@@ -98,26 +99,31 @@ async function getUsername(users, userId) {
   if (!userId) throw error;
   try {
     const user = await users.fetch(userId);
-    return user.displayName;
+    const safeUsername = getSafeText(user.displayName);
+    return safeUsername ? safeUsername : user.username;
   } catch (error) {
-    logger.error(`- cannot find userId: ${userId}`);
+    logger.warn(error);
   }
   return userId;
 }
 
+function getSafeText(input) {
+  if (!input || typeof input !== "string") return null;
+  clean = escapeMarkdown(input);
+  //if (clean.length === 0) return null;
+  clean = clean + LRM;
+  return clean;
+}
+
 async function sendKarmaWeeklyLeaderboard(client) {
   logger.info("function - sendKarmaWeeklyLeaderboard");
-
   const filePath = "./data/leaderboardWeeklyChannelConfig.json"; // todo tidy this all up
   const map = await readFile(filePath);
-
   if (Object.keys(map).length === 0) {
     return;
   }
-
   const content = await getKarmaWeeklyLeaderboardFormatted(client.users);
   const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(content);
-
   for (const [serverId, channelIds] of Object.entries(map)) {
     logger.info(`- serverId: ${serverId}`);
     for (const channelId of channelIds) {
