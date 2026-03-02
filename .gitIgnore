@@ -4,6 +4,7 @@
 .env
 /data
 chowbot.log
+deploy.sh
 
 # Compiled output
 /dist

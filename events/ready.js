@@ -16,10 +16,9 @@ module.exports = {
     const statuses = [
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
+      { name: "Raging w/ Charlie", type: ActivityType.Watching },
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
       { name: "yo momma", type: ActivityType.Playing },
-      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-      { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
       { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
       { name: "Gaming w/ Henry", type: ActivityType.Watching }
