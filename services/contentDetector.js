@@ -58,4 +58,4 @@ async function handleMessageEvent(message, isUpdate) {
   }
 }
 
-module.exports = { handleMessageEvent, addKarmaReactions };
+module.exports = { handleMessageEvent, addKarmaReactions, contentDetector, checkMessageAge };

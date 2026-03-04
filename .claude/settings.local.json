@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"c:\\\\Users\\\\louis\\\\Documents\\\\Code\\\\chowbot\"/*.js \"c:\\\\Users\\\\louis\\\\Documents\\\\Code\\\\chowbot\"/services/*.js \"c:\\\\Users\\\\louis\\\\Documents\\\\Code\\\\chowbot\"/repositories/*.js)",
+      "Bash(xargs wc -l)",
+      "Bash(npm install --save-dev jest)",
+      "Bash(npm test)"
+    ]
+  }
+}

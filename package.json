@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node index.js | pino-pretty",
     "dev": "nodemon index.js --ignore ./data | pino-pretty",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +22,7 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "jest": "^30.2.0",
     "nodemon": "^3.1.7"
   }
 }
