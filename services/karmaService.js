@@ -20,7 +20,7 @@ async function handleEvent(reaction, user, addReaction) {
     }
   }
   const authorId = reaction.message.author.id;
-  //if (user.id === authorId) return;
+  if (user.id === authorId) return;
   let karmaValue = 0;
   if (addReaction) {
     const isUpvote = emojiId === EMOJI_UPVOTE_ID;

@@ -11,7 +11,8 @@ function contentDetector(message) {
     "streamable.com/",
     "youtu.be/",
     "tiktok.com/",
-    "gyazo.com/"
+    "gyazo.com/",
+    "twitch.com/"
   ];
   const hasValidEmbed = message.embeds.some(
     (embed) => embed.url && domainList.some((domain) => embed.url.includes(domain))
