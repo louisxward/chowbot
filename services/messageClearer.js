@@ -1,25 +1,20 @@
 const logger = require("logger");
-const { readFile, writeFile } = require("services/storageHelper");
-const { MESSAGE_CLEARER_CONFIG_PATH: filePath } = require("config");
+const { readServerConfig, getClearChannels, addClearChannel, removeClearChannel } = require("services/serverConfigStorage");
 
 async function scheduledClearer(client) {
   logger.info("function - scheduledClearer");
-  const map = await readFile(filePath);
-  if (Object.keys(map).length === 0) {
-    return;
-  }
-  for (const [serverId, channelIds] of Object.entries(map)) {
-    //check this should, just be map.entries()
+  const config = await readServerConfig();
+  if (Object.keys(config).length === 0) return;
+  for (const [serverId, serverConfig] of Object.entries(config)) {
     logger.info(`- serverId: ${serverId}`);
-    clearChannels(client, channelIds);
+    clearChannels(client, serverConfig.clearChannels ?? []);
   }
 }
 
 async function manualServerClear(client, serverId) {
   logger.info("function - manualServerClear");
   logger.info(`- serverId: ${serverId}`);
-  const map = await readFile(filePath);
-  const channelIds = null == map[serverId] ? [] : map[serverId];
+  const channelIds = await getClearChannels(serverId);
   clearChannels(client, channelIds);
 }
 
@@ -57,31 +52,14 @@ function wait(ms) {
 
 async function addServerClearChannel(client, serverId, channelId) {
   const channel = client.channels.cache.get(channelId);
-  if (!channel) {
-    throw "doesnt exist";
-  }
-  const map = await readFile(filePath);
-  const channels = null == map[serverId] ? [] : map[serverId];
-  if (channels.includes(channelId)) {
-    throw "already exists";
-  }
+  if (!channel) throw "doesnt exist";
   logger.info(`adding clear channel: ${channelId}`);
-  channels.push(channelId);
-  map[serverId] = channels;
-  await writeFile(filePath, map);
+  await addClearChannel(serverId, channelId);
 }
 
 async function removeServerClearChannel(serverId, channelId) {
-  const map = await readFile(filePath);
-  const channels = null == map[serverId] ? [] : map[serverId];
-  if (!channels.includes(channelId)) {
-    throw "doesnt exist";
-  }
   logger.info(`removing clear channel: ${channelId}`);
-  channels.push(channelId);
-  const filtered = channels.filter((value) => value !== channelId);
-  map[serverId] = filtered;
-  await writeFile(filePath, map);
+  await removeClearChannel(serverId, channelId);
 }
 
 module.exports = { manualServerClear, scheduledClearer, addServerClearChannel, removeServerClearChannel };

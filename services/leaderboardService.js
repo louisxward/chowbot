@@ -7,8 +7,7 @@ const {
   getKarmaWeeklyLeaderboardMapByWeek
 } = require("repositories/karmaWeeklyLeaderboard");
 const { EmbedBuilder, escapeMarkdown } = require("discord.js");
-const { readFile } = require("services/storageHelper");
-const { LEADERBOARD_CONFIG_PATH } = require("config");
+const { readServerConfig } = require("services/serverConfigStorage");
 
 const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
@@ -118,15 +117,13 @@ function getSafeText(input) {
 
 async function sendKarmaWeeklyLeaderboard(client) {
   logger.info("function - sendKarmaWeeklyLeaderboard");
-  const map = await readFile(LEADERBOARD_CONFIG_PATH);
-  if (Object.keys(map).length === 0) {
-    return;
-  }
+  const config = await readServerConfig();
+  if (Object.keys(config).length === 0) return;
   const content = await getKarmaWeeklyLeaderboardFormatted(client.users);
   const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(content);
-  for (const [serverId, channelIds] of Object.entries(map)) {
+  for (const [serverId, serverConfig] of Object.entries(config)) {
     logger.info(`- serverId: ${serverId}`);
-    for (const channelId of channelIds) {
+    for (const channelId of serverConfig.leaderboardChannels ?? []) {
       logger.info(`- channelId: ${channelId}`);
       if (null == channelId) continue;
       const channel = await client.channels.cache.get(channelId);
