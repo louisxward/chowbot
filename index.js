@@ -8,6 +8,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const logger = require("logger");
+const { start: startHealth } = require("services/healthService");
 
 // Check Envs
 logger.info("startup - check envs");
@@ -89,6 +90,9 @@ for (const file of eventFiles) {
   logger.info("startup - database");
   init();
 })();
+
+// Health Check
+startHealth(client);
 
 // Client Login
 logger.info("startup - login");
