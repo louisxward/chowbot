@@ -8,6 +8,7 @@ const {
 } = require("repositories/karmaWeeklyLeaderboard");
 const { EmbedBuilder, escapeMarkdown } = require("discord.js");
 const { readFile } = require("services/storageHelper");
+const { LEADERBOARD_CONFIG_PATH } = require("config");
 
 const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
@@ -117,8 +118,7 @@ function getSafeText(input) {
 
 async function sendKarmaWeeklyLeaderboard(client) {
   logger.info("function - sendKarmaWeeklyLeaderboard");
-  const filePath = "./data/leaderboardWeeklyChannelConfig.json"; // todo tidy this all up
-  const map = await readFile(filePath);
+  const map = await readFile(LEADERBOARD_CONFIG_PATH);
   if (Object.keys(map).length === 0) {
     return;
   }

@@ -1,7 +1,6 @@
 const logger = require("logger");
 const { readFile, writeFile } = require("services/storageHelper");
-
-const filePath = "./data/messageClearerConfig.json";
+const { MESSAGE_CLEARER_CONFIG_PATH: filePath } = require("config");
 
 async function scheduledClearer(client) {
   logger.info("function - scheduledClearer");

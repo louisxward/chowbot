@@ -1,5 +1,6 @@
 const sqlite3 = require("sqlite3").verbose();
 const { open } = require("sqlite");
+const { DB_PATH } = require("config");
 
 const MIGRATIONS = [
   // v1 — initial schema
@@ -53,7 +54,7 @@ async function init() {
 
 async function connect() {
   const db = await open({
-    filename: "./data/chowbot.db",
+    filename: DB_PATH,
     driver: sqlite3.Database
   });
   return db;
