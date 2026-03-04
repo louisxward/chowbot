@@ -46,6 +46,13 @@ describe("handleEvent", () => {
     expect(updateKarma).not.toHaveBeenCalled();
   });
 
+  test("ignores self-reactions", async () => {
+    const reaction = makeReaction({ emojiId: UPVOTE_ID, authorId: "user1" });
+    const user = makeUser({ id: "user1" });
+    await handleEvent(reaction, user, true);
+    expect(updateKarma).not.toHaveBeenCalled();
+  });
+
   test("fetches partial reactions before processing", async () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID, partial: true });
     const user = makeUser();
@@ -54,7 +61,7 @@ describe("handleEvent", () => {
     expect(reaction.fetch).toHaveBeenCalled();
   });
 
-  test("upvote adds +1 karma when addReaction is true", async () => {
+  test("upvote adds +1 karma", async () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID });
     const user = makeUser({ id: "user1" });
     updateKarma.mockResolvedValue(1);
@@ -62,7 +69,7 @@ describe("handleEvent", () => {
     expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", UPVOTE_ID, 1);
   });
 
-  test("removes upvote by zeroing karma (addReaction is false)", async () => {
+  test("removing upvote zeroes karma", async () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID });
     const user = makeUser({ id: "user1" });
     updateKarma.mockResolvedValue(1);
@@ -70,7 +77,7 @@ describe("handleEvent", () => {
     expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", UPVOTE_ID, 0);
   });
 
-  test("downvote adds -1 karma when addReaction is true", async () => {
+  test("downvote adds -1 karma", async () => {
     const reaction = makeReaction({ emojiId: DOWNVOTE_ID });
     const user = makeUser({ id: "user1" });
     updateKarma.mockResolvedValue(1);
@@ -78,7 +85,7 @@ describe("handleEvent", () => {
     expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", DOWNVOTE_ID, -1);
   });
 
-  test("removes downvote by zeroing karma (addReaction is false)", async () => {
+  test("removing downvote zeroes karma", async () => {
     const reaction = makeReaction({ emojiId: DOWNVOTE_ID });
     const user = makeUser({ id: "user1" });
     updateKarma.mockResolvedValue(1);

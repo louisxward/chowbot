@@ -11,6 +11,8 @@ async function createKarma(serverId, messageId, messageUserId, reactionUserId, r
   db.close();
 }
 
+// TODO: replace this two-step with a single upsert once existing duplicate rows have been
+// cleaned up and a UNIQUE index added to (serverId, messageId, reactionUserId, reactionEmojiId).
 async function updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value) {
   logger.info("repository - updateKarma");
   const db = await connect();
