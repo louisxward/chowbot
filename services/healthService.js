@@ -5,7 +5,7 @@ const { reloadAppConfig } = require("services/applicationConfigService");
 const { sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const logger = require("logger");
 
-const PORT = process.env.HEALTH_PORT || 3000;
+const PORT = process.env.HEALTH_PORT || 33002;
 
 let server;
 
