@@ -9,7 +9,17 @@ if (!fs.existsSync(loggerPath)) {
 }
 
 const transport = pino.transport({
-  targets: [{ target: "pino-pretty" }, { target: "pino/file", options: { destination: "./log/chowbot.log" } }]
+  targets: [
+    { target: "pino-pretty" },
+    {
+      target: "pino-roll",
+      options: {
+        file: "./log/chowbot.log",
+        frequency: "daily",
+        limit: { count: 14 }
+      }
+    }
+  ]
 });
 
 const logger = pino(transport);

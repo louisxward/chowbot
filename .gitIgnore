@@ -3,7 +3,7 @@
 # App
 .env
 /data
-chowbot.log
+/log
 deploy.sh
 
 # Compiled output
