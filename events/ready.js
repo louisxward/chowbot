@@ -11,6 +11,20 @@ module.exports = {
   once: true,
   async execute(client) {
     logger.info(`${client.user.tag} INITIALISED`);
+    // Validate emoji vars exist on the bot
+    const appEmojis = await client.application.emojis.fetch();
+    const emojiIds = {
+      EMOJI_UPVOTE_ID: process.env.EMOJI_UPVOTE_ID,
+      EMOJI_DOWNVOTE_ID: process.env.EMOJI_DOWNVOTE_ID
+    };
+    for (const [varName, emojiId] of Object.entries(emojiIds)) {
+      const emoji = appEmojis.get(emojiId);
+      if (!emoji) {
+        logger.warn(`startup - emoji not found on application for ${varName} (id: ${emojiId})`);
+      } else {
+        logger.info(`startup - emoji ok: ${varName} -> ${emoji.name} (${emojiId})`);
+      }
+    }
     // Scheduled Timers - ToDo - Move this to somewhere else
     // Statuses - Hourly
     const statuses = [

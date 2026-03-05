@@ -12,7 +12,7 @@ const { start: startHealth } = require("services/healthService");
 
 // Check Envs
 logger.info("startup - check envs");
-const REQUIRED_VARS = ["TOKEN", "CLIENT_ID", "EMOJI_UPVOTE_ID", "EMOJI_DOWNVOTE_ID"]; //todo: validate emojis
+const REQUIRED_VARS = ["TOKEN", "CLIENT_ID", "EMOJI_UPVOTE_ID", "EMOJI_DOWNVOTE_ID"];
 
 function validateEnv() {
   const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
