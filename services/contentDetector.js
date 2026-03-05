@@ -1,12 +1,9 @@
 const logger = require("logger");
 const { handleMessageEvent: storeMessage } = require("services/messageService");
-const { readFile } = require("services/storageHelper");
-const { APPLICATION_CONFIG_PATH } = require("config");
-
-require("dotenv").config();
+const { getAppConfig, areEmojisValid } = require("services/applicationConfigService");
 
 async function contentDetector(message) {
-  const { domainList = [] } = await readFile(APPLICATION_CONFIG_PATH);
+  const { domainList = [] } = await getAppConfig();
   const videoImageTypes = ["image", "video"];
   const hasValidEmbed = message.embeds.some(
     (embed) => embed.url && domainList.some((domain) => embed.url.includes(domain))
@@ -18,7 +15,8 @@ async function contentDetector(message) {
 }
 
 async function addKarmaReactions(message) {
-  const { emojiUpvoteId, emojiDownvoteId } = await readFile(APPLICATION_CONFIG_PATH);
+  if (!areEmojisValid()) return;
+  const { emojiUpvoteId, emojiDownvoteId } = await getAppConfig();
   await message.react(emojiUpvoteId);
   await message.react(emojiDownvoteId);
 }

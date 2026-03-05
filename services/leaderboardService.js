@@ -8,13 +8,11 @@ const {
 } = require("repositories/karmaWeeklyLeaderboard");
 const { EmbedBuilder, escapeMarkdown } = require("discord.js");
 const { readServerConfig } = require("services/serverConfigStorage");
+const { getCachedUsername, setCachedUsername } = require("services/sessionStateStorage");
 
 const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
 const LRM = "\u200E";
-
-const USERNAME_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
-const usernameCache = new Map();
 
 async function persistKarmaWeeklyLeaderboard() {
   logger.info("function - persistKarmaWeeklyLeaderboard");
@@ -100,15 +98,13 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
 
 async function getUsername(users, userId) {
   if (!userId) throw error;
-  const cached = usernameCache.get(userId);
-  if (cached && Date.now() - cached.cachedAt < USERNAME_CACHE_TTL_MS) {
-    return cached.username;
-  }
+  const cached = await getCachedUsername(userId);
+  if (cached) return cached;
   try {
     const user = await users.fetch(userId);
     const safeUsername = getSafeText(user.displayName);
     const username = safeUsername ? safeUsername : user.username;
-    usernameCache.set(userId, { username, cachedAt: Date.now() });
+    await setCachedUsername(userId, username);
     return username;
   } catch (error) {
     //logger.warn(error);

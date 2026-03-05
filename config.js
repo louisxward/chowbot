@@ -5,5 +5,6 @@ const DATA_DIR = path.join(__dirname, "data");
 module.exports = {
   DB_PATH: path.join(DATA_DIR, "chowbot.db"),
   SERVER_CONFIG_PATH: path.join(DATA_DIR, "serverConfig.json"),
-  APPLICATION_CONFIG_PATH: path.join(DATA_DIR, "applicationConfig.json")
+  APPLICATION_CONFIG_PATH: path.join(DATA_DIR, "applicationConfig.json"),
+  SESSION_STATE_PATH: path.join(DATA_DIR, "sessionState.json")
 };

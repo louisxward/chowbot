@@ -8,11 +8,10 @@ const path = require("node:path");
 const logger = require("logger");
 const { init } = require("services/databaseService");
 const { start: startHealth } = require("services/healthService");
-const { readFile } = require("services/storageHelper");
-const { APPLICATION_CONFIG_PATH } = require("config");
+const { getAppConfig } = require("services/applicationConfigService");
 
 // Application config validation
-readFile(APPLICATION_CONFIG_PATH).then((appConfig) => {
+getAppConfig().then((appConfig) => {
   if (!appConfig.domainList?.length) logger.warn("startup - domainList is empty or missing");
 });
 

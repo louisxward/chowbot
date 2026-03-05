@@ -4,8 +4,7 @@ const logger = require("logger");
 
 const { scheduledClearer } = require("services/messageClearer");
 const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
-const { readFile } = require("services/storageHelper");
-const { APPLICATION_CONFIG_PATH } = require("config");
+const { getAppConfig, setEmojisValid } = require("services/applicationConfigService");
 
 function schedule(expression, name, fn) {
   cron.schedule(
@@ -24,19 +23,23 @@ function schedule(expression, name, fn) {
 
 async function validateEmojis(client) {
   const appEmojis = await client.application.emojis.fetch();
-  const { emojiUpvoteId, emojiDownvoteId } = await readFile(APPLICATION_CONFIG_PATH);
+  const { emojiUpvoteId, emojiDownvoteId } = await getAppConfig();
+  let allValid = true;
   for (const [varName, emojiId] of Object.entries({ emojiUpvoteId, emojiDownvoteId })) {
     if (!emojiId) {
       logger.warn(`startup - ${varName} is missing from applicationConfig`);
+      allValid = false;
       continue;
     }
     const emoji = appEmojis.get(emojiId);
     if (!emoji) {
       logger.warn(`startup - emoji not found for ${varName} (id: ${emojiId})`);
+      allValid = false;
     } else {
       logger.info(`startup - emoji ok: ${varName} -> ${emoji.name}`);
     }
   }
+  setEmojisValid(allValid);
 }
 
 function mapStatuses(statuses) {
@@ -47,7 +50,7 @@ async function readyup(client) {
   await validateEmojis(client);
 
   // Set initial status
-  const { statuses: initialStatuses = [] } = await readFile(APPLICATION_CONFIG_PATH);
+  const { statuses: initialStatuses = [] } = await getAppConfig();
   const initialMapped = mapStatuses(initialStatuses);
   let currentIndex = 0;
   if (initialMapped.length > 0) {
@@ -56,7 +59,7 @@ async function readyup(client) {
   }
 
   schedule("0 0 * * *", "statusUpdate", async () => {
-    const { statuses = [] } = await readFile(APPLICATION_CONFIG_PATH);
+    const { statuses = [] } = await getAppConfig();
     const mapped = mapStatuses(statuses);
     if (mapped.length === 0) return;
     const status = mapped[currentIndex % mapped.length];

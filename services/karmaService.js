@@ -1,13 +1,12 @@
 const logger = require("logger");
 const { createKarma: repoCreateKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
-const { readFile } = require("services/storageHelper");
-const { APPLICATION_CONFIG_PATH } = require("config");
+const { getAppConfig } = require("services/applicationConfigService");
 
 const KARMA_TYPE = { MESSAGE: 0, ETIQUETTE: 1 };
 
 async function handleEvent(reaction, user, addReaction) {
   if (user.bot) return;
-  const { emojiUpvoteId, emojiDownvoteId } = await readFile(APPLICATION_CONFIG_PATH);
+  const { emojiUpvoteId, emojiDownvoteId } = await getAppConfig();
   const emojiId = reaction._emoji.id;
   if (![emojiUpvoteId, emojiDownvoteId].includes(emojiId)) return;
   if (reaction.partial) {
