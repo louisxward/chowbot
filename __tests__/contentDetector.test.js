@@ -1,4 +1,19 @@
 jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
+jest.mock("config", () => ({ APPLICATION_CONFIG_PATH: "/fake/applicationConfig.json" }));
+jest.mock("services/storageHelper", () => ({
+  readFile: jest.fn().mockResolvedValue({
+    domainList: [
+      "youtube.com/",
+      "twitter.com/",
+      "x.com/",
+      "streamable.com/",
+      "youtu.be/",
+      "tiktok.com/",
+      "gyazo.com/",
+      "twitch.com/"
+    ]
+  })
+}));
 
 const { contentDetector, checkMessageAge } = require("services/contentDetector");
 
@@ -19,54 +34,54 @@ describe("contentDetector", () => {
       "gyazo.com/abc"
     ];
 
-    test.each(validDomains)("detects embed from %s", (url) => {
+    test.each(validDomains)("detects embed from %s", async (url) => {
       const message = makeMessage({ embeds: [{ url }] });
-      expect(contentDetector(message)).toBe(true);
+      expect(await contentDetector(message)).toBe(true);
     });
 
-    test("ignores embed with no url", () => {
+    test("ignores embed with no url", async () => {
       const message = makeMessage({ embeds: [{ url: null }] });
-      expect(contentDetector(message)).toBe(false);
+      expect(await contentDetector(message)).toBe(false);
     });
 
-    test("ignores embed from unknown domain", () => {
+    test("ignores embed from unknown domain", async () => {
       const message = makeMessage({ embeds: [{ url: "https://example.com/video" }] });
-      expect(contentDetector(message)).toBe(false);
+      expect(await contentDetector(message)).toBe(false);
     });
   });
 
   describe("valid attachments", () => {
-    test("detects image attachment", () => {
+    test("detects image attachment", async () => {
       const message = makeMessage({ attachments: [{ contentType: "image/png" }] });
-      expect(contentDetector(message)).toBe(true);
+      expect(await contentDetector(message)).toBe(true);
     });
 
-    test("detects video attachment", () => {
+    test("detects video attachment", async () => {
       const message = makeMessage({ attachments: [{ contentType: "video/mp4" }] });
-      expect(contentDetector(message)).toBe(true);
+      expect(await contentDetector(message)).toBe(true);
     });
 
-    test("ignores attachment with no contentType", () => {
+    test("ignores attachment with no contentType", async () => {
       const message = makeMessage({ attachments: [{ contentType: null }] });
-      expect(contentDetector(message)).toBe(false);
+      expect(await contentDetector(message)).toBe(false);
     });
 
-    test("ignores non-media attachment", () => {
+    test("ignores non-media attachment", async () => {
       const message = makeMessage({ attachments: [{ contentType: "application/pdf" }] });
-      expect(contentDetector(message)).toBe(false);
+      expect(await contentDetector(message)).toBe(false);
     });
   });
 
-  test("returns false with no embeds or attachments", () => {
-    expect(contentDetector(makeMessage())).toBe(false);
+  test("returns false with no embeds or attachments", async () => {
+    expect(await contentDetector(makeMessage())).toBe(false);
   });
 
-  test("returns true when both embed and attachment are valid", () => {
+  test("returns true when both embed and attachment are valid", async () => {
     const message = makeMessage({
       embeds: [{ url: "youtube.com/watch?v=abc" }],
       attachments: [{ contentType: "image/jpeg" }]
     });
-    expect(contentDetector(message)).toBe(true);
+    expect(await contentDetector(message)).toBe(true);
   });
 });
 

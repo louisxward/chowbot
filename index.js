@@ -8,6 +8,13 @@ const path = require("node:path");
 const logger = require("logger");
 const { init } = require("services/databaseService");
 const { start: startHealth } = require("services/healthService");
+const { readFile } = require("services/storageHelper");
+const { APPLICATION_CONFIG_PATH } = require("config");
+
+// Application config validation
+readFile(APPLICATION_CONFIG_PATH).then((appConfig) => {
+  if (!appConfig.domainList?.length) logger.warn("startup - domainList is empty or missing");
+});
 
 // Env validation
 const REQUIRED_VARS = ["TOKEN", "CLIENT_ID", "EMOJI_UPVOTE_ID", "EMOJI_DOWNVOTE_ID"];

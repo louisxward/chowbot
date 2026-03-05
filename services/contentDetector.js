@@ -1,20 +1,13 @@
 const logger = require("logger");
 const { handleMessageEvent: storeMessage } = require("services/messageService");
+const { readFile } = require("services/storageHelper");
+const { APPLICATION_CONFIG_PATH } = require("config");
 
 require("dotenv").config();
 
-function contentDetector(message) {
+async function contentDetector(message) {
+  const { domainList = [] } = await readFile(APPLICATION_CONFIG_PATH);
   const videoImageTypes = ["image", "video"];
-  const domainList = [
-    "youtube.com/",
-    "twitter.com/",
-    "x.com/",
-    "streamable.com/",
-    "youtu.be/",
-    "tiktok.com/",
-    "gyazo.com/",
-    "twitch.com/"
-  ];
   const hasValidEmbed = message.embeds.some(
     (embed) => embed.url && domainList.some((domain) => embed.url.includes(domain))
   );
@@ -49,7 +42,7 @@ async function handleMessageEvent(message, isUpdate) {
   if (isUpdate && !checkMessageAge(message)) {
     return;
   }
-  if (contentDetector(message)) {
+  if (await contentDetector(message)) {
     logger.info("event - content detected");
     logger.info(`- authorId: ${message.author.id}`);
     logger.info(`- messageId: ${message.id}`);

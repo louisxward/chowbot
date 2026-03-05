@@ -4,24 +4,8 @@ const logger = require("logger");
 
 const { scheduledClearer } = require("services/messageClearer");
 const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
-
-const STATUSES = [
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "Raging w/ Charlie", type: ActivityType.Watching },
-
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "yo momma", type: ActivityType.Playing },
-
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "Gaming w/ Henry", type: ActivityType.Watching },
-
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "DrankDrankDrank By Nettspend", type: ActivityType.Listening },
-  { name: "Twerkin w/ Tec?", type: ActivityType.Playing }
-];
+const { readFile } = require("services/storageHelper");
+const { APPLICATION_CONFIG_PATH } = require("config");
 
 function schedule(expression, name, fn) {
   cron.schedule(
@@ -53,18 +37,29 @@ async function validateEmojis(client) {
   }
 }
 
+function mapStatuses(statuses) {
+  return statuses.map(({ name, type }) => ({ name, type: ActivityType[type] }));
+}
+
 async function readyup(client) {
   await validateEmojis(client);
 
   // Set initial status
+  const { statuses: initialStatuses = [] } = await readFile(APPLICATION_CONFIG_PATH);
+  const initialMapped = mapStatuses(initialStatuses);
   let currentIndex = 0;
-  await client.user.setActivity(STATUSES[currentIndex].name, { type: STATUSES[currentIndex].type });
-  currentIndex = 1;
+  if (initialMapped.length > 0) {
+    await client.user.setActivity(initialMapped[currentIndex].name, { type: initialMapped[currentIndex].type });
+    currentIndex = 1;
+  }
 
   schedule("0 0 * * *", "statusUpdate", async () => {
-    const status = STATUSES[currentIndex];
+    const { statuses = [] } = await readFile(APPLICATION_CONFIG_PATH);
+    const mapped = mapStatuses(statuses);
+    if (mapped.length === 0) return;
+    const status = mapped[currentIndex % mapped.length];
     await client.user.setActivity(status.name, { type: status.type });
-    currentIndex = (currentIndex + 1) % STATUSES.length;
+    currentIndex = (currentIndex + 1) % mapped.length;
   });
 
   schedule("0 5 * * *", "scheduledClearer", () => scheduledClearer(client));

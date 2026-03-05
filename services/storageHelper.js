@@ -4,12 +4,12 @@ const logger = require("logger");
 const encoding = "utf8";
 
 async function readFile(filePath) {
-  logger.info("function - readFile ");
-  logger.info(`- filePath: ${filePath}`);
+  logger.debug("function - readFile ");
+  logger.debug(`- filePath: ${filePath}`);
   let data = {};
   try {
     const fileContent = await fs.readFile(filePath, encoding);
-    data = JSON.parse(fileContent);
+    if (fileContent.trim()) data = JSON.parse(fileContent);
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
