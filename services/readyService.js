@@ -67,7 +67,7 @@ async function readyup(client) {
     currentIndex = (currentIndex + 1) % STATUSES.length;
   });
 
-  schedule("0 5 * * *", "scheduledClearer", async () => await scheduledClearer(client));
+  schedule("0 5 * * *", "scheduledClearer", () => scheduledClearer(client));
 
   schedule("0 21 * * 0", "sendKarmaWeeklyLeaderboard", () => sendKarmaWeeklyLeaderboard(client));
   schedule("1 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
