@@ -13,6 +13,9 @@ const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
 const LRM = "\u200E";
 
+const USERNAME_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const usernameCache = new Map();
+
 async function persistKarmaWeeklyLeaderboard() {
   logger.info("function - persistKarmaWeeklyLeaderboard");
   const created = new Date().toISOString();
@@ -97,10 +100,16 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
 
 async function getUsername(users, userId) {
   if (!userId) throw error;
+  const cached = usernameCache.get(userId);
+  if (cached && Date.now() - cached.cachedAt < USERNAME_CACHE_TTL_MS) {
+    return cached.username;
+  }
   try {
     const user = await users.fetch(userId);
     const safeUsername = getSafeText(user.displayName);
-    return safeUsername ? safeUsername : user.username;
+    const username = safeUsername ? safeUsername : user.username;
+    usernameCache.set(userId, { username, cachedAt: Date.now() });
+    return username;
   } catch (error) {
     //logger.warn(error);
   }
@@ -109,8 +118,8 @@ async function getUsername(users, userId) {
 
 function getSafeText(input) {
   if (!input || typeof input !== "string") return null;
-  clean = escapeMarkdown(input);
-  //if (clean.length === 0) return null;
+  let clean = escapeMarkdown(input);
+  if (clean.length === 0) return null;
   clean = clean + LRM;
   return clean;
 }
