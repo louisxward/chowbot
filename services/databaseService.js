@@ -60,8 +60,8 @@ const MIGRATIONS = [
     userId TEXT,
     created TEXT NOT NULL
   );
-  INSERT OR IGNORE INTO Message (id, serverId, created)
-    SELECT DISTINCT messageId, serverId, date('now') FROM Karma WHERE messageId IS NOT NULL;
+  INSERT OR IGNORE INTO Message (id, serverId, created, userId)
+    SELECT DISTINCT messageId, serverId, date('now'), userId FROM Karma WHERE messageId IS NOT NULL;
   `
 ];
 
