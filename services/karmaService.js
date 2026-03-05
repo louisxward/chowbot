@@ -1,17 +1,15 @@
 const logger = require("logger");
 const { createKarma: repoCreateKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
-require("dotenv").config();
-
-const EMOJI_UPVOTE_ID = process.env.EMOJI_UPVOTE_ID;
-const EMOJI_DOWNVOTE_ID = process.env.EMOJI_DOWNVOTE_ID;
-const KARMA_EMOJIS = [EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID];
+const { readFile } = require("services/storageHelper");
+const { APPLICATION_CONFIG_PATH } = require("config");
 
 const KARMA_TYPE = { MESSAGE: 0, ETIQUETTE: 1 };
 
 async function handleEvent(reaction, user, addReaction) {
   if (user.bot) return;
+  const { emojiUpvoteId, emojiDownvoteId } = await readFile(APPLICATION_CONFIG_PATH);
   const emojiId = reaction._emoji.id;
-  if (!KARMA_EMOJIS.includes(emojiId)) return;
+  if (![emojiUpvoteId, emojiDownvoteId].includes(emojiId)) return;
   if (reaction.partial) {
     try {
       await reaction.fetch();
@@ -30,7 +28,7 @@ async function handleEvent(reaction, user, addReaction) {
     return;
   }
 
-  const karmaValue = emojiId === EMOJI_UPVOTE_ID ? 1 : -1;
+  const karmaValue = emojiId === emojiUpvoteId ? 1 : -1;
   await updateUserKarma(guildId, messageId, authorId, user.id, emojiId, karmaValue, KARMA_TYPE.MESSAGE);
 }
 

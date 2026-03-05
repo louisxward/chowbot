@@ -18,8 +18,9 @@ async function contentDetector(message) {
 }
 
 async function addKarmaReactions(message) {
-  await message.react(process.env.EMOJI_UPVOTE_ID);
-  await message.react(process.env.EMOJI_DOWNVOTE_ID);
+  const { emojiUpvoteId, emojiDownvoteId } = await readFile(APPLICATION_CONFIG_PATH);
+  await message.react(emojiUpvoteId);
+  await message.react(emojiDownvoteId);
 }
 
 // returns true if valid age less than 24h

@@ -17,7 +17,7 @@ readFile(APPLICATION_CONFIG_PATH).then((appConfig) => {
 });
 
 // Env validation
-const REQUIRED_VARS = ["TOKEN", "CLIENT_ID", "EMOJI_UPVOTE_ID", "EMOJI_DOWNVOTE_ID"];
+const REQUIRED_VARS = ["TOKEN", "CLIENT_ID"];
 const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
 if (missing.length > 0) {
   logger.fatal(

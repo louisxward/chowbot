@@ -1,10 +1,11 @@
 const UPVOTE_ID = "upvote123";
 const DOWNVOTE_ID = "downvote456";
 
-process.env.EMOJI_UPVOTE_ID = UPVOTE_ID;
-process.env.EMOJI_DOWNVOTE_ID = DOWNVOTE_ID;
-
 jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
+jest.mock("config", () => ({ APPLICATION_CONFIG_PATH: "/fake/applicationConfig.json" }));
+jest.mock("services/storageHelper", () => ({
+  readFile: jest.fn().mockResolvedValue({ emojiUpvoteId: "upvote123", emojiDownvoteId: "downvote456" })
+}));
 jest.mock("repositories/karma", () => ({
   createKarma: jest.fn(),
   updateKarma: jest.fn(),

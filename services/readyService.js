@@ -24,10 +24,12 @@ function schedule(expression, name, fn) {
 
 async function validateEmojis(client) {
   const appEmojis = await client.application.emojis.fetch();
-  for (const [varName, emojiId] of Object.entries({
-    EMOJI_UPVOTE_ID: process.env.EMOJI_UPVOTE_ID,
-    EMOJI_DOWNVOTE_ID: process.env.EMOJI_DOWNVOTE_ID
-  })) {
+  const { emojiUpvoteId, emojiDownvoteId } = await readFile(APPLICATION_CONFIG_PATH);
+  for (const [varName, emojiId] of Object.entries({ emojiUpvoteId, emojiDownvoteId })) {
+    if (!emojiId) {
+      logger.warn(`startup - ${varName} is missing from applicationConfig`);
+      continue;
+    }
     const emoji = appEmojis.get(emojiId);
     if (!emoji) {
       logger.warn(`startup - emoji not found for ${varName} (id: ${emojiId})`);

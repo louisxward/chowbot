@@ -2,6 +2,8 @@ jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() 
 jest.mock("config", () => ({ APPLICATION_CONFIG_PATH: "/fake/applicationConfig.json" }));
 jest.mock("services/storageHelper", () => ({
   readFile: jest.fn().mockResolvedValue({
+    emojiUpvoteId: "upvote123",
+    emojiDownvoteId: "downvote456",
     domainList: [
       "youtube.com/",
       "twitter.com/",
