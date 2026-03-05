@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const logger = require("logger");
 const { addKarmaReactions } = require("services/contentDetector");
+const { areEmojisValid } = require("services/applicationConfigService");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -9,6 +10,10 @@ module.exports = {
     .addStringOption((option) => option.setName("message_id").setDescription("id of the message").setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
   async execute(interaction) {
+    if (!areEmojisValid()) {
+      await interaction.reply({ content: "emoji are ids not valid", ephemeral: true });
+      return;
+    }
     const inputMessageId = interaction.options.getString("message_id");
     logger.info(`- inputMessageId: ${inputMessageId}`);
     let message = null;

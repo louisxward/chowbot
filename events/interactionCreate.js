@@ -11,7 +11,7 @@ module.exports = {
     if (!interaction.isChatInputCommand()) return;
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) {
-      logger.error(`Command '${interaction.commandName}' not found`);
+      logger.warn(`Command '${interaction.commandName}' not found`);
     }
     try {
       await command.execute(interaction);

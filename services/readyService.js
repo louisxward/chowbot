@@ -27,16 +27,16 @@ async function validateEmojis(client) {
   let allValid = true;
   for (const [varName, emojiId] of Object.entries({ emojiUpvoteId, emojiDownvoteId })) {
     if (!emojiId) {
-      logger.warn(`startup - ${varName} is missing from applicationConfig`);
+      logger.warn(`post - ${varName} is missing from applicationConfig`);
       allValid = false;
       continue;
     }
     const emoji = appEmojis.get(emojiId);
     if (!emoji) {
-      logger.warn(`startup - emoji not found for ${varName} (id: ${emojiId})`);
+      logger.warn(`post - emoji not found for ${varName} (id: ${emojiId})`);
       allValid = false;
     } else {
-      logger.info(`startup - emoji ok: ${varName} -> ${emoji.name}`);
+      logger.info(`post - emoji ok: ${varName} -> ${emoji.name}`);
     }
   }
   setEmojisValid(allValid);

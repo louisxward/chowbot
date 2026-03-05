@@ -8,10 +8,13 @@ async function contentDetector(message) {
   const hasValidEmbed = message.embeds.some(
     (embed) => embed.url && domainList.some((domain) => embed.url.includes(domain))
   );
+  if (hasValidEmbed) {
+    return true;
+  }
   const hasValidAttachment = message.attachments.some(
     (attachment) => attachment.contentType && videoImageTypes.some((type) => attachment.contentType.includes(type))
   );
-  return hasValidEmbed || hasValidAttachment;
+  return hasValidAttachment;
 }
 
 async function addKarmaReactions(message) {
@@ -29,6 +32,7 @@ function checkMessageAge(message) {
 }
 
 async function handleMessageEvent(message, isUpdate) {
+  if (!areEmojisValid()) return;
   if (message.author.bot) return;
   if (message.partial) {
     try {
