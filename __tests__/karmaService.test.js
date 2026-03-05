@@ -98,13 +98,13 @@ describe("updateUserKarma", () => {
   test("creates karma record when update affects 0 rows", async () => {
     updateKarma.mockResolvedValue(0);
     createKarma.mockResolvedValue();
-    await updateUserKarma("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1);
-    expect(createKarma).toHaveBeenCalledWith("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1);
+    await updateUserKarma("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, 0);
+    expect(createKarma).toHaveBeenCalledWith("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, null, 0);
   });
 
   test("does not create karma record when update succeeds", async () => {
     updateKarma.mockResolvedValue(1);
-    await updateUserKarma("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1);
+    await updateUserKarma("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, 0);
     expect(createKarma).not.toHaveBeenCalled();
   });
 });

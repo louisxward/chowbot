@@ -1,12 +1,14 @@
 const logger = require("logger");
 const { connect } = require("services/databaseService");
 
-async function createKarma(serverId, messageId, userId, fromUserId, emojiId, value, type) {
+//todo rename methods karma is wide table
+
+async function createKarma(serverId, messageId, userId, fromUserId, emojiId, value, reason, type) {
   logger.info("repository - createKarma");
   const db = await connect();
   await db.run(
-    "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, type) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [serverId, messageId, userId, fromUserId, emojiId, value, type]
+    "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [serverId, messageId, userId, fromUserId, emojiId, value, reason, type]
   );
   db.close();
 }
@@ -14,10 +16,12 @@ async function createKarma(serverId, messageId, userId, fromUserId, emojiId, val
 async function deleteKarma(serverId, messageId, fromUserId, emojiId) {
   logger.info("repository - deleteKarma");
   const db = await connect();
-  await db.run(
-    "DELETE FROM Karma WHERE serverId = ? AND messageId = ? AND fromUserId = ? AND emojiId = ?",
-    [serverId, messageId, fromUserId, emojiId]
-  );
+  await db.run("DELETE FROM Karma WHERE serverId = ? AND messageId = ? AND fromUserId = ? AND emojiId = ?", [
+    serverId,
+    messageId,
+    fromUserId,
+    emojiId
+  ]);
   db.close();
 }
 

@@ -41,6 +41,7 @@ const MIGRATIONS = [
     fromUserId TEXT NOT NULL,
     emojiId TEXT,
     value INTEGER NOT NULL,
+    reason TEXT,
     type INTEGER NOT NULL DEFAULT 0
   );
   INSERT INTO Karma_new (id, serverId, messageId, userId, fromUserId, emojiId, value, type)

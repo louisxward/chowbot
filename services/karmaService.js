@@ -1,5 +1,5 @@
 const logger = require("logger");
-const { createKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+const { createKarma: repoCreateKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
 require("dotenv").config();
 
 const EMOJI_UPVOTE_ID = process.env.EMOJI_UPVOTE_ID;
@@ -40,8 +40,9 @@ async function updateUserKarma(serverId, messageId, userId, fromUserId, emojiId,
   logger.info(`- messageId: ${messageId}`);
   logger.info(`- fromUserId: ${fromUserId}`);
   logger.info(`- value: ${value}`);
+  //todo maybe remove this one day, if user reacts while down
   if ((await updateKarma(serverId, messageId, fromUserId, emojiId, value)) == 0) {
-    await createKarma(serverId, messageId, userId, fromUserId, emojiId, value, type);
+    await repoCreateKarma(serverId, messageId, userId, fromUserId, emojiId, value, null, type);
   }
 }
 
@@ -53,17 +54,17 @@ async function deleteUserKarma(serverId, messageId, fromUserId, emojiId) {
   await deleteKarma(serverId, messageId, fromUserId, emojiId);
 }
 
-async function createUserKarma(serverId, messageId, userId, fromUserId, emojiId, value, type) {
+async function createKarma(serverId, messageId, userId, fromUserId, emojiId, value, reason, type) {
   logger.info("service - createUserKarma");
   logger.info(`- serverId: ${serverId}`);
-  logger.info(`- messageId: ${messageId}`);
+  logger.info(`- userId: ${userId}`);
   logger.info(`- fromUserId: ${fromUserId}`);
   logger.info(`- value: ${value}`);
-  await createKarma(serverId, messageId, userId, fromUserId, emojiId, value, type);
+  await repoCreateKarma(serverId, messageId, userId, fromUserId, emojiId, value, reason, type);
 }
 
 async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
-module.exports = { handleEvent, updateUserKarma, deleteUserKarma, getUserKarma, createUserKarma, KARMA_TYPE };
+module.exports = { handleEvent, updateUserKarma, deleteUserKarma, getUserKarma, createKarma, KARMA_TYPE };

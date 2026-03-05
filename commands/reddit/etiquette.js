@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { createUserKarma } = require("services/karmaService");
+const { SlashCommandBuilder } = require("discord.js");
+const { createKarma, KARMA_TYPE } = require("services/karmaService");
 const logger = require("logger");
 
 module.exports = {
@@ -27,7 +27,7 @@ module.exports = {
     logger.info(`- whoId: ${who.id}`);
     logger.info(`- good: ${good}`);
     logger.info(`- reason: ${reason}`);
-    await createUserKarma(interaction.guildId, "etiquette_report", who.id, userId, reason, good ? 1 : -1);
+    await createKarma(interaction.guildId, null, who.id, userId, null, good ? 1 : -1, reason, KARMA_TYPE.ETIQUETTE);
     await interaction.reply({
       content: "Thank you for your input, please leave this with us as we investigate further",
       ephemeral: true
