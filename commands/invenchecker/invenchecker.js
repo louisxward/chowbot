@@ -106,77 +106,89 @@ module.exports = {
     const group = interaction.options.getSubcommandGroup();
     const sub = interaction.options.getSubcommand();
 
-    if (group === "account" && sub === "register") {
-      const existing = await getUid(interaction.user.id);
-      if (existing) {
-        return interaction.reply({ ephemeral: true, content: `Already registered (uid: \`${existing}\`).` });
-      }
-      await interaction.deferReply({ ephemeral: true });
-      const result = await createAccountByDiscord(interaction.user.id);
-      await setUid(interaction.user.id, result.uid);
-      return interaction.editReply({ content: `Registered! Your uid: \`${result.uid}\`` });
-    }
-
-    if (group === "steam") {
-      const uid = await requireUid(interaction);
-      if (!uid) return;
-      const id = interaction.options.getString("id");
-      await interaction.deferReply({ ephemeral: true });
-
-      if (sub === "add") {
-        const account = await addSteam64Id(uid, id);
-        return interaction.editReply({ content: `Added \`${id}\`. Steam64 IDs: ${account.steam64ids.join(", ")}` });
-      }
-      if (sub === "remove") {
-        const account = await removeSteam64Id(uid, id);
-        const remaining = account.steam64ids.length ? account.steam64ids.join(", ") : "none";
-        return interaction.editReply({ content: `Removed \`${id}\`. Remaining: ${remaining}` });
-      }
-    }
-
-    if (group === "item") {
-      const uid = await requireUid(interaction);
-      if (!uid) return;
-      const name = interaction.options.getString("name");
-      await interaction.deferReply({ ephemeral: true });
-
-      if (sub === "add") {
-        const account = await addCustomItem(uid, name);
-        return interaction.editReply({ content: `Added \`${name}\`. Tracked items: ${account.customItems.join(", ")}` });
-      }
-      if (sub === "remove") {
-        const account = await removeCustomItem(uid, name);
-        const remaining = account.customItems.length ? account.customItems.join(", ") : "none";
-        return interaction.editReply({ content: `Removed \`${name}\`. Remaining: ${remaining}` });
-      }
-    }
-
-    if (group === "alerts") {
-      const uid = await requireUid(interaction);
-      if (!uid) return;
-      await interaction.deferReply({ ephemeral: true });
-
-      if (sub === "list") {
-        const alerts = await getUserAlerts(uid);
-        if (!alerts.length) {
-          return interaction.editReply({ content: "No unresolved alerts." });
+    try {
+      if (group === "account" && sub === "register") {
+        const existing = await getUid(interaction.user.id);
+        if (existing) {
+          return interaction.reply({ ephemeral: true, content: `Already registered (uid: \`${existing}\`).` });
         }
-        const embed = new EmbedBuilder()
-          .setTitle("Unresolved Alerts")
-          .setColor(0xffa500)
-          .setDescription(
-            alerts
-              .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ $${a.price_at_alert.toFixed(2)}`)
-              .join("\n")
-          )
-          .setTimestamp();
-        return interaction.editReply({ embeds: [embed] });
+        await interaction.deferReply({ ephemeral: true });
+        const result = await createAccountByDiscord(interaction.user.id);
+        await setUid(interaction.user.id, result.uid);
+        return interaction.editReply({ content: `Registered! Your uid: \`${result.uid}\`` });
       }
 
-      if (sub === "resolve") {
-        const result = await resolveAllAlerts(uid);
-        return interaction.editReply({ content: `Resolved ${result.resolved} alert(s).` });
+      if (group === "steam") {
+        const uid = await requireUid(interaction);
+        if (!uid) return;
+        const id = interaction.options.getString("id");
+        await interaction.deferReply({ ephemeral: true });
+
+        if (sub === "add") {
+          const account = await addSteam64Id(uid, id);
+          return interaction.editReply({ content: `Added \`${id}\`. Steam64 IDs: ${account.steam64ids.join(", ")}` });
+        }
+        if (sub === "remove") {
+          const account = await removeSteam64Id(uid, id);
+          const remaining = account.steam64ids.length ? account.steam64ids.join(", ") : "none";
+          return interaction.editReply({ content: `Removed \`${id}\`. Remaining: ${remaining}` });
+        }
       }
+
+      if (group === "item") {
+        const uid = await requireUid(interaction);
+        if (!uid) return;
+        const name = interaction.options.getString("name");
+        await interaction.deferReply({ ephemeral: true });
+
+        if (sub === "add") {
+          const account = await addCustomItem(uid, name);
+          return interaction.editReply({ content: `Added \`${name}\`. Tracked items: ${account.customItems.join(", ")}` });
+        }
+        if (sub === "remove") {
+          const account = await removeCustomItem(uid, name);
+          const remaining = account.customItems.length ? account.customItems.join(", ") : "none";
+          return interaction.editReply({ content: `Removed \`${name}\`. Remaining: ${remaining}` });
+        }
+      }
+
+      if (group === "alerts") {
+        const uid = await requireUid(interaction);
+        if (!uid) return;
+        await interaction.deferReply({ ephemeral: true });
+
+        if (sub === "list") {
+          const alerts = await getUserAlerts(uid);
+          if (!alerts.length) {
+            return interaction.editReply({ content: "No unresolved alerts." });
+          }
+          const embed = new EmbedBuilder()
+            .setTitle("Unresolved Alerts")
+            .setColor(0xffa500)
+            .setDescription(
+              alerts
+                .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ $${a.price_at_alert.toFixed(2)}`)
+                .join("\n")
+            )
+            .setTimestamp();
+          return interaction.editReply({ embeds: [embed] });
+        }
+
+        if (sub === "resolve") {
+          const result = await resolveAllAlerts(uid);
+          return interaction.editReply({ content: `Resolved ${result.resolved} alert(s).` });
+        }
+      }
+    } catch (err) {
+      const msg = err.status === 404
+        ? "Account not found. Try `/invenchecker account register` again."
+        : err.status === 409
+          ? "Account already exists on the server."
+          : `API error: ${err.message}`;
+      if (interaction.deferred) {
+        return interaction.editReply({ content: msg });
+      }
+      return interaction.reply({ ephemeral: true, content: msg });
     }
   }
 };
