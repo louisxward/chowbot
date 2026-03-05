@@ -5,6 +5,7 @@
 /data
 /log
 deploy.sh
+/.claude
 
 # Compiled output
 /dist
