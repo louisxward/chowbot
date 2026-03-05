@@ -1,11 +1,12 @@
 const logger = require("logger");
-const { createKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+const { createKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
 require("dotenv").config();
 
 const EMOJI_UPVOTE_ID = process.env.EMOJI_UPVOTE_ID;
 const EMOJI_DOWNVOTE_ID = process.env.EMOJI_DOWNVOTE_ID;
-
 const KARMA_EMOJIS = [EMOJI_UPVOTE_ID, EMOJI_DOWNVOTE_ID];
+
+const KARMA_TYPE = { MESSAGE: 0, ETIQUETTE: 1 };
 
 async function handleEvent(reaction, user, addReaction) {
   if (user.bot) return;
@@ -15,42 +16,54 @@ async function handleEvent(reaction, user, addReaction) {
     try {
       await reaction.fetch();
     } catch (error) {
-      logger.error(error);
+      logger.error({ err: error }, "event - failed to fetch partial reaction");
       return;
     }
   }
   const authorId = reaction.message.author.id;
   if (user.id === authorId) return;
-  let karmaValue = 0;
-  if (addReaction) {
-    const isUpvote = emojiId === EMOJI_UPVOTE_ID;
-    karmaValue = isUpvote === addReaction ? 1 : -1;
+
+  const { guildId, id: messageId } = reaction.message;
+
+  if (!addReaction) {
+    await deleteUserKarma(guildId, messageId, user.id, emojiId);
+    return;
   }
-  await updateUserKarma(reaction.message.guildId, reaction.message.id, authorId, user.id, emojiId, karmaValue);
+
+  const karmaValue = emojiId === EMOJI_UPVOTE_ID ? 1 : -1;
+  await updateUserKarma(guildId, messageId, authorId, user.id, emojiId, karmaValue, KARMA_TYPE.MESSAGE);
 }
 
-async function updateUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
-  logger.info("function - updateUserKarma");
+async function updateUserKarma(serverId, messageId, userId, fromUserId, emojiId, value, type) {
+  logger.info("service - updateUserKarma");
   logger.info(`- serverId: ${serverId}`);
   logger.info(`- messageId: ${messageId}`);
-  logger.info(`- reactionUserId: ${reactionUserId}`);
+  logger.info(`- fromUserId: ${fromUserId}`);
   logger.info(`- value: ${value}`);
-  if ((await updateKarma(serverId, messageId, reactionUserId, reactionEmojiId, value)) == 0) {
-    await createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value);
+  if ((await updateKarma(serverId, messageId, fromUserId, emojiId, value)) == 0) {
+    await createKarma(serverId, messageId, userId, fromUserId, emojiId, value, type);
   }
 }
 
-async function createUserKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value) {
-  logger.info("function - createUserKarma");
+async function deleteUserKarma(serverId, messageId, fromUserId, emojiId) {
+  logger.info("service - deleteUserKarma");
   logger.info(`- serverId: ${serverId}`);
   logger.info(`- messageId: ${messageId}`);
-  logger.info(`- reactionUserId: ${reactionUserId}`);
+  logger.info(`- fromUserId: ${fromUserId}`);
+  await deleteKarma(serverId, messageId, fromUserId, emojiId);
+}
+
+async function createUserKarma(serverId, messageId, userId, fromUserId, emojiId, value, type) {
+  logger.info("service - createUserKarma");
+  logger.info(`- serverId: ${serverId}`);
+  logger.info(`- messageId: ${messageId}`);
+  logger.info(`- fromUserId: ${fromUserId}`);
   logger.info(`- value: ${value}`);
-  await createKarma(serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value);
+  await createKarma(serverId, messageId, userId, fromUserId, emojiId, value, type);
 }
 
 async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
-module.exports = { handleEvent, updateUserKarma, getUserKarma, createUserKarma };
+module.exports = { handleEvent, updateUserKarma, deleteUserKarma, getUserKarma, createUserKarma, KARMA_TYPE };

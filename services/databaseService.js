@@ -31,14 +31,36 @@ const MIGRATIONS = [
     value INTEGER NOT NULL
   );
   `,
-  // v2 — indexes
+  // v2 — indexes, Karma schema update, Message table
   `
-  CREATE INDEX IF NOT EXISTS idx_karma_messageUserId
-    ON Karma (messageUserId);
+  CREATE TABLE Karma_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    serverId TEXT NOT NULL,
+    messageId TEXT,
+    userId TEXT NOT NULL,
+    fromUserId TEXT NOT NULL,
+    emojiId TEXT,
+    value INTEGER NOT NULL,
+    type INTEGER NOT NULL DEFAULT 0
+  );
+  INSERT INTO Karma_new (id, serverId, messageId, userId, fromUserId, emojiId, value, type)
+    SELECT id, serverId, messageId, messageUserId, reactionUserId, reactionEmojiId, value, 0 FROM Karma;
+  DROP TABLE Karma;
+  ALTER TABLE Karma_new RENAME TO Karma;
+  CREATE INDEX IF NOT EXISTS idx_karma_userId
+    ON Karma (userId);
   CREATE INDEX IF NOT EXISTS idx_karma_lookup
-    ON Karma (serverId, messageId, reactionUserId, reactionEmojiId);
+    ON Karma (serverId, messageId, fromUserId, emojiId);
   CREATE INDEX IF NOT EXISTS idx_karmaWeeklyLeaderboardUser_weekId
     ON KarmaWeeklyLeaderboardUser (weekId);
+  CREATE TABLE IF NOT EXISTS Message (
+    id TEXT PRIMARY KEY,
+    serverId TEXT NOT NULL,
+    userId TEXT,
+    created TEXT NOT NULL
+  );
+  INSERT OR IGNORE INTO Message (id, serverId, created)
+    SELECT DISTINCT messageId, serverId, date('now') FROM Karma WHERE messageId IS NOT NULL;
   `
 ];
 

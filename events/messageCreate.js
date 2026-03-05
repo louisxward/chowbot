@@ -1,6 +1,5 @@
 const { Events } = require("discord.js");
 const { handleMessageEvent } = require("services/contentDetector");
-require("dotenv").config();
 
 module.exports = {
   name: Events.MessageCreate,

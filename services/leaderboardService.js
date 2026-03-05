@@ -102,7 +102,7 @@ async function getUsername(users, userId) {
     const safeUsername = getSafeText(user.displayName);
     return safeUsername ? safeUsername : user.username;
   } catch (error) {
-    logger.warn(error);
+    //logger.warn(error);
   }
   return userId;
 }

@@ -1,4 +1,5 @@
 const logger = require("logger");
+const { handleMessageEvent: storeMessage } = require("services/messageService");
 
 require("dotenv").config();
 
@@ -28,6 +29,7 @@ async function addKarmaReactions(message) {
   await message.react(process.env.EMOJI_DOWNVOTE_ID);
 }
 
+// returns true if valid age less than 24h
 function checkMessageAge(message) {
   const oneDayInMs = 24 * 60 * 60 * 1000;
   const isTooOld = Date.now() - message.createdTimestamp > oneDayInMs;
@@ -48,14 +50,15 @@ async function handleMessageEvent(message, isUpdate) {
     return;
   }
   if (contentDetector(message)) {
-    logger.info("- Content detected!");
+    logger.info("event - content detected");
     logger.info(`- authorId: ${message.author.id}`);
     logger.info(`- messageId: ${message.id}`);
     try {
       await addKarmaReactions(message);
     } catch (error) {
-      logger.error(error);
+      logger.error({ err: error }, "event - failed to add karma reactions");
     }
+    await storeMessage(message);
   }
 }
 
