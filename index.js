@@ -1,38 +1,29 @@
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
-const { init } = require("services/databaseService");
 
-const { Client, Collection, GatewayIntentBits, Partials, IntentsBitField } = require("discord.js"); //PermissionsBitField
-
+const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
 
 const logger = require("logger");
+const { init } = require("services/databaseService");
 const { start: startHealth } = require("services/healthService");
 
-// Check Envs
-logger.info("startup - check envs");
+// Env validation
 const REQUIRED_VARS = ["TOKEN", "CLIENT_ID", "EMOJI_UPVOTE_ID", "EMOJI_DOWNVOTE_ID"];
-
-function validateEnv() {
-  const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
-  if (missing.length > 0) {
-    logger.fatal(
-      { missingVariables: missing },
-      `- missing required environment variables in .env: ${missing.join(", ")}`
-    );
-    process.exit(1);
-  }
+const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
+if (missing.length > 0) {
+  logger.fatal(
+    { missingVariables: missing },
+    `startup - missing required environment variables: ${missing.join(", ")}`
+  );
+  process.exit(1);
 }
 
-validateEnv();
+// Data directory
+fs.mkdirSync(path.join(__dirname, "data"), { recursive: true });
 
-// Data
-const dataPath = path.join(__dirname, "data");
-if (!fs.existsSync(dataPath)) {
-  fs.mkdirSync(dataPath, { recursive: true });
-}
-// ToDo - Needs looking at
+// Client
 logger.info("startup - client init");
 const client = new Client({
   intents: [
@@ -40,60 +31,40 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-    IntentsBitField.Flags.Guilds,
-    IntentsBitField.Flags.GuildMessages,
-    IntentsBitField.Flags.MessageContent
+    GatewayIntentBits.GuildMembers
   ],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.User, Partials.GuildMember]
 });
 
-// Import Commands
+// Commands
 logger.info("startup - import commands");
 client.commands = new Collection();
-const foldersPath = path.join(__dirname, "commands");
-const commandFolders = fs.readdirSync(foldersPath);
-
-for (const folder of commandFolders) {
-  const commandsPath = path.join(foldersPath, folder);
-  const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".js"));
-  for (const file of commandFiles) {
-    logger.info(`- fileName: ${file}`);
-    const filePath = path.join(commandsPath, file);
-    const command = require(filePath);
+for (const folder of fs.readdirSync(path.join(__dirname, "commands"))) {
+  const commandsPath = path.join(__dirname, "commands", folder);
+  for (const file of fs.readdirSync(commandsPath).filter((f) => f.endsWith(".js"))) {
+    const command = require(path.join(commandsPath, file));
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
     } else {
-      logger.warn(`- missing data command`);
+      logger.warn(`startup - skipping ${file}, missing data or execute`);
     }
   }
 }
 
-// Import Events
+// Events
 logger.info("startup - import events");
-const eventsPath = path.join(__dirname, "events");
-const eventFiles = fs.readdirSync(eventsPath).filter((file) => file.endsWith(".js"));
-
-for (const file of eventFiles) {
-  logger.info(`- fileName: ${file}`);
-  const filePath = path.join(eventsPath, file);
-  const event = require(filePath);
-  if (event.once) {
-    client.once(event.name, (...args) => event.execute(...args));
-  } else {
-    client.on(event.name, (...args) => event.execute(...args));
-  }
+for (const file of fs.readdirSync(path.join(__dirname, "events")).filter((f) => f.endsWith(".js"))) {
+  const event = require(path.join(__dirname, "events", file));
+  client[event.once ? "once" : "on"](event.name, (...args) => event.execute(...args));
 }
 
 // Database
-(async () => {
-  logger.info("startup - database");
-  init();
-})();
+logger.info("startup - database");
+init();
 
-// Health Check
+// Health check
 startHealth(client);
 
-// Client Login
+// Login
 logger.info("startup - login");
 client.login(process.env.TOKEN);
