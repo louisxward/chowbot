@@ -8,10 +8,11 @@ jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() 
 jest.mock("repositories/karma", () => ({
   createKarma: jest.fn(),
   updateKarma: jest.fn(),
+  deleteKarma: jest.fn(),
   getKarmaTotalByUserId: jest.fn()
 }));
 
-const { createKarma, updateKarma } = require("repositories/karma");
+const { createKarma, updateKarma, deleteKarma } = require("repositories/karma");
 const { handleEvent, updateUserKarma } = require("services/karmaService");
 
 beforeEach(() => {
@@ -69,12 +70,11 @@ describe("handleEvent", () => {
     expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", UPVOTE_ID, 1);
   });
 
-  test("removing upvote zeroes karma", async () => {
+  test("removing upvote deletes karma", async () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID });
     const user = makeUser({ id: "user1" });
-    updateKarma.mockResolvedValue(1);
     await handleEvent(reaction, user, false);
-    expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", UPVOTE_ID, 0);
+    expect(deleteKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", UPVOTE_ID);
   });
 
   test("downvote adds -1 karma", async () => {
@@ -85,12 +85,11 @@ describe("handleEvent", () => {
     expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", DOWNVOTE_ID, -1);
   });
 
-  test("removing downvote zeroes karma", async () => {
+  test("removing downvote deletes karma", async () => {
     const reaction = makeReaction({ emojiId: DOWNVOTE_ID });
     const user = makeUser({ id: "user1" });
-    updateKarma.mockResolvedValue(1);
     await handleEvent(reaction, user, false);
-    expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", DOWNVOTE_ID, 0);
+    expect(deleteKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", DOWNVOTE_ID);
   });
 });
 

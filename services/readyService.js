@@ -24,14 +24,18 @@ const STATUSES = [
 ];
 
 function schedule(expression, name, fn) {
-  cron.schedule(expression, async () => {
-    try {
-      logger.info(`scheduled - ${name}`);
-      await fn();
-    } catch (error) {
-      logger.error({ err: error }, `scheduled - ${name} failed`);
-    }
-  }, { timezone: "UTC" });
+  cron.schedule(
+    expression,
+    async () => {
+      try {
+        logger.info(`scheduled - ${name}`);
+        await fn();
+      } catch (error) {
+        logger.error({ err: error }, `scheduled - ${name} failed`);
+      }
+    },
+    { timezone: "UTC" }
+  );
 }
 
 async function validateEmojis(client) {
@@ -63,10 +67,10 @@ async function readyup(client) {
     currentIndex = (currentIndex + 1) % STATUSES.length;
   });
 
-  schedule("0 5 * * *", "scheduledClearer", () => scheduledClearer(client));
+  schedule("0 5 * * *", "scheduledClearer", async () => await scheduledClearer(client));
 
   schedule("0 21 * * 0", "sendKarmaWeeklyLeaderboard", () => sendKarmaWeeklyLeaderboard(client));
-  schedule("0 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
+  schedule("1 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
 }
 
 module.exports = { readyup };
