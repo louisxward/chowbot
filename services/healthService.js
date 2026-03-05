@@ -3,9 +3,10 @@ const { connect } = require("services/databaseService");
 const { clearSessionState } = require("services/sessionStateStorage");
 const { reloadAppConfig } = require("services/applicationConfigService");
 const { sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
+const config = require("config");
 const logger = require("logger");
 
-const PORT = process.env.HEALTH_PORT || 33002;
+const PORT = config.PORT;
 
 let server;
 

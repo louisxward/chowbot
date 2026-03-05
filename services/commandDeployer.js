@@ -1,5 +1,4 @@
-require("dotenv").config();
-
+const config = require("config");
 const logger = require("logger");
 const { REST, Routes } = require("discord.js");
 const fs = require("node:fs");
@@ -10,16 +9,16 @@ const path = require("node:path");
 async function deployCommands(serverId) {
   logger.info("function - deployCommands");
   logger.info(`- serverId: ${serverId}`);
-  const rest = new REST().setToken(process.env.TOKEN);
+  const rest = new REST().setToken(config.TOKEN);
   try {
     const commands = readCommands();
     let data;
     if (serverId) {
-      data = await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, serverId), {
+      data = await rest.put(Routes.applicationGuildCommands(config.CLIENT_ID, serverId), {
         body: commands
       });
     } else {
-      data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+      data = await rest.put(Routes.applicationCommands(config.CLIENT_ID), { body: commands });
     }
     logger.info(`- Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {
@@ -30,13 +29,13 @@ async function deployCommands(serverId) {
 async function deleteCommands(serverId) {
   logger.info("function - deleteCommands");
   logger.info(`- serverId: ${serverId}`);
-  const rest = new REST().setToken(process.env.TOKEN);
+  const rest = new REST().setToken(config.TOKEN);
   try {
     if (serverId) {
-      await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, serverId), { body: [] });
+      await rest.put(Routes.applicationGuildCommands(config.CLIENT_ID, serverId), { body: [] });
       logger.info("Successfully deleted all guild commands.");
     } else {
-      await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] });
+      await rest.put(Routes.applicationCommands(config.CLIENT_ID), { body: [] });
       logger.info("Successfully deleted all application commands.");
     }
   } catch (error) {

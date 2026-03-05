@@ -5,6 +5,7 @@ const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js"
 const fs = require("node:fs");
 const path = require("node:path");
 
+const config = require("config");
 const logger = require("logger");
 const { init } = require("services/databaseService");
 const { start: startHealth } = require("services/healthService");
@@ -73,4 +74,4 @@ startHealth(client);
 
 // Login
 logger.info("startup - login");
-client.login(process.env.TOKEN);
+client.login(config.TOKEN);

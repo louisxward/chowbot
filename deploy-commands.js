@@ -1,6 +1,7 @@
 require("dotenv").config();
 require("app-module-path").addPath(__dirname);
 
+const config = require("config");
 const { REST, Routes } = require("discord.js");
 const logger = require("logger");
 const fs = require("node:fs");
@@ -26,30 +27,30 @@ for (const folder of commandFolders) {
 }
 
 logger.info("deploy-commands - push local commands");
-const rest = new REST().setToken(process.env.TOKEN);
+const rest = new REST().setToken(config.TOKEN);
 (async () => {
   try {
     //logger.info(`- Started refreshing ${commands.length} application (/) commands.`);
 
     // Specific Server
     //// Push Commands
-    // const data = await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), {
+    // const data = await rest.put(Routes.applicationGuildCommands(config.CLIENT_ID, process.env.GUILD_ID), {
     //   body: commands
     // });
     //// Delete Commmands
     // await rest
-    //   .put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: [] })
+    //   .put(Routes.applicationGuildCommands(config.CLIENT_ID, process.env.GUILD_ID), { body: [] })
     //   .then(() => console.log("Successfully deleted all guild commands."))
     //   .catch(console.error);
 
     // All Servers
     //// Delete Commands
     await rest
-      .put(Routes.applicationCommands(process.env.CLIENT_ID), { body: [] })
+      .put(Routes.applicationCommands(config.CLIENT_ID), { body: [] })
       .then(() => console.log("Successfully deleted all application commands."))
       .catch(console.error);
     //// Push Commmands
-    const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
+    const data = await rest.put(Routes.applicationCommands(config.CLIENT_ID), { body: commands });
 
     //logger.info(`- Successfully reloaded ${data.length} application (/) commands.`);
   } catch (error) {
