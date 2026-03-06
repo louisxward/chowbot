@@ -4,7 +4,11 @@ Version: 0.4.0
 
 Publisher: ChowIndustries
 
+Discord bot for doing different things
+
 ## Release Notes
+
+- CS Inven Checker 
 
 ## Quick Start
 
@@ -18,44 +22,75 @@ docker compose up --build
 
 The app runs on port **33002**.
 
-## Configuration
-### applicationConfig
-managed by app owner
-
-### serverConfig
-managed by app
-
-
-
 ## Configuration 
-### Server Config (`data/serverConfig.json`)
 
-Server config is stored in a single JSON file. Create `data/serverConfig.json` with the following structure:
+### serverConfig.json — managed by the Discord server
+
+`data/serverConfig.json` is written to at runtime by Discord slash commands. You should not edit it manually. It is keyed by guild ID.
 
 ```json
 {
-  "YOUR_SERVER_ID": {
-    "leaderboardChannels": ["YOUR_CHANNEL_ID"],
-    "clearChannels": ["YOUR_CHANNEL_ID"]
+  "<guildId>": {
+    "clearChannels": ["<channelId>"],
+    "leaderboardChannels": ["<channelId>"],
+    "invenchecker": {
+      "<discordUserId>": "<invencheckerUid>"
+    }
   }
 }
 ```
 
-Both arrays are optional — omit a key if that feature isn't used for a server.
-Mainly managed by App
+| Field | Type | Managed by |
+|-------|------|------------|
+| `clearChannels` | `string[]` | `/addclearchannel` / `/removeclearchannel` |
+| `leaderboardChannels` | `string[]` | (internal) |
+| `invenchecker` | `{ userId: uid }` | `/invenchecker account register` |
 
-### Application Config (`data/applicationConfig.json`)
+---
 
-Application config is stored in a single JSON file. Create `data/serverConfig.json` with the following structure:
+### applicationConfig.json — managed manually
+
+`data/applicationConfig.json` is edited by hand and loaded at startup. Changes take effect immediately after running `/dev reloadconfig` or `POST /admin/reloadconfig` — no restart needed.
 
 ```json
 {
-  "YOUR_SERVER_ID": {
-    "leaderboardChannels": ["YOUR_CHANNEL_ID"],
-    "clearChannels": ["YOUR_CHANNEL_ID"]
-  }
+  "emojiUpvoteId": "<applicationEmojiId>",
+  "emojiDownvoteId": "<applicationEmojiId>",
+  "domainList": ["youtube.com"],
+  "statuses": [
+    { "name": "something", "type": "Watching" }
+  ]
 }
 ```
 
-Both arrays are optional — omit a key if that feature isn't used for a server.
-Mainly managed by App
+| Field | Type | Description |
+|-------|------|-------------|
+| `emojiUpvoteId` | `string` | Application emoji ID for upvote reactions |
+| `emojiDownvoteId` | `string` | Application emoji ID for downvote reactions |
+| `domainList` | `string[]` | Domains that trigger karma reactions on message post/edit |
+| `statuses` | `{ name, type }[]` | Bot status rotation (cycles daily). `type` is a Discord `ActivityType` name e.g. `Watching`, `Playing`, `Listening` |
+
+Emoji IDs are validated against the bot's application emojis on startup. If either is invalid, karma reactions are disabled entirely until the config is fixed and reloaded.
+
+
+## Environment Variables
+
+Configured in `.env` or the host environment. Defined in `config.js`.
+
+| Variable | Default | Required | Description |
+|----------|---------|----------|-------------|
+| `TOKEN` | — | Yes | Discord bot token |
+| `CLIENT_ID` | — | Yes | Discord application client ID |
+| `GUILD_ID` | — | No | Discord guild (server) ID |
+| `PORT` | `33002` | No | HTTP server port |
+| `INVENCHECKER_API_URL` | `http://localhost:33001` | No | Base URL for the invenchecker(TBA) API |
+
+## Local Development (without Docker)
+
+Restarts on save
+
+```bash
+npm install
+mkdir -p data
+npm run dev 
+```
