@@ -3,7 +3,7 @@ const pino = require("pino");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const loggerPath = path.join(__dirname, "log");
+const loggerPath = path.join(__dirname, "../log");
 if (!fs.existsSync(loggerPath)) {
   fs.mkdirSync(loggerPath, { recursive: true });
 }

@@ -20,7 +20,13 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-const makeReaction = ({ emojiId, authorId = "author1", guildId = "guild1", messageId = "msg1", partial = false } = {}) => ({
+const makeReaction = ({
+  emojiId,
+  authorId = "author1",
+  guildId = "guild1",
+  messageId = "msg1",
+  partial = false
+} = {}) => ({
   _emoji: { id: emojiId },
   partial,
   message: {

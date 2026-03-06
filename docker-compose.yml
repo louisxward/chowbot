@@ -3,6 +3,11 @@ services:
     container_name: chowbot
     restart: unless-stopped
     build: .
+    env_file:
+      - .env
     volumes:
-      - /opt/data/chowbot:/app/data
-      - /var/log/chowbot:/app/log
+      # - /opt/data/chowbot:/app/data
+      # - /var/log/chowbot:/app/log
+
+      - ./data:/app/data
+      - ./log:/app/log

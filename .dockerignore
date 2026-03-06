@@ -6,3 +6,4 @@ data/
 *.md
 .env
 log/
+docs/

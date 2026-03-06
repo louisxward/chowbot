@@ -28,7 +28,7 @@ if (missing.length > 0) {
 }
 
 // Data directory
-fs.mkdirSync(path.join(__dirname, "data"), { recursive: true });
+fs.mkdirSync(path.join(__dirname, "../data"), { recursive: true });
 
 // Client
 logger.info("startup - client init");
@@ -66,6 +66,7 @@ for (const file of fs.readdirSync(path.join(__dirname, "events")).filter((f) => 
 }
 
 // Database
+//todo doesnt wait for it to start/fail
 logger.info("startup - database");
 init();
 

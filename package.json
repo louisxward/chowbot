@@ -1,16 +1,12 @@
 {
   "name": "chowbot",
   "version": "0.3.4",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node index.js | pino-pretty",
-    "dev": "nodemon index.js --ignore ./data | pino-pretty",
+    "start": "node src/index.js  | pino-pretty",
+    "dev": "cross-env NODE_ENV=development node src/index.js | pino-pretty",
     "test": "jest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "app-module-path": "^2.2.0",
     "discord.js": "^14.16.3",
@@ -21,10 +17,10 @@
     "pino-pretty": "^13.0.0",
     "pino-roll": "^4.0.0",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "cross-env": "^7.0.3"
   },
   "devDependencies": {
-    "jest": "^30.2.0",
-    "nodemon": "^3.1.7"
+    "jest": "^30.2.0"
   }
 }
