@@ -6,7 +6,7 @@ async function getStatus(client) {
   let db = "ok";
   try {
     const conn = await connect();
-    await conn.get("SELECT 1");
+    await conn.get("select * from server limit 1");
     await conn.close();
   } catch {
     db = "error";

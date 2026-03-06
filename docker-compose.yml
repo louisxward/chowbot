@@ -3,6 +3,8 @@ services:
     container_name: chowbot
     restart: unless-stopped
     build: .
+    ports:
+      - "33002:33002"
     env_file:
       - .env
     volumes:
