@@ -18,7 +18,7 @@ async function handleEvent(reaction, user, addReaction) {
     }
   }
   const authorId = reaction.message.author.id;
-  //if (user.id === authorId) return;
+  if (user.id === authorId) return;
 
   const { guildId, id: messageId } = reaction.message;
 
