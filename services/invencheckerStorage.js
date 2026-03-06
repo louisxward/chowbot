@@ -1,15 +1,15 @@
-const { readFile, writeFile } = require("services/storageHelper");
-const { INVENCHECKER_STATE_PATH } = require("config");
+const { readServerConfig, writeServerConfig } = require("services/serverConfigStorage");
 
-async function getUid(userId) {
-  const state = await readFile(INVENCHECKER_STATE_PATH);
-  return state[userId] ?? null;
+async function getUid(guildId, userId) {
+  const config = await readServerConfig();
+  return config[guildId]?.invenchecker?.[userId] ?? null;
 }
 
-async function setUid(userId, uid) {
-  const state = await readFile(INVENCHECKER_STATE_PATH);
-  state[userId] = uid;
-  await writeFile(INVENCHECKER_STATE_PATH, state);
+async function setUid(guildId, userId, uid) {
+  const config = await readServerConfig();
+  const server = config[guildId] ?? {};
+  config[guildId] = { ...server, invenchecker: { ...server.invenchecker, [userId]: uid } };
+  await writeServerConfig(config);
 }
 
 module.exports = { getUid, setUid };
