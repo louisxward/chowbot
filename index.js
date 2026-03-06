@@ -4,11 +4,11 @@ require("app-module-path").addPath(__dirname);
 const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
+const express = require("express");
 
 const config = require("config");
 const logger = require("logger");
 const { init } = require("services/databaseService");
-const { start: startHealth } = require("services/healthService");
 const { getAppConfig } = require("services/applicationConfigService");
 
 // Application config validation
@@ -69,8 +69,20 @@ for (const file of fs.readdirSync(path.join(__dirname, "events")).filter((f) => 
 logger.info("startup - database");
 init();
 
-// Health check
-startHealth(client);
+// Express app
+const app = express();
+app.use(express.json());
+app.use(require("./routes"));
+
+// Global error handler
+app.use((err, req, res, _next) => {
+  logger.error({ err, path: req.path }, "Unhandled request error");
+  res.status(err.status || 500).json({ error: err.message || "Internal server error" });
+});
+
+const server = app.listen(config.PORT, () => {
+  logger.info({ port: config.PORT }, "startup - api");
+});
 
 // Login
 logger.info("startup - login");
