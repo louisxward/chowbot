@@ -71,6 +71,7 @@ init();
 
 // Express app
 const app = express();
+app.set("client", client);
 app.use(express.json());
 app.use(require("./routes"));
 
