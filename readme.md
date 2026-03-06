@@ -70,6 +70,51 @@ The app runs on port **33002**.
 
 Emoji IDs are validated against the bot's application emojis on startup. If either is invalid, karma reactions are disabled entirely until the config is fixed and reloaded.
 
+## Discord Commands
+
+### Utility
+
+| Command | Description | Permission |
+|---------|-------------|------------||
+| `/health` | Shows bot health status (uptime, WS ping, database) | Administrator |
+
+### Karma
+
+| Command                     | Options                                           | Description                              | Permission    |
+| --------------------------- | ------------------------------------------------- | ---------------------------------------- | ------------- |
+| `/checkkarma`               | `whos` (user, optional)                           | Check karma for yourself or another user | Everyone      |
+| `/etiquette`                | `who` (user), `good` (boolean), `reason` (string) | Report a user for good/bad etiquette     | Everyone      |
+| `/leaderboard`              | —                                                 | Show the karma weekly leaderboard        | Everyone      |
+| `/persistweeklyleaderboard` | `confirm` (type `RUN`)                            | Persist weekly leaderboard to DB         | Administrator |
+
+### Message Clearer
+
+| Command               | Options                | Description                                                    | Permission    |
+| --------------------- | ---------------------- | -------------------------------------------------------------- | ------------- |
+| `/addclearchannel`    | `channel_id`           | **DANGEROUS** — Add a channel to be cleared daily at 05:00 UTC | Administrator |
+| `/removeclearchannel` | `channel_id`           | Remove a channel from the daily clear list                     | Administrator |
+| `/runclear`           | `confirm` (type `RUN`) | **DANGEROUS** — Manually run the channel clear                 | Administrator |
+
+### Invenchecker
+
+| Command                            | Description                                        | Permission    |
+| ---------------------------------- | -------------------------------------------------- | ------------- |
+| `/invenchecker account register`   | Register your Discord account with invenchecker    | Administrator |
+| `/invenchecker steam add <id>`     | Add a Steam64 ID to your account                   | Administrator |
+| `/invenchecker steam remove <id>`  | Remove a Steam64 ID from your account              | Administrator |
+| `/invenchecker item add <name>`    | Add a custom item to track (by `market_hash_name`) | Administrator |
+| `/invenchecker item remove <name>` | Remove a custom tracked item                       | Administrator |
+| `/invenchecker alerts list`        | List unresolved price alerts                       | Administrator |
+| `/invenchecker alerts resolve`     | Resolve all unresolved alerts                      | Administrator |
+
+### Dev
+
+| Command                | Description                               | Permission    |
+| ---------------------- | ----------------------------------------- | ------------- |
+| `/dev sendleaderboard` | Send karma weekly leaderboard             | Administrator |
+| `/dev clearstate`      | Clear session state (username cache)      | Administrator |
+| `/dev reloadconfig`    | Reload `applicationConfig.json` from disk | Administrator |
+
 ## API Endpoints
 
 ### Health
