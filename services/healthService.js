@@ -1,4 +1,3 @@
-const express = require("express");
 const { connect } = require("services/databaseService");
 
 async function getStatus(client) {
