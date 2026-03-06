@@ -21,7 +21,7 @@ async function setCachedUsername(userId, username) {
 }
 
 async function clearSessionState() {
-  logger.info("function - clearSessionState");
+  logger.info("map - clearSessionState");
   await writeFile(SESSION_STATE_PATH, {});
 }
 

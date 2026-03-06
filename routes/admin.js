@@ -4,17 +4,17 @@ const { sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const express = require("express");
 const router = express.Router();
 
-router.post("/admin/clearstate", async (_req, res) => {
+router.post("/clearstate", async (_req, res) => {
   await clearSessionState();
   res.json({ ok: true });
 });
 
-router.post("/admin/reloadconfig", async (_req, res) => {
+router.post("/reloadconfig", async (_req, res) => {
   await reloadAppConfig();
   res.json({ ok: true });
 });
 
-router.post("/admin/sendLeaderboardRoute", async (_req, res) => {
+router.post("/sendLeaderboardRoute", async (_req, res) => {
   await sendKarmaWeeklyLeaderboard(_req.app.get("client")).catch((err) =>
     logger.error({ err }, "admin - sendleaderboard failed")
   );
