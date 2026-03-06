@@ -1,8 +1,7 @@
-const http = require("http");
+const express = require("express");
 const { connect } = require("services/databaseService");
-const { clearSessionState } = require("services/sessionStateStorage");
-const { reloadAppConfig } = require("services/applicationConfigService");
-const { sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
+const { healthRoute } = require("routes/health");
+const { clearStateRoute, reloadConfigRoute, sendLeaderboardRoute } = require("routes/admin");
 const config = require("config");
 const logger = require("logger");
 
@@ -32,40 +31,15 @@ async function getStatus(client) {
 }
 
 function start(client) {
-  server = http.createServer(async (req, res) => {
-    if (req.method === "GET" && req.url === "/health") {
-      const status = await getStatus(client);
-      const code = status.status === "ok" ? 200 : 503;
-      res.writeHead(code, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(status));
-      return;
-    }
+  const app = express();
+  app.set("client", client);
 
-    if (req.method === "POST" && req.url === "/admin/clearstate") {
-      await clearSessionState();
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true }));
-      return;
-    }
+  app.get("/health", healthRoute);
+  app.post("/admin/clearstate", clearStateRoute);
+  app.post("/admin/reloadconfig", reloadConfigRoute);
+  app.post("/admin/sendleaderboard", sendLeaderboardRoute);
 
-    if (req.method === "POST" && req.url === "/admin/reloadconfig") {
-      await reloadAppConfig();
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true }));
-      return;
-    }
-
-    if (req.method === "POST" && req.url === "/admin/sendleaderboard") {
-      sendKarmaWeeklyLeaderboard(client).catch((err) => logger.error({ err }, "admin - sendleaderboard failed"));
-      res.writeHead(202, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true }));
-      return;
-    }
-
-    res.writeHead(404).end();
-  });
-
-  server.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     logger.info(`startup - health check listening on :${PORT}`);
   });
 }
