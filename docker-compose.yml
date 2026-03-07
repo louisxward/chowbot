@@ -3,13 +3,10 @@ services:
     container_name: chowbot
     restart: unless-stopped
     build: .
-    ports:
-      - "33002:33002"
+    expose:
+      - "33002"
     env_file:
       - .env
     volumes:
-      # - /opt/data/chowbot:/app/data
-      # - /var/log/chowbot:/app/log
-
-      - ./data:/app/data
-      - ./log:/app/log
+      - /opt/data/chowbot:/app/data
+      - /var/log/chowbot:/app/log

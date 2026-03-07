@@ -11,3 +11,7 @@ lockapp
 manual react flag
 
 if message get spam reacted by one user come back and check the count on the message later
+
+as as many emojis as you want
+
+- value sort order
