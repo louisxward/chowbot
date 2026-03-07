@@ -4,8 +4,6 @@ const { REST, Routes } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
 
-//MODULE NOT IN USE
-
 async function deployCommands(serverId) {
   logger.info("function - deployCommands");
   logger.info(`- serverId: ${serverId}`);
@@ -46,7 +44,7 @@ async function deleteCommands(serverId) {
 function readCommands() {
   logger.info("function - readCommands");
   const commands = [];
-  const foldersPath = path.join("commands");
+  const foldersPath = path.join(__dirname, "../commands");
   const commandFolders = fs.readdirSync(foldersPath);
   for (const folder of commandFolders) {
     const commandsPath = path.join(foldersPath, folder);

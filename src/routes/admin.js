@@ -1,6 +1,7 @@
 const { clearSessionState } = require("services/sessionStateStorage");
 const { reloadAppConfig } = require("services/applicationConfigService");
 const { sendKarmaWeeklyLeaderboard, persistKarmaWeeklyLeaderboard } = require("services/leaderboardService");
+const { deployCommands } = require("services/commandDeployer");
 const express = require("express");
 const router = express.Router();
 
@@ -26,6 +27,12 @@ router.post("/sendLeaderboardRoute", async (_req, res) => {
     logger.error({ err }, "admin - sendleaderboard failed")
   );
   res.status(202).json({ ok: true });
+});
+
+router.post("/deploycommands", async (req, res) => {
+  const { serverId } = req.body ?? {};
+  await deployCommands(serverId);
+  res.json({ ok: true, serverId: serverId ?? "global" });
 });
 
 module.exports = router;
