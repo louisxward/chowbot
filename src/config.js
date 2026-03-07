@@ -7,6 +7,7 @@ module.exports = {
   SERVER_CONFIG_PATH: path.join(DATA_DIR, "serverConfig.json"),
   APPLICATION_CONFIG_PATH: path.join(DATA_DIR, "applicationConfig.json"),
   SESSION_STATE_PATH: path.join(DATA_DIR, "sessionState.json"),
+  USER_CONFIG_PATH: path.join(DATA_DIR, "userConfig.json"),
   PORT: process.env.PORT || 33002,
   INVENCHECKER_API_URL: process.env.INVENCHECKER_API_URL || "http://localhost:33001",
   TOKEN: process.env.TOKEN,

@@ -11,7 +11,7 @@ const {
 } = require("services/invencheckerService");
 
 async function requireUid(interaction) {
-  const uid = await getUid(interaction.guildId, interaction.user.id);
+  const uid = await getUid(interaction.user.id);
   if (!uid) {
     await interaction.reply({
       ephemeral: true,
@@ -108,13 +108,13 @@ module.exports = {
 
     try {
       if (group === "account" && sub === "register") {
-        const existing = await getUid(interaction.guildId, interaction.user.id);
+        const existing = await getUid(interaction.user.id);
         if (existing) {
           return interaction.reply({ ephemeral: true, content: `Already registered (uid: \`${existing}\`).` });
         }
         await interaction.deferReply({ ephemeral: true });
         const result = await createAccountByDiscord(interaction.user.id);
-        await setUid(interaction.guildId, interaction.user.id, result.uid);
+        await setUid(interaction.user.id, result.uid);
         return interaction.editReply({ content: `Registered! Your uid: \`${result.uid}\`` });
       }
 

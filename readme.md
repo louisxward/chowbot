@@ -32,21 +32,15 @@ The app runs on port **33002**.
 {
   "<guildId>": {
     "clearChannels": ["<channelId>"],
-    "leaderboardChannels": ["<channelId>"],
-    "pendingReconcile": [{ "messageId": "<id>", "channelId": "<id>" }],
-    "invenchecker": {
-      "<discordUserId>": "<invencheckerUid>"
-    }
+    "leaderboardChannels": ["<channelId>"]
   }
 }
 ```
 
-| Field                 | Type              | Managed by                                 |
-| --------------------- | ----------------- | ------------------------------------------ |
-| `clearChannels`       | `string[]`        | `/clearchannel add` / `/clearchannel remove` |
-| `leaderboardChannels` | `string[]`        | (internal)                                 |
-| `pendingReconcile`    | `{ messageId, channelId }[]` | Burst reaction reconciler — messages queued for DB sync |
-| `invenchecker`        | `{ userId: uid }` | `/invenchecker account register`           |
+| Field                 | Type       | Managed by                                   |
+| --------------------- | ---------- | -------------------------------------------- |
+| `clearChannels`       | `string[]` | `/clearchannel add` / `/clearchannel remove` |
+| `leaderboardChannels` | `string[]` | (internal)                                   |
 
 ---
 
@@ -58,13 +52,35 @@ The app runs on port **33002**.
 {
   "usernames": {
     "<discordUserId>": { "username": "<string>", "cachedAt": "<timestamp ms>" }
+  },
+  "pendingReconcile": {
+    "<guildId>": [{ "messageId": "<id>", "channelId": "<id>" }]
   }
 }
 ```
 
-| Field       | Type                              | Description                                              |
-| ----------- | --------------------------------- | -------------------------------------------------------- |
-| `usernames` | `{ userId: { username, cachedAt } }` | Discord username cache used by the karma leaderboard. Entries expire after 12 hours. |
+| Field              | Type                                       | Description                                                                          |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `usernames`        | `{ userId: { username, cachedAt } }`       | Discord username cache used by the karma leaderboard. Entries expire after 12 hours. |
+| `pendingReconcile` | `{ guildId: { messageId, channelId }[] }`  | Messages queued for DB reconciliation after a reaction burst. Processed on startup.  |
+
+---
+
+### userConfig.json — managed by users
+
+`data/userConfig.json` is written to at runtime by user-facing slash commands. You should not edit it manually. It is keyed by Discord user ID (global across all servers).
+
+```json
+{
+  "<discordUserId>": {
+    "invencheckerId": "<uid>"
+  }
+}
+```
+
+| Field             | Type     | Managed by                         |
+| ----------------- | -------- | ---------------------------------- |
+| `invencheckerId`  | `string` | `/invenchecker account register`   |
 
 ---
 

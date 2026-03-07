@@ -2,7 +2,7 @@ const logger = require("logger");
 const { BURST_THRESHOLD, BURST_WINDOW_MS, RECONCILE_DELAY_MS } = require("config");
 const { getAppConfig } = require("services/applicationConfigService");
 const { createKarma, deleteKarma, updateKarma, getKarmaByMessageAndEmoji } = require("repositories/karma");
-const { readServerConfig, addPendingReconcile, removePendingReconcile } = require("services/serverConfigStorage");
+const { addPendingReconcile, removePendingReconcile, getAllPendingReconcile } = require("services/sessionStateStorage");
 
 const KARMA_TYPE_MESSAGE = 0;
 
@@ -108,10 +108,9 @@ async function reconcileMessage(serverId, messageId, channelId, client) {
 
 async function processPendingReconcile(client) {
   logger.info("burst - processing pending reconcile on startup");
-  const config = await readServerConfig();
-  for (const [serverId, serverData] of Object.entries(config)) {
-    const pending = serverData.pendingReconcile ?? [];
-    for (const { messageId, channelId } of pending) {
+  const pending = await getAllPendingReconcile();
+  for (const [serverId, entries] of Object.entries(pending)) {
+    for (const { messageId, channelId } of entries) {
       await reconcileMessage(serverId, messageId, channelId, client);
     }
   }
