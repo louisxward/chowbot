@@ -56,6 +56,9 @@ async function removePendingReconcile(serverId, messageId) {
 
 module.exports = {
   readServerConfig,
+  getChannels,
+  addChannel,
+  removeChannel,
   getClearChannels: (serverId) => getChannels(serverId, "clearChannels"),
   addClearChannel: (serverId, channelId) => addChannel(serverId, "clearChannels", channelId),
   removeClearChannel: (serverId, channelId) => removeChannel(serverId, "clearChannels", channelId),
