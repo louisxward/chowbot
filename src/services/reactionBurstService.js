@@ -1,11 +1,9 @@
 const logger = require("logger");
+const { BURST_THRESHOLD, BURST_WINDOW_MS, RECONCILE_DELAY_MS } = require("config");
 const { getAppConfig } = require("services/applicationConfigService");
 const { createKarma, deleteKarma, updateKarma, getKarmaByMessageAndEmoji } = require("repositories/karma");
 const { readServerConfig, addPendingReconcile, removePendingReconcile } = require("services/serverConfigStorage");
 
-const BURST_THRESHOLD = 5;
-const BURST_WINDOW_MS = 3000;
-const RECONCILE_DELAY_MS = 15000;
 const KARMA_TYPE_MESSAGE = 0;
 
 // Map<messageId, { count, windowStart, debounceTimer, serverId, channelId }>
