@@ -1,6 +1,6 @@
 # chowbot
 
-Version: 0.4.0
+Version: 0.3.5
 
 Publisher: ChowIndustries
 
