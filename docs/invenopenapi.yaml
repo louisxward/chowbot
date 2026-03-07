@@ -1,0 +1,609 @@
+openapi: 3.0.3
+info:
+  title: invenchecker API
+  version: 0.0.1
+  description: Steam inventory checker and price alert service
+
+servers:
+  - url: http://localhost:3000
+
+tags:
+  - name: health
+  - name: accounts
+  - name: alerts
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  lastScannedAt:
+                    type: integer
+                    nullable: true
+                    description: Unix timestamp of last scan
+                  lastScanMs:
+                    type: integer
+                    nullable: true
+                    description: Duration of last scan in milliseconds
+
+  /accounts:
+    get:
+      tags: [accounts]
+      summary: List all accounts
+      responses:
+        "200":
+          description: Array of all accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+
+    post:
+      tags: [accounts]
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [friendlyName, discordId, steam64ids]
+              properties:
+                friendlyName:
+                  type: string
+                discordId:
+                  type: string
+                steam64ids:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                customItems:
+                  type: array
+                  items:
+                    type: string
+                  default: []
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /accounts/discord:
+    post:
+      tags: [accounts]
+      summary: Create account via Discord ID (minimal)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [discordId]
+              properties:
+                discordId:
+                  type: string
+                friendlyName:
+                  type: string
+                  nullable: true
+      responses:
+        "201":
+          description: Account created, returns uid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /accounts/{uid}:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    get:
+      tags: [accounts]
+      summary: Get account by UID
+      responses:
+        "200":
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [accounts]
+      summary: Update account fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                friendlyName:
+                  type: string
+                discordId:
+                  type: string
+                steam64ids:
+                  type: array
+                  items:
+                    type: string
+                customItems:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [accounts]
+      summary: Delete account
+      responses:
+        "204":
+          description: Account deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /accounts/{uid}/steam64ids:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    post:
+      tags: [accounts]
+      summary: Add a Steam64 ID to account (no-op if already present)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [steam64id]
+              properties:
+                steam64id:
+                  type: string
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /accounts/{uid}/steam64ids/{id}:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Steam64 ID to remove
+
+    delete:
+      tags: [accounts]
+      summary: Remove a Steam64 ID from account
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /accounts/{uid}/customItems:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    post:
+      tags: [accounts]
+      summary: Add a custom item to account (no-op if already present)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [item]
+              properties:
+                item:
+                  type: string
+                  description: market_hash_name of the item
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /accounts/{uid}/customItems/{item}:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+      - name: item
+        in: path
+        required: true
+        schema:
+          type: string
+        description: URL-encoded market_hash_name to remove
+
+    delete:
+      tags: [accounts]
+      summary: Remove a custom item from account
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /accounts/{uid}/inventory:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    get:
+      tags: [accounts]
+      summary: Live Steam inventory for all steam64ids on the account
+      responses:
+        "200":
+          description: Merged inventory items from all Steam accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  count:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      description: Raw Steam inventory item
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          description: Steam API error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /accounts/{uid}/summary:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    get:
+      tags: [accounts]
+      summary: Inventory summary with latest prices per item
+      responses:
+        "200":
+          description: Summary of tracked items and custom items with latest prices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  friendlyName:
+                    type: string
+                    nullable: true
+                  steam64ids:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/InventoryItem"
+                  customItems:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CustomItem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /accounts/{uid}/prices:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+      - name: days
+        in: query
+        schema:
+          type: integer
+          default: 7
+        description: Number of days of price history to return
+      - name: item
+        in: query
+        schema:
+          type: string
+        description: Filter to a single item by market_hash_name; defaults to account's customItems
+
+    get:
+      tags: [accounts]
+      summary: Price history for account's custom items
+      responses:
+        "200":
+          description: Price snapshots grouped by market_hash_name
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PriceSnapshot"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /alerts:
+    get:
+      tags: [alerts]
+      summary: List all alerts (admin)
+      responses:
+        "200":
+          description: All alerts ordered by created_at desc
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/user/{uid}:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    get:
+      tags: [alerts]
+      summary: Get unresolved alerts for a user
+      responses:
+        "200":
+          description: Unresolved alert recipients for the given uid
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertRecipient"
+
+  /alerts/recipients/{id}/resolve:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Alert recipient row ID
+
+    put:
+      tags: [alerts]
+      summary: Resolve a single alert recipient
+      responses:
+        "200":
+          description: Resolved recipient
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertRecipient"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /alerts/user/{uid}/resolve-all:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    put:
+      tags: [alerts]
+      summary: Resolve all unresolved alerts for a user
+      responses:
+        "200":
+          description: Number of rows resolved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resolved:
+                    type: integer
+
+  /alerts/scan:
+    post:
+      tags: [alerts]
+      summary: Trigger a manual inventory scan
+      responses:
+        "200":
+          description: Scan completed, returns all alerts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Scan complete
+                  alerts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Alert"
+        "500":
+          description: Scan failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  parameters:
+    uid:
+      name: uid
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Account UID (hex string)
+
+  responses:
+    BadRequest:
+      description: Missing or invalid request fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    Account:
+      type: object
+      properties:
+        uid:
+          type: string
+        friendlyName:
+          type: string
+          nullable: true
+        discordId:
+          type: string
+        steam64ids:
+          type: array
+          items:
+            type: string
+        customItems:
+          type: array
+          items:
+            type: string
+
+    PriceSnapshot:
+      type: object
+      properties:
+        lowest_price:
+          type: number
+          nullable: true
+        median_price:
+          type: number
+          nullable: true
+        volume:
+          type: integer
+          nullable: true
+        captured_at:
+          type: integer
+          description: Unix timestamp
+
+    InventoryItem:
+      type: object
+      properties:
+        market_hash_name:
+          type: string
+        first_seen:
+          type: integer
+          description: Unix timestamp
+        last_seen:
+          type: integer
+          description: Unix timestamp
+        missing:
+          type: boolean
+        price:
+          $ref: "#/components/schemas/PriceSnapshot"
+          nullable: true
+
+    CustomItem:
+      type: object
+      properties:
+        market_hash_name:
+          type: string
+        price:
+          $ref: "#/components/schemas/PriceSnapshot"
+          nullable: true
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: integer
+        market_hash_name:
+          type: string
+        spike_pct:
+          type: number
+        price_at_alert:
+          type: number
+        seven_day_low:
+          type: number
+        created_at:
+          type: integer
+          description: Unix timestamp
+
+    AlertRecipient:
+      allOf:
+        - $ref: "#/components/schemas/Alert"
+        - type: object
+          properties:
+            recipient_id:
+              type: integer
+            resolved:
+              type: integer
+              enum: [0, 1]
+            resolved_at:
+              type: integer
+              nullable: true
+              description: Unix timestamp

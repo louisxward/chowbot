@@ -3,8 +3,9 @@
 # App
 .env
 /data
-chowbot.log
+/log
 deploy.sh
+/.claude
 
 # Compiled output
 /dist

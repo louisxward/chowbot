@@ -1,0 +1,25 @@
+const fs = require("fs/promises");
+const logger = require("logger");
+
+const encoding = "utf8";
+
+async function readFile(filePath) {
+  logger.debug("function - readFile ");
+  logger.debug(`- filePath: ${filePath}`);
+  let data = {};
+  try {
+    const fileContent = await fs.readFile(filePath, encoding);
+    if (fileContent.trim()) data = JSON.parse(fileContent);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  return data;
+}
+
+async function writeFile(filePath, data) {
+  logger.debug("function - writeFile");
+  logger.debug(`- filePath: ${filePath}`);
+  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+}
+
+module.exports = { readFile, writeFile };
