@@ -33,6 +33,7 @@ The app runs on port **33002**.
   "<guildId>": {
     "clearChannels": ["<channelId>"],
     "leaderboardChannels": ["<channelId>"],
+    "pendingReconcile": [{ "messageId": "<id>", "channelId": "<id>" }],
     "invenchecker": {
       "<discordUserId>": "<invencheckerUid>"
     }
@@ -44,6 +45,7 @@ The app runs on port **33002**.
 | --------------------- | ----------------- | ------------------------------------------ |
 | `clearChannels`       | `string[]`        | `/addclearchannel` / `/removeclearchannel` |
 | `leaderboardChannels` | `string[]`        | (internal)                                 |
+| `pendingReconcile`    | `{ messageId, channelId }[]` | Burst reaction reconciler — messages queued for DB sync |
 | `invenchecker`        | `{ userId: uid }` | `/invenchecker account register`           |
 
 ---
@@ -116,19 +118,52 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Admin
 
-| Method | Path                              | Description                                  |
-| ------ | --------------------------------- | -------------------------------------------- |
-| `POST` | `/admin/clearstate`               | Clear session state (username cache)         |
-| `POST` | `/admin/reloadconfig`             | Reload `applicationConfig.json` from disk    |
-| `POST` | `/admin/sendLeaderboardRoute`     | Send karma weekly leaderboard (responds 202) |
-| `POST` | `/admin/persistweeklyleaderboard` | Persist weekly leaderboard (responds 202)    |
+| Method | Path                                    | Body                      | Description                                              |
+| ------ | --------------------------------------- | ------------------------- | -------------------------------------------------------- |
+| `POST` | `/admin/clearstate`                     | —                         | Clear session state (username cache)                     |
+| `POST` | `/admin/reloadconfig`                   | —                         | Reload `applicationConfig.json` from disk                |
+| `POST` | `/admin/deploycommands`                 | `{}` or `{"serverId":"…"}` | Deploy slash commands globally or to a specific guild   |
+| `POST` | `/admin/sendLeaderboardRoute`           | —                         | Send karma weekly leaderboard now (responds 202)         |
+| `POST` | `/admin/persistKarmaWeeklyLeaderboard`  | —                         | Persist weekly leaderboard snapshot (responds 202)       |
 
-**Example:**
+**Examples:**
 
 ```bash
 curl -X POST http://localhost:33002/admin/reloadconfig
 curl -X POST http://localhost:33002/admin/clearstate
+
+# Deploy commands globally
+curl -X POST http://localhost:33002/admin/deploycommands \
+  -H "Content-Type: application/json" -d '{}'
+
+# Deploy commands to one server
+curl -X POST http://localhost:33002/admin/deploycommands \
+  -H "Content-Type: application/json" -d '{"serverId":"YOUR_SERVER_ID"}'
 ```
+
+Commands can also be deployed at startup with the `--deploy-commands` flag:
+
+```bash
+# Local
+node src/index.js --deploy-commands
+npm run dev -- --deploy-commands
+```
+
+In Docker, either run it as a one-off:
+
+```bash
+docker compose run --rm chowbot node src/index.js --deploy-commands
+```
+
+Or temporarily add `command` to `docker-compose.yml`, bring it up, then remove it again:
+
+```yaml
+services:
+  chowbot:
+    command: node src/index.js --deploy-commands
+```
+
+> Don't leave the `command` override permanently — it will redeploy on every container restart and hit Discord's API rate limits.
 
 ## Environment Variables
 
@@ -138,9 +173,11 @@ Configured in `.env` or the host environment. Defined in `config.js`.
 | ---------------------- | ------------------------ | -------- | -------------------------------------- |
 | `TOKEN`                | —                        | Yes      | Discord bot token                      |
 | `CLIENT_ID`            | —                        | Yes      | Discord application client ID          |
-| `GUILD_ID`             | —                        | No       | Discord guild (server) ID              |
 | `PORT`                 | `33002`                  | No       | HTTP server port                       |
 | `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker(TBA) API |
+| `BURST_THRESHOLD`      | `5`                      | No       | Reaction events on one message before burst mode triggers |
+| `BURST_WINDOW_MS`      | `3000`                   | No       | Sliding window (ms) for burst detection |
+| `RECONCILE_DELAY_MS`   | `15000`                  | No       | Debounce delay (ms) before DB reconciliation runs after a burst |
 
 ## Local Development (without Docker)
 
