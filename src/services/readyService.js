@@ -75,4 +75,4 @@ async function readyup(client) {
   schedule("1 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
 }
 
-module.exports = { readyup };
+module.exports = { readyup, validateEmojis };

@@ -1,5 +1,6 @@
 const { clearSessionState } = require("services/sessionStateStorage");
 const { reloadAppConfig } = require("services/applicationConfigService");
+const { validateEmojis } = require("services/readyService");
 const { sendKarmaWeeklyLeaderboard, persistKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const { deployCommands } = require("services/commandDeployer");
 const express = require("express");
@@ -10,8 +11,9 @@ router.post("/clearstate", async (_req, res) => {
   res.json({ ok: true });
 });
 
-router.post("/reloadconfig", async (_req, res) => {
+router.post("/reloadconfig", async (req, res) => {
   await reloadAppConfig();
+  await validateEmojis(req.app.get("client"));
   res.json({ ok: true });
 });
 
