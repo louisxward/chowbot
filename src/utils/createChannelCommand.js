@@ -5,12 +5,12 @@ function defaultValidateAdd(client, channelId) {
   if (!client.channels.cache.get(channelId)) throw new Error("Channel doesn't exist");
 }
 
-function createChannelCommand({ name, description, key, addDescription, validateAdd = defaultValidateAdd }) {
+function createChannelCommand({ name, description, key, addDescription, validateAdd = defaultValidateAdd, permission = PermissionFlagsBits.Administrator }) {
   return {
     data: new SlashCommandBuilder()
       .setName(name)
       .setDescription(description)
-      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+      .setDefaultMemberPermissions(permission)
       .addSubcommand((sub) =>
         sub
           .setName("add")
