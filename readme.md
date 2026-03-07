@@ -43,7 +43,7 @@ The app runs on port **33002**.
 
 | Field                 | Type              | Managed by                                 |
 | --------------------- | ----------------- | ------------------------------------------ |
-| `clearChannels`       | `string[]`        | `/addclearchannel` / `/removeclearchannel` |
+| `clearChannels`       | `string[]`        | `/clearchannel add` / `/clearchannel remove` |
 | `leaderboardChannels` | `string[]`        | (internal)                                 |
 | `pendingReconcile`    | `{ messageId, channelId }[]` | Burst reaction reconciler — messages queued for DB sync |
 | `invenchecker`        | `{ userId: uid }` | `/invenchecker account register`           |
@@ -90,11 +90,12 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Message Clearer
 
-| Command               | Options                | Description                                                    | Permission    |
-| --------------------- | ---------------------- | -------------------------------------------------------------- | ------------- |
-| `/addclearchannel`    | `channel_id`           | **DANGEROUS** — Add a channel to be cleared daily at 05:00 UTC | Administrator |
-| `/removeclearchannel` | `channel_id`           | Remove a channel from the daily clear list                     | Administrator |
-| `/runclear`           | `confirm` (type `RUN`) | **DANGEROUS** — Manually run the channel clear                 | Administrator |
+| Command                    | Options                | Description                                                    | Permission    |
+| -------------------------- | ---------------------- | -------------------------------------------------------------- | ------------- |
+| `/clearchannel add`        | `channel_id`           | **DANGEROUS** — Add a channel to be cleared daily at 05:00 UTC | Administrator |
+| `/clearchannel remove`     | `channel_id`           | Remove a channel from the daily clear list                     | Administrator |
+| `/clearchannel list`       | —                      | List channels currently in the clear list                      | Administrator |
+| `/runclear`                | `confirm` (type `RUN`) | **DANGEROUS** — Manually run the channel clear                 | Administrator |
 
 ### Invenchecker
 

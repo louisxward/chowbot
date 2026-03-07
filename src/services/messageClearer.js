@@ -62,4 +62,8 @@ async function removeServerClearChannel(serverId, channelId) {
   await removeClearChannel(serverId, channelId);
 }
 
-module.exports = { manualServerClear, scheduledClearer, addServerClearChannel, removeServerClearChannel };
+async function getServerClearChannels(serverId) {
+  return getClearChannels(serverId);
+}
+
+module.exports = { manualServerClear, scheduledClearer, addServerClearChannel, removeServerClearChannel, getServerClearChannels };
