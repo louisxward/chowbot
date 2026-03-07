@@ -80,12 +80,11 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Karma
 
-| Command                     | Options                                           | Description                              | Permission    |
-| --------------------------- | ------------------------------------------------- | ---------------------------------------- | ------------- |
-| `/checkkarma`               | `whos` (user, optional)                           | Check karma for yourself or another user | Everyone      |
-| `/etiquette`                | `who` (user), `good` (boolean), `reason` (string) | Report a user for good/bad etiquette     | Everyone      |
-| `/leaderboard`              | —                                                 | Show the karma weekly leaderboard        | Everyone      |
-| `/persistweeklyleaderboard` | `confirm` (type `RUN`)                            | Persist weekly leaderboard to DB         | Administrator |
+| Command        | Options                                           | Description                              | Permission |
+| -------------- | ------------------------------------------------- | ---------------------------------------- | ---------- |
+| `/checkkarma`  | `whos` (user, optional)                           | Check karma for yourself or another user | Everyone   |
+| `/etiquette`   | `who` (user), `good` (boolean), `reason` (string) | Report a user for good/bad etiquette     | Everyone   |
+| `/leaderboard` | —                                                 | Show the karma weekly leaderboard        | Everyone   |
 
 ### Message Clearer
 
@@ -107,14 +106,6 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 | `/invenchecker alerts list`        | List unresolved price alerts                       | Administrator |
 | `/invenchecker alerts resolve`     | Resolve all unresolved alerts                      | Administrator |
 
-### Dev
-
-| Command                | Description                               | Permission    |
-| ---------------------- | ----------------------------------------- | ------------- |
-| `/dev sendleaderboard` | Send karma weekly leaderboard             | Administrator |
-| `/dev clearstate`      | Clear session state (username cache)      | Administrator |
-| `/dev reloadconfig`    | Reload `applicationConfig.json` from disk | Administrator |
-
 ## API Endpoints
 
 ### Health
@@ -125,16 +116,18 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Admin
 
-| Method | Path                          | Description                                  |
-| ------ | ----------------------------- | -------------------------------------------- |
-| `POST` | `/admin/clearstate`           | Clear session state (username cache)         |
-| `POST` | `/admin/reloadconfig`         | Reload `applicationConfig.json` from disk    |
-| `POST` | `/admin/sendLeaderboardRoute` | Send karma weekly leaderboard (responds 202) |
+| Method | Path                              | Description                                  |
+| ------ | --------------------------------- | -------------------------------------------- |
+| `POST` | `/admin/clearstate`               | Clear session state (username cache)         |
+| `POST` | `/admin/reloadconfig`             | Reload `applicationConfig.json` from disk    |
+| `POST` | `/admin/sendLeaderboardRoute`     | Send karma weekly leaderboard (responds 202) |
+| `POST` | `/admin/persistweeklyleaderboard` | Persist weekly leaderboard (responds 202)    |
 
 **Example:**
 
 ```bash
 curl -X POST http://localhost:33002/admin/reloadconfig
+curl -X POST http://localhost:33002/admin/clearstate
 ```
 
 ## Environment Variables
