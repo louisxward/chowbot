@@ -18,11 +18,12 @@ async function handleEvent(reaction, user, addReaction) {
     }
   }
   const authorId = reaction.message.author.id;
-  if (user.id === authorId) return;
+  //if (user.id === authorId) return;
 
   const { guildId, id: messageId } = reaction.message;
 
   if (!addReaction) {
+    //await updateUserKarma(guildId, messageId, authorId, user.id, emojiId, 0, KARMA_TYPE.MESSAGE);
     await deleteUserKarma(guildId, messageId, user.id, emojiId);
     return;
   }

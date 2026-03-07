@@ -1,6 +1,6 @@
 const { clearSessionState } = require("services/sessionStateStorage");
 const { reloadAppConfig } = require("services/applicationConfigService");
-const { sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
+const { sendKarmaWeeklyLeaderboard, persistKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const express = require("express");
 const router = express.Router();
 
@@ -12,6 +12,13 @@ router.post("/clearstate", async (_req, res) => {
 router.post("/reloadconfig", async (_req, res) => {
   await reloadAppConfig();
   res.json({ ok: true });
+});
+
+router.post("/persistKarmaWeeklyLeaderboard", async (_req, res) => {
+  await persistKarmaWeeklyLeaderboard().catch((err) =>
+    logger.error({ err }, "admin - persistKarmaWeeklyLeaderboard failed")
+  );
+  res.status(202).json({ ok: true });
 });
 
 router.post("/sendLeaderboardRoute", async (_req, res) => {

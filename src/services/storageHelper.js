@@ -17,8 +17,8 @@ async function readFile(filePath) {
 }
 
 async function writeFile(filePath, data) {
-  logger.info("function - writeFile");
-  logger.info(`- filePath: ${filePath}`);
+  logger.debug("function - writeFile");
+  logger.debug(`- filePath: ${filePath}`);
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
 }
 
