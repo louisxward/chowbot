@@ -74,8 +74,8 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Utility
 
-| Command | Description | Permission |
-|---------|-------------|------------||
+| Command   | Description                                         | Permission    |
+| --------- | --------------------------------------------------- | ------------- |
 | `/health` | Shows bot health status (uptime, WS ping, database) | Administrator |
 
 ### Karma
