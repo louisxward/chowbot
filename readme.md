@@ -8,7 +8,7 @@ Discord bot for doing different things
 
 ## Release Notes
 
-- CS Inven Checker
+###### ...
 
 ## Quick Start
 
