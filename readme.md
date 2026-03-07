@@ -50,6 +50,24 @@ The app runs on port **33002**.
 
 ---
 
+### sessionState.json — managed automatically
+
+`data/sessionState.json` is written to at runtime as a persistent cache. You should not edit it manually. Clear it with `POST /admin/clearstate`.
+
+```json
+{
+  "usernames": {
+    "<discordUserId>": { "username": "<string>", "cachedAt": "<timestamp ms>" }
+  }
+}
+```
+
+| Field       | Type                              | Description                                              |
+| ----------- | --------------------------------- | -------------------------------------------------------- |
+| `usernames` | `{ userId: { username, cachedAt } }` | Discord username cache used by the karma leaderboard. Entries expire after 12 hours. |
+
+---
+
 ### applicationConfig.json — managed manually
 
 `data/applicationConfig.json` is edited by hand and loaded at startup. Changes take effect immediately after running `/dev reloadconfig` or `POST /admin/reloadconfig` — no restart needed.
