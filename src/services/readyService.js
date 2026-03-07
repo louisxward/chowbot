@@ -5,6 +5,7 @@ const logger = require("logger");
 const { scheduledClearer } = require("services/messageClearer");
 const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const { getAppConfig, setEmojisValid } = require("services/applicationConfigService");
+const { processPendingReconcile } = require("services/reactionBurstService");
 
 function schedule(expression, name, fn) {
   cron.schedule(
@@ -48,6 +49,7 @@ function mapStatuses(statuses) {
 
 async function readyup(client) {
   await validateEmojis(client);
+  await processPendingReconcile(client);
 
   // Set initial status
   const { statuses: initialStatuses = [] } = await getAppConfig();

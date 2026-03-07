@@ -32,6 +32,28 @@ async function removeChannel(serverId, key, channelId) {
   await writeServerConfig(config);
 }
 
+async function getPendingReconcile(serverId) {
+  const config = await readServerConfig();
+  return config[serverId]?.pendingReconcile ?? [];
+}
+
+async function addPendingReconcile(serverId, messageId, channelId) {
+  const config = await readServerConfig();
+  const server = config[serverId] ?? {};
+  const pending = server.pendingReconcile ?? [];
+  if (pending.some((e) => e.messageId === messageId)) return;
+  config[serverId] = { ...server, pendingReconcile: [...pending, { messageId, channelId }] };
+  await writeServerConfig(config);
+}
+
+async function removePendingReconcile(serverId, messageId) {
+  const config = await readServerConfig();
+  const server = config[serverId] ?? {};
+  const pending = server.pendingReconcile ?? [];
+  config[serverId] = { ...server, pendingReconcile: pending.filter((e) => e.messageId !== messageId) };
+  await writeServerConfig(config);
+}
+
 module.exports = {
   readServerConfig,
   getClearChannels: (serverId) => getChannels(serverId, "clearChannels"),
@@ -39,5 +61,8 @@ module.exports = {
   removeClearChannel: (serverId, channelId) => removeChannel(serverId, "clearChannels", channelId),
   getLeaderboardChannels: (serverId) => getChannels(serverId, "leaderboardChannels"),
   addLeaderboardChannel: (serverId, channelId) => addChannel(serverId, "leaderboardChannels", channelId),
-  removeLeaderboardChannel: (serverId, channelId) => removeChannel(serverId, "leaderboardChannels", channelId)
+  removeLeaderboardChannel: (serverId, channelId) => removeChannel(serverId, "leaderboardChannels", channelId),
+  getPendingReconcile,
+  addPendingReconcile,
+  removePendingReconcile
 };

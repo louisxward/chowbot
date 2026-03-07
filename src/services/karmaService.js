@@ -1,6 +1,7 @@
 const logger = require("logger");
 const { createKarma: repoCreateKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
 const { getAppConfig } = require("services/applicationConfigService");
+const { recordEvent } = require("services/reactionBurstService");
 
 const KARMA_TYPE = { MESSAGE: 0, ETIQUETTE: 1 };
 
@@ -18,7 +19,9 @@ async function handleEvent(reaction, user, addReaction) {
     }
   }
   const authorId = reaction.message.author.id;
-  if (user.id === authorId) return;
+  //if (user.id === authorId) return;
+
+  if (await recordEvent(reaction)) return;
 
   const { guildId, id: messageId } = reaction.message;
 
