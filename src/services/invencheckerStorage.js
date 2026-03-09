@@ -12,4 +12,11 @@ async function setUid(userId, uid) {
   await writeFile(USER_CONFIG_PATH, config);
 }
 
-module.exports = { getUid, setUid };
+async function getAllUsers() {
+  const config = await readFile(USER_CONFIG_PATH);
+  return Object.entries(config)
+    .filter(([, val]) => val?.invencheckerId)
+    .map(([discordId, val]) => ({ discordId, uid: val.invencheckerId }));
+}
+
+module.exports = { getUid, setUid, getAllUsers };
