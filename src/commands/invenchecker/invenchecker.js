@@ -34,9 +34,7 @@ module.exports = {
         .setName("account")
         .setDescription("Account management")
         .addSubcommand((sub) =>
-          sub
-            .setName("register")
-            .setDescription("Register your Discord account with invenchecker")
+          sub.setName("register").setDescription("Register your Discord account with invenchecker")
         )
     )
 
@@ -50,17 +48,13 @@ module.exports = {
           sub
             .setName("add")
             .setDescription("Add a Steam64 ID to your account")
-            .addStringOption((opt) =>
-              opt.setName("id").setDescription("Steam64 ID").setRequired(true)
-            )
+            .addStringOption((opt) => opt.setName("id").setDescription("Steam64 ID").setRequired(true))
         )
         .addSubcommand((sub) =>
           sub
             .setName("remove")
             .setDescription("Remove a Steam64 ID from your account")
-            .addStringOption((opt) =>
-              opt.setName("id").setDescription("Steam64 ID to remove").setRequired(true)
-            )
+            .addStringOption((opt) => opt.setName("id").setDescription("Steam64 ID to remove").setRequired(true))
         )
     )
 
@@ -94,12 +88,8 @@ module.exports = {
       group
         .setName("alerts")
         .setDescription("Manage your price alerts")
-        .addSubcommand((sub) =>
-          sub.setName("list").setDescription("List your unresolved alerts")
-        )
-        .addSubcommand((sub) =>
-          sub.setName("resolve").setDescription("Resolve all your unresolved alerts")
-        )
+        .addSubcommand((sub) => sub.setName("list").setDescription("List your unresolved alerts"))
+        .addSubcommand((sub) => sub.setName("resolve").setDescription("Resolve all your unresolved alerts"))
     ),
 
   async execute(interaction) {
@@ -143,7 +133,9 @@ module.exports = {
 
         if (sub === "add") {
           const account = await addCustomItem(uid, name);
-          return interaction.editReply({ content: `Added \`${name}\`. Tracked items: ${account.customItems.join(", ")}` });
+          return interaction.editReply({
+            content: `Added \`${name}\`. Tracked items: ${account.customItems.join(", ")}`
+          });
         }
         if (sub === "remove") {
           const account = await removeCustomItem(uid, name);
@@ -180,11 +172,13 @@ module.exports = {
         }
       }
     } catch (err) {
-      const msg = err.status === 404
-        ? "Account not found. Try `/invenchecker account register` again."
-        : err.status === 409
-          ? "Account already exists on the server."
-          : `API error: ${err.message}`;
+      logger.warn(err);
+      const msg =
+        err.status === 404
+          ? "Account not found. Try `/invenchecker account register` again."
+          : err.status === 409
+            ? "Account already exists on the server."
+            : `API error: ${err.message}`;
       if (interaction.deferred) {
         return interaction.editReply({ content: msg });
       }
