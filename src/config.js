@@ -11,8 +11,5 @@ module.exports = {
   PORT: process.env.PORT || 33002,
   INVENCHECKER_API_URL: process.env.INVENCHECKER_API_URL || "http://localhost:33001",
   TOKEN: process.env.TOKEN,
-  CLIENT_ID: process.env.CLIENT_ID,
-  BURST_THRESHOLD: parseInt(process.env.BURST_THRESHOLD) || 5,
-  BURST_WINDOW_MS: parseInt(process.env.BURST_WINDOW_MS) || 3000,
-  RECONCILE_DELAY_MS: parseInt(process.env.RECONCILE_DELAY_MS) || 15000
+  CLIENT_ID: process.env.CLIENT_ID
 };

@@ -25,32 +25,4 @@ async function clearSessionState() {
   await writeFile(SESSION_STATE_PATH, {});
 }
 
-async function getPendingReconcile(serverId) {
-  const state = await readFile(SESSION_STATE_PATH);
-  return state.pendingReconcile?.[serverId] ?? [];
-}
-
-async function addPendingReconcile(serverId, messageId, channelId) {
-  const state = await readFile(SESSION_STATE_PATH);
-  if (!state.pendingReconcile) state.pendingReconcile = {};
-  const pending = state.pendingReconcile[serverId] ?? [];
-  if (pending.some((e) => e.messageId === messageId)) return;
-  state.pendingReconcile[serverId] = [...pending, { messageId, channelId }];
-  await writeFile(SESSION_STATE_PATH, state);
-}
-
-async function removePendingReconcile(serverId, messageId) {
-  const state = await readFile(SESSION_STATE_PATH);
-  if (!state.pendingReconcile?.[serverId]) return;
-  state.pendingReconcile[serverId] = state.pendingReconcile[serverId].filter(
-    (e) => e.messageId !== messageId
-  );
-  await writeFile(SESSION_STATE_PATH, state);
-}
-
-async function getAllPendingReconcile() {
-  const state = await readFile(SESSION_STATE_PATH);
-  return state.pendingReconcile ?? {};
-}
-
-module.exports = { getCachedUsername, setCachedUsername, clearSessionState, getPendingReconcile, addPendingReconcile, removePendingReconcile, getAllPendingReconcile };
+module.exports = { getCachedUsername, setCachedUsername, clearSessionState };

@@ -52,17 +52,13 @@ The app runs on port **33002**.
 {
   "usernames": {
     "<discordUserId>": { "username": "<string>", "cachedAt": "<timestamp ms>" }
-  },
-  "pendingReconcile": {
-    "<guildId>": [{ "messageId": "<id>", "channelId": "<id>" }]
   }
 }
 ```
 
-| Field              | Type                                       | Description                                                                          |
-| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `usernames`        | `{ userId: { username, cachedAt } }`       | Discord username cache used by the karma leaderboard. Entries expire after 12 hours. |
-| `pendingReconcile` | `{ guildId: { messageId, channelId }[] }`  | Messages queued for DB reconciliation after a reaction burst. Processed on startup.  |
+| Field       | Type                                 | Description                                                                          |
+| ----------- | ------------------------------------ | ------------------------------------------------------------------------------------ |
+| `usernames` | `{ userId: { username, cachedAt } }` | Discord username cache used by the karma leaderboard. Entries expire after 12 hours. |
 
 ---
 
@@ -210,9 +206,6 @@ Configured in `.env` or the host environment. Defined in `config.js`.
 | `CLIENT_ID`            | —                        | Yes      | Discord application client ID          |
 | `PORT`                 | `33002`                  | No       | HTTP server port                       |
 | `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker(TBA) API |
-| `BURST_THRESHOLD`      | `5`                      | No       | Reaction events on one message before burst mode triggers |
-| `BURST_WINDOW_MS`      | `3000`                   | No       | Sliding window (ms) for burst detection |
-| `RECONCILE_DELAY_MS`   | `15000`                  | No       | Debounce delay (ms) before DB reconciliation runs after a burst |
 
 ## Local Development (without Docker)
 
