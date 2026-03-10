@@ -103,6 +103,14 @@ module.exports = {
           return interaction.reply({ ephemeral: true, content: `Already registered (uid: \`${existing}\`).` });
         }
         await interaction.deferReply({ ephemeral: true });
+        try {
+          await interaction.user.send("Verifying DMs for invenchecker registration…");
+        } catch {
+          return interaction.editReply({
+            content:
+              "Registration failed: please enable DMs from server members so invenchecker can send you price alerts."
+          });
+        }
         const result = await createAccountByDiscord(interaction.user.id);
         await setUid(interaction.user.id, result.uid);
         return interaction.editReply({ content: `Registered! Your uid: \`${result.uid}\`` });
