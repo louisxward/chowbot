@@ -74,7 +74,7 @@ async function readyup(client) {
   schedule("0 21 * * 0", "sendKarmaWeeklyLeaderboard", () => sendKarmaWeeklyLeaderboard(client));
   schedule("1 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
 
-  schedule("*/5 * * * *", "invencheckerAlerts", async () => {
+  schedule("*/1 * * * *", "invencheckerAlerts", async () => {
     const users = await getAllUsers();
     for (const { discordId, uid } of users) {
       const alerts = await getUserAlerts(uid);
@@ -94,7 +94,7 @@ async function readyup(client) {
       } catch (err) {
         logger.warn({ err, discordId }, "invencheckerAlerts - failed to DM user");
       }
-      //await resolveAllAlerts(uid);
+      await resolveAllAlerts(uid);
     }
   });
 }
