@@ -1,4 +1,4 @@
-const { readFile } = require("services/storageHelper");
+const { readFile, invalidateCache } = require("services/storageHelper");
 const { APPLICATION_CONFIG_PATH } = require("config");
 const logger = require("logger");
 
@@ -12,6 +12,7 @@ async function getAppConfig() {
 
 async function reloadAppConfig() {
   logger.info("map - reload app config");
+  invalidateCache(APPLICATION_CONFIG_PATH);
   cache = await readFile(APPLICATION_CONFIG_PATH);
   return cache;
 }

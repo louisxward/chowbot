@@ -1,5 +1,5 @@
 const logger = require("logger");
-const { readServerConfig, getClearChannels, addClearChannel, removeClearChannel } = require("services/serverConfigStorage");
+const { readServerConfig, getClearChannels } = require("services/serverConfigStorage");
 
 async function scheduledClearer(client) {
   logger.info("function - scheduledClearer");
@@ -50,16 +50,4 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function addServerClearChannel(client, serverId, channelId) {
-  const channel = client.channels.cache.get(channelId);
-  if (!channel) throw "doesnt exist";
-  logger.info(`adding clear channel: ${channelId}`);
-  await addClearChannel(serverId, channelId);
-}
-
-async function removeServerClearChannel(serverId, channelId) {
-  logger.info(`removing clear channel: ${channelId}`);
-  await removeClearChannel(serverId, channelId);
-}
-
-module.exports = { manualServerClear, scheduledClearer, addServerClearChannel, removeServerClearChannel };
+module.exports = { manualServerClear, scheduledClearer };

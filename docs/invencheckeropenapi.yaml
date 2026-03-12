@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
   title: invenchecker API
-  version: 0.0.1
+  version: 1.0.0
   description: Steam inventory checker and price alert service
 
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:33001
 
 tags:
   - name: health
@@ -36,6 +36,12 @@ paths:
                     type: integer
                     nullable: true
                     description: Duration of last scan in milliseconds
+                  inventoryQueueSize:
+                    type: integer
+                    description: Number of steam64ids pending in the inventory queue
+                  priceQueueSize:
+                    type: integer
+                    description: Number of items pending in the price queue
 
   /accounts:
     get:
@@ -70,6 +76,8 @@ paths:
                   type: array
                   items:
                     type: string
+                    pattern: '^7656119\d{10}$'
+                    description: 17-digit Steam64 ID starting with 7656119
                   minItems: 1
                 customItems:
                   type: array
@@ -84,7 +92,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Account"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          description: Missing or invalid fields, or entry previously rejected by the scanner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "409":
           $ref: "#/components/responses/Conflict"
 
@@ -155,6 +167,8 @@ paths:
                   type: array
                   items:
                     type: string
+                    pattern: '^7656119\d{10}$'
+                    description: 17-digit Steam64 ID starting with 7656119
                 customItems:
                   type: array
                   items:
@@ -166,6 +180,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Account"
+        "400":
+          description: Invalid fields or entry previously rejected by the scanner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -195,6 +215,8 @@ paths:
               properties:
                 steam64id:
                   type: string
+                  pattern: '^7656119\d{10}$'
+                  description: 17-digit Steam64 ID starting with 7656119
       responses:
         "200":
           description: Updated account
@@ -203,7 +225,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Account"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          description: Invalid or previously rejected steam64id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -256,7 +282,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Account"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          description: Item previously rejected by the scanner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -346,6 +376,35 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/CustomItem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /accounts/{uid}/progress:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+
+    get:
+      tags: [accounts]
+      summary: Scan state per steam64id and custom item
+      description: Shows whether each steam64id/item is queued, when it was last fetched/priced, and when it is next scheduled to scan.
+      responses:
+        "200":
+          description: Progress for each steam64id and custom item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  steam64ids:
+                    type: object
+                    additionalProperties:
+                      $ref: "#/components/schemas/Steam64Progress"
+                  customItems:
+                    type: object
+                    additionalProperties:
+                      $ref: "#/components/schemas/ItemProgress"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -455,10 +514,17 @@ paths:
   /alerts/scan:
     post:
       tags: [alerts]
-      summary: Trigger a manual inventory scan
+      summary: Enqueue all accounts for scanning immediately (returns instantly)
+      parameters:
+        - name: force
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Bypass recency checks and enqueue all items immediately regardless of last scan time
       responses:
         "200":
-          description: Scan completed, returns all alerts
+          description: All accounts enqueued for scanning
           content:
             application/json:
               schema:
@@ -466,17 +532,13 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Scan complete
-                  alerts:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Alert"
-        "500":
-          description: Scan failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                    example: Scan enqueued
+                  force:
+                    type: boolean
+                    description: Whether recency checks were bypassed
+                  queuedAt:
+                    type: integer
+                    description: Unix timestamp when scan was enqueued
 
 components:
   parameters:
@@ -529,6 +591,7 @@ components:
           type: array
           items:
             type: string
+            pattern: '^7656119\d{10}$'
         customItems:
           type: array
           items:
@@ -607,3 +670,50 @@ components:
               type: integer
               nullable: true
               description: Unix timestamp
+
+    InventoryFetch:
+      type: object
+      nullable: true
+      properties:
+        item_count:
+          type: integer
+          description: Number of items found in the inventory
+        duration_ms:
+          type: integer
+          description: Time taken to fetch the inventory in milliseconds
+        fetched_at:
+          type: integer
+          description: Unix timestamp of the fetch
+
+    Steam64Progress:
+      type: object
+      properties:
+        queued:
+          type: boolean
+          description: True if this steam64id is currently pending in the inventory queue
+        lastFetch:
+          $ref: "#/components/schemas/InventoryFetch"
+        nextScanAt:
+          type: integer
+          nullable: true
+          description: Estimated Unix timestamp of next scan (lastFetch.fetched_at + re-enqueue delay), or null if queued or never scanned
+
+    ItemProgress:
+      type: object
+      properties:
+        queued:
+          type: boolean
+          description: True if this item is currently pending in the price queue
+        lastPrice:
+          type: object
+          nullable: true
+          properties:
+            lowest_price:
+              type: number
+            captured_at:
+              type: integer
+              description: Unix timestamp
+        nextScanAt:
+          type: integer
+          nullable: true
+          description: Estimated Unix timestamp of next price check, or null if queued or never scanned

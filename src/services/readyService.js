@@ -1,10 +1,12 @@
-const { ActivityType } = require("discord.js");
+const { ActivityType, EmbedBuilder } = require("discord.js");
 const cron = require("node-cron");
 const logger = require("logger");
 
 const { scheduledClearer } = require("services/messageClearer");
 const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const { getAppConfig, setEmojisValid } = require("services/applicationConfigService");
+const { getAllUsers } = require("services/invencheckerStorage");
+const { getUserAlerts, resolveAllAlerts } = require("services/invencheckerService");
 
 function schedule(expression, name, fn) {
   cron.schedule(
@@ -71,6 +73,30 @@ async function readyup(client) {
 
   schedule("0 21 * * 0", "sendKarmaWeeklyLeaderboard", () => sendKarmaWeeklyLeaderboard(client));
   schedule("1 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
+
+  schedule("*/1 * * * *", "invencheckerAlerts", async () => {
+    const users = await getAllUsers();
+    for (const { discordId, uid } of users) {
+      const alerts = await getUserAlerts(uid);
+      if (!alerts.length) continue;
+      const embed = new EmbedBuilder()
+        .setTitle("Price Alert")
+        .setColor(0xffa500)
+        .setDescription(
+          alerts
+            .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ $${a.price_at_alert.toFixed(2)}`)
+            .join("\n")
+        )
+        .setTimestamp();
+      try {
+        const user = await client.users.fetch(discordId);
+        await user.send({ embeds: [embed] });
+      } catch (err) {
+        logger.warn({ err, discordId }, "invencheckerAlerts - failed to DM user");
+      }
+      await resolveAllAlerts(uid);
+    }
+  });
 }
 
-module.exports = { readyup };
+module.exports = { readyup, validateEmojis };

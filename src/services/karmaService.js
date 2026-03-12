@@ -1,7 +1,6 @@
 const logger = require("logger");
 const { createKarma: repoCreateKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
 const { getAppConfig } = require("services/applicationConfigService");
-
 const KARMA_TYPE = { MESSAGE: 0, ETIQUETTE: 1 };
 
 async function handleEvent(reaction, user, addReaction) {

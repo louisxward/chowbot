@@ -34,10 +34,13 @@ async function removeChannel(serverId, key, channelId) {
 
 module.exports = {
   readServerConfig,
+  getChannels,
+  addChannel,
+  removeChannel,
   getClearChannels: (serverId) => getChannels(serverId, "clearChannels"),
   addClearChannel: (serverId, channelId) => addChannel(serverId, "clearChannels", channelId),
   removeClearChannel: (serverId, channelId) => removeChannel(serverId, "clearChannels", channelId),
   getLeaderboardChannels: (serverId) => getChannels(serverId, "leaderboardChannels"),
   addLeaderboardChannel: (serverId, channelId) => addChannel(serverId, "leaderboardChannels", channelId),
-  removeLeaderboardChannel: (serverId, channelId) => removeChannel(serverId, "leaderboardChannels", channelId)
+  removeLeaderboardChannel: (serverId, channelId) => removeChannel(serverId, "leaderboardChannels", channelId),
 };

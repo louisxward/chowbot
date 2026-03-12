@@ -10,6 +10,7 @@ const config = require("config");
 const logger = require("logger");
 const { init } = require("services/databaseService");
 const { getAppConfig } = require("services/applicationConfigService");
+const { deployCommands } = require("services/commandDeployer");
 
 // Application config validation
 getAppConfig().then((appConfig) => {
@@ -89,3 +90,9 @@ const server = app.listen(config.PORT, () => {
 // Login
 logger.info("startup - login");
 client.login(config.TOKEN);
+
+// Deploy commands if flag is set
+if (process.argv.includes("--deploy-commands")) {
+  logger.info("startup - deploying commands (--deploy-commands flag)");
+  deployCommands().catch((err) => logger.error({ err }, "startup - deployCommands failed"));
+}
