@@ -1,6 +1,6 @@
 # chowbot
 
-Version: 0.3.5
+Version: 0.4.0
 
 Publisher: ChowIndustries
 
@@ -8,7 +8,7 @@ Discord bot for doing different things
 
 ## Release Notes
 
-###### ...
+[Invenchecker](#invenchecker)
 
 ## Quick Start
 
@@ -74,9 +74,9 @@ The app runs on port **33002**.
 }
 ```
 
-| Field             | Type     | Managed by                         |
-| ----------------- | -------- | ---------------------------------- |
-| `invencheckerId`  | `string` | `/invenchecker account register`   |
+| Field            | Type     | Managed by                       |
+| ---------------- | -------- | -------------------------------- |
+| `invencheckerId` | `string` | `/invenchecker account register` |
 
 ---
 
@@ -120,12 +120,12 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Message Clearer
 
-| Command                    | Options                | Description                                                    | Permission    |
-| -------------------------- | ---------------------- | -------------------------------------------------------------- | ------------- |
-| `/clearchannel add`        | `channel_id`           | **DANGEROUS** — Add a channel to be cleared daily at 05:00 UTC | Administrator |
-| `/clearchannel remove`     | `channel_id`           | Remove a channel from the daily clear list                     | Administrator |
-| `/clearchannel list`       | —                      | List channels currently in the clear list                      | Administrator |
-| `/runclear`                | `confirm` (type `RUN`) | **DANGEROUS** — Manually run the channel clear                 | Administrator |
+| Command                | Options                | Description                                                    | Permission    |
+| ---------------------- | ---------------------- | -------------------------------------------------------------- | ------------- |
+| `/clearchannel add`    | `channel_id`           | **DANGEROUS** — Add a channel to be cleared daily at 05:00 UTC | Administrator |
+| `/clearchannel remove` | `channel_id`           | Remove a channel from the daily clear list                     | Administrator |
+| `/clearchannel list`   | —                      | List channels currently in the clear list                      | Administrator |
+| `/runclear`            | `confirm` (type `RUN`) | **DANGEROUS** — Manually run the channel clear                 | Administrator |
 
 ### Invenchecker
 
@@ -149,13 +149,13 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Admin
 
-| Method | Path                                    | Body                      | Description                                              |
-| ------ | --------------------------------------- | ------------------------- | -------------------------------------------------------- |
-| `POST` | `/admin/clearstate`                     | —                         | Clear session state (username cache)                     |
-| `POST` | `/admin/reloadconfig`                   | —                         | Reload `applicationConfig.json` from disk                |
-| `POST` | `/admin/deploycommands`                 | `{}` or `{"serverId":"…"}` | Deploy slash commands globally or to a specific guild   |
-| `POST` | `/admin/sendLeaderboardRoute`           | —                         | Send karma weekly leaderboard now (responds 202)         |
-| `POST` | `/admin/persistKarmaWeeklyLeaderboard`  | —                         | Persist weekly leaderboard snapshot (responds 202)       |
+| Method | Path                                   | Body                       | Description                                           |
+| ------ | -------------------------------------- | -------------------------- | ----------------------------------------------------- |
+| `POST` | `/admin/clearstate`                    | —                          | Clear session state (username cache)                  |
+| `POST` | `/admin/reloadconfig`                  | —                          | Reload `applicationConfig.json` from disk             |
+| `POST` | `/admin/deploycommands`                | `{}` or `{"serverId":"…"}` | Deploy slash commands globally or to a specific guild |
+| `POST` | `/admin/sendLeaderboardRoute`          | —                          | Send karma weekly leaderboard now (responds 202)      |
+| `POST` | `/admin/persistKarmaWeeklyLeaderboard` | —                          | Persist weekly leaderboard snapshot (responds 202)    |
 
 **Examples:**
 
