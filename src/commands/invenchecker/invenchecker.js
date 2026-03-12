@@ -12,6 +12,7 @@ const {
   getAccountProgress,
   getAccountPrices
 } = require("services/invencheckerService");
+const logger = require("logger");
 
 async function requireUid(interaction) {
   const uid = await getUid(interaction.user.id);
@@ -104,9 +105,7 @@ module.exports = {
         .addSubcommand((sub) =>
           sub.setName("summary").setDescription("Inventory summary with latest prices per tracked item")
         )
-        .addSubcommand((sub) =>
-          sub.setName("progress").setDescription("Scan state per Steam account and custom item")
-        )
+        .addSubcommand((sub) => sub.setName("progress").setDescription("Scan state per Steam account and custom item"))
         .addSubcommand((sub) =>
           sub
             .setName("prices")
@@ -115,10 +114,7 @@ module.exports = {
               opt.setName("days").setDescription("Number of days of history to return (default: 7)").setRequired(false)
             )
             .addStringOption((opt) =>
-              opt
-                .setName("item")
-                .setDescription("Filter to a single item by market_hash_name")
-                .setRequired(false)
+              opt.setName("item").setDescription("Filter to a single item by market_hash_name").setRequired(false)
             )
         )
     ),
@@ -223,8 +219,7 @@ module.exports = {
           for (const [steam64id, items] of Object.entries(summary.steam64ids || {})) {
             if (!items.length) continue;
             const lines = items.map((item) => {
-              const price =
-                item.price?.lowest_price != null ? `£${item.price.lowest_price.toFixed(2)}` : "no price";
+              const price = item.price?.lowest_price != null ? `£${item.price.lowest_price.toFixed(2)}` : "no price";
               const missing = item.missing ? " *(missing)*" : "";
               return `\`${item.market_hash_name}\` — ${price}${missing}`;
             });
@@ -234,8 +229,7 @@ module.exports = {
           const customItems = summary.customItems || [];
           if (customItems.length) {
             const lines = customItems.map((item) => {
-              const price =
-                item.price?.lowest_price != null ? `£${item.price.lowest_price.toFixed(2)}` : "no price";
+              const price = item.price?.lowest_price != null ? `£${item.price.lowest_price.toFixed(2)}` : "no price";
               return `\`${item.market_hash_name}\` — ${price}`;
             });
             embed.addFields({ name: "Custom Items", value: lines.join("\n").slice(0, 1024) });
@@ -264,9 +258,7 @@ module.exports = {
           if (itemEntries.length) {
             const lines = itemEntries.map(([name, p]) => {
               if (p.queued) return `\`${name}\` — queued`;
-              const lastPriced = p.lastPrice?.captured_at
-                ? `last: <t:${p.lastPrice.captured_at}:R>`
-                : "never priced";
+              const lastPriced = p.lastPrice?.captured_at ? `last: <t:${p.lastPrice.captured_at}:R>` : "never priced";
               const nextScan = p.nextScanAt ? `, next: <t:${p.nextScanAt}:R>` : "";
               return `\`${name}\` — ${lastPriced}${nextScan}`;
             });
@@ -282,10 +274,7 @@ module.exports = {
           const item = interaction.options.getString("item");
           const prices = await getAccountPrices(uid, days, item);
 
-          const embed = new EmbedBuilder()
-            .setTitle(`Price History (${days}d)`)
-            .setColor(0xffcc00)
-            .setTimestamp();
+          const embed = new EmbedBuilder().setTitle(`Price History (${days}d)`).setColor(0xffcc00).setTimestamp();
 
           for (const [name, snapshots] of Object.entries(prices)) {
             if (!snapshots.length) continue;
@@ -302,7 +291,6 @@ module.exports = {
           return interaction.editReply({ embeds: [embed] });
         }
       }
-
     } catch (err) {
       logger.warn(err);
       const msg =
