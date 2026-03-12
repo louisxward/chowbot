@@ -5,8 +5,13 @@ services:
     build: .
     expose:
       - "33002"
+    networks:
+      - invenchecker
     env_file:
       - .env
     volumes:
       - /opt/data/chowbot:/app/data
       - /var/log/chowbot:/app/log
+networks:
+  invenchecker:
+    external: true

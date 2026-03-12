@@ -129,15 +129,18 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Invenchecker
 
-| Command                            | Description                                        | Permission    |
-| ---------------------------------- | -------------------------------------------------- | ------------- |
-| `/invenchecker account register`   | Register your Discord account with invenchecker    | Administrator |
-| `/invenchecker steam add <id>`     | Add a Steam64 ID to your account                   | Administrator |
-| `/invenchecker steam remove <id>`  | Remove a Steam64 ID from your account              | Administrator |
-| `/invenchecker item add <name>`    | Add a custom item to track (by `market_hash_name`) | Administrator |
-| `/invenchecker item remove <name>` | Remove a custom tracked item                       | Administrator |
-| `/invenchecker alerts list`        | List unresolved price alerts                       | Administrator |
-| `/invenchecker alerts resolve`     | Resolve all unresolved alerts                      | Administrator |
+| Command                       | Options                                         | Description                                                       | Permission |
+| ----------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- | ---------- |
+| `/invenchecker account register` | —                                            | Register your Discord account with invenchecker                   | Everyone   |
+| `/invenchecker steam add`     | `id`                                            | Add a Steam64 ID to your account                                  | Everyone   |
+| `/invenchecker steam remove`  | `id`                                            | Remove a Steam64 ID from your account                             | Everyone   |
+| `/invenchecker item add`      | `name`                                          | Add a custom item to track (by `market_hash_name`)                | Everyone   |
+| `/invenchecker item remove`   | `name`                                          | Remove a custom tracked item                                      | Everyone   |
+| `/invenchecker alerts list`   | —                                               | List unresolved price alerts                                      | Everyone   |
+| `/invenchecker alerts resolve` | —                                              | Resolve all unresolved alerts                                     | Everyone   |
+| `/invenchecker view summary`  | —                                               | Inventory summary with latest prices per tracked item             | Everyone   |
+| `/invenchecker view progress` | —                                               | Scan state (queued, last fetched, next scan) per account and item | Everyone   |
+| `/invenchecker view prices`   | `days` (int, default 7), `item` (str, optional) | Price history for your custom tracked items                       | Everyone   |
 
 ## API Endpoints
 
@@ -205,7 +208,7 @@ Configured in `.env` or the host environment. Defined in `config.js`.
 | `TOKEN`                | —                        | Yes      | Discord bot token                      |
 | `CLIENT_ID`            | —                        | Yes      | Discord application client ID          |
 | `PORT`                 | `33002`                  | No       | HTTP server port                       |
-| `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker(TBA) API |
+| `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker API      |
 
 ## Local Development (without Docker)
 

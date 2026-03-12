@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getUid, setUid } = require("services/invencheckerStorage");
 const {
   createAccountByDiscord,
@@ -7,7 +7,10 @@ const {
   addCustomItem,
   removeCustomItem,
   resolveAllAlerts,
-  getUserAlerts
+  getUserAlerts,
+  getAccountSummary,
+  getAccountProgress,
+  getAccountPrices
 } = require("services/invencheckerService");
 
 async function requireUid(interaction) {
@@ -26,7 +29,6 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("invenchecker")
     .setDescription("Manage your invenchecker account and alerts")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 
     // /invenchecker account register
     .addSubcommandGroup((group) =>
@@ -90,6 +92,35 @@ module.exports = {
         .setDescription("Manage your price alerts")
         .addSubcommand((sub) => sub.setName("list").setDescription("List your unresolved alerts"))
         .addSubcommand((sub) => sub.setName("resolve").setDescription("Resolve all your unresolved alerts"))
+    )
+
+    // /invenchecker view summary
+    // /invenchecker view progress
+    // /invenchecker view prices [days] [item]
+    .addSubcommandGroup((group) =>
+      group
+        .setName("view")
+        .setDescription("View account data and prices")
+        .addSubcommand((sub) =>
+          sub.setName("summary").setDescription("Inventory summary with latest prices per tracked item")
+        )
+        .addSubcommand((sub) =>
+          sub.setName("progress").setDescription("Scan state per Steam account and custom item")
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("prices")
+            .setDescription("Price history for your custom tracked items")
+            .addIntegerOption((opt) =>
+              opt.setName("days").setDescription("Number of days of history to return (default: 7)").setRequired(false)
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName("item")
+                .setDescription("Filter to a single item by market_hash_name")
+                .setRequired(false)
+            )
+        )
     ),
 
   async execute(interaction) {
@@ -167,7 +198,7 @@ module.exports = {
             .setColor(0xffa500)
             .setDescription(
               alerts
-                .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ $${a.price_at_alert.toFixed(2)}`)
+                .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ £${a.price_at_alert.toFixed(2)}`)
                 .join("\n")
             )
             .setTimestamp();
@@ -179,6 +210,99 @@ module.exports = {
           return interaction.editReply({ content: `Resolved ${result.resolved} alert(s).` });
         }
       }
+
+      if (group === "view") {
+        const uid = await requireUid(interaction);
+        if (!uid) return;
+        await interaction.deferReply({ ephemeral: true });
+
+        if (sub === "summary") {
+          const summary = await getAccountSummary(uid);
+          const embed = new EmbedBuilder().setTitle("Inventory Summary").setColor(0x00aaff).setTimestamp();
+
+          for (const [steam64id, items] of Object.entries(summary.steam64ids || {})) {
+            if (!items.length) continue;
+            const lines = items.map((item) => {
+              const price =
+                item.price?.lowest_price != null ? `£${item.price.lowest_price.toFixed(2)}` : "no price";
+              const missing = item.missing ? " *(missing)*" : "";
+              return `\`${item.market_hash_name}\` — ${price}${missing}`;
+            });
+            embed.addFields({ name: steam64id, value: lines.join("\n").slice(0, 1024) });
+          }
+
+          const customItems = summary.customItems || [];
+          if (customItems.length) {
+            const lines = customItems.map((item) => {
+              const price =
+                item.price?.lowest_price != null ? `£${item.price.lowest_price.toFixed(2)}` : "no price";
+              return `\`${item.market_hash_name}\` — ${price}`;
+            });
+            embed.addFields({ name: "Custom Items", value: lines.join("\n").slice(0, 1024) });
+          }
+
+          if (!embed.data.fields?.length) embed.setDescription("No tracked items found.");
+          return interaction.editReply({ embeds: [embed] });
+        }
+
+        if (sub === "progress") {
+          const progress = await getAccountProgress(uid);
+          const embed = new EmbedBuilder().setTitle("Scan Progress").setColor(0x00cc66).setTimestamp();
+
+          const steamEntries = Object.entries(progress.steam64ids || {});
+          if (steamEntries.length) {
+            const lines = steamEntries.map(([id, p]) => {
+              if (p.queued) return `\`${id}\` — queued`;
+              const lastFetched = p.lastFetch?.fetched_at ? `last: <t:${p.lastFetch.fetched_at}:R>` : "never fetched";
+              const nextScan = p.nextScanAt ? `, next: <t:${p.nextScanAt}:R>` : "";
+              return `\`${id}\` — ${lastFetched}${nextScan}`;
+            });
+            embed.addFields({ name: "Steam Accounts", value: lines.join("\n").slice(0, 1024) });
+          }
+
+          const itemEntries = Object.entries(progress.customItems || {});
+          if (itemEntries.length) {
+            const lines = itemEntries.map(([name, p]) => {
+              if (p.queued) return `\`${name}\` — queued`;
+              const lastPriced = p.lastPrice?.captured_at
+                ? `last: <t:${p.lastPrice.captured_at}:R>`
+                : "never priced";
+              const nextScan = p.nextScanAt ? `, next: <t:${p.nextScanAt}:R>` : "";
+              return `\`${name}\` — ${lastPriced}${nextScan}`;
+            });
+            embed.addFields({ name: "Custom Items", value: lines.join("\n").slice(0, 1024) });
+          }
+
+          if (!embed.data.fields?.length) embed.setDescription("No tracked items found.");
+          return interaction.editReply({ embeds: [embed] });
+        }
+
+        if (sub === "prices") {
+          const days = interaction.options.getInteger("days") ?? 7;
+          const item = interaction.options.getString("item");
+          const prices = await getAccountPrices(uid, days, item);
+
+          const embed = new EmbedBuilder()
+            .setTitle(`Price History (${days}d)`)
+            .setColor(0xffcc00)
+            .setTimestamp();
+
+          for (const [name, snapshots] of Object.entries(prices)) {
+            if (!snapshots.length) continue;
+            const lines = snapshots.slice(-10).map((s) => {
+              const date = new Date(s.captured_at * 1000).toLocaleDateString();
+              const low = s.lowest_price != null ? `£${s.lowest_price.toFixed(2)}` : "—";
+              const med = s.median_price != null ? `£${s.median_price.toFixed(2)}` : "—";
+              return `${date}: ${low} low / ${med} med`;
+            });
+            embed.addFields({ name, value: lines.join("\n").slice(0, 1024) });
+          }
+
+          if (!embed.data.fields?.length) embed.setDescription("No price data found.");
+          return interaction.editReply({ embeds: [embed] });
+        }
+      }
+
     } catch (err) {
       logger.warn(err);
       const msg =

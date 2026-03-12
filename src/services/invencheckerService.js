@@ -47,6 +47,30 @@ async function getUserAlerts(uid) {
   return request("GET", `/alerts/user/${uid}`);
 }
 
+// GET /accounts/{uid}/summary → summary object
+async function getAccountSummary(uid) {
+  return request("GET", `/accounts/${uid}/summary`);
+}
+
+// GET /accounts/{uid}/progress → progress object
+async function getAccountProgress(uid) {
+  return request("GET", `/accounts/${uid}/progress`);
+}
+
+// GET /accounts/{uid}/prices?days=N&item=X → { [market_hash_name]: PriceSnapshot[] }
+async function getAccountPrices(uid, days, item) {
+  const params = new URLSearchParams();
+  if (days != null) params.set("days", days);
+  if (item != null) params.set("item", item);
+  const qs = params.toString() ? `?${params}` : "";
+  return request("GET", `/accounts/${uid}/prices${qs}`);
+}
+
+// POST /alerts/scan?force=bool → { message, force, queuedAt }
+async function triggerScan(force = false) {
+  return request("POST", `/alerts/scan${force ? "?force=true" : ""}`);
+}
+
 module.exports = {
   createAccountByDiscord,
   addSteam64Id,
@@ -54,5 +78,9 @@ module.exports = {
   addCustomItem,
   removeCustomItem,
   resolveAllAlerts,
-  getUserAlerts
+  getUserAlerts,
+  getAccountSummary,
+  getAccountProgress,
+  getAccountPrices,
+  triggerScan
 };
