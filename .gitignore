@@ -1,42 +1,35 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# Dependencies
+node_modules/
 
-# App
+# Secrets
 .env
-/data
-/log
+.env.*
+!.env.example
+
+# Runtime data (SQLite db, JSON config/state) and logs
+/data/
+/log/
+*.log
+
+# Local deploy script
 deploy.sh
-/.claude
 
-# Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
+# Tooling caches and output
+coverage/
+.eslintcache
 
-# Node
-/node_modules
-npm-debug.log
-yarn-error.log
+# Claude Code local settings
+/.claude/
 
-# System files
-.DS_Store
-Thumbs.db
-
-# IDEs and editors
+# Editors
 .idea/
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# Visual Studio Code
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.history/*
+.history/
 
-
+# OS files
+.DS_Store
+Thumbs.db

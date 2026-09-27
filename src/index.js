@@ -83,7 +83,7 @@ app.use((err, req, res, _next) => {
   res.status(err.status || 500).json({ error: err.message || "Internal server error" });
 });
 
-const server = app.listen(config.PORT, () => {
+app.listen(config.PORT, () => {
   logger.info({ port: config.PORT }, "startup - api");
 });
 

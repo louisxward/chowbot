@@ -16,7 +16,7 @@ module.exports = {
     }
     const inputMessageId = interaction.options.getString("message_id");
     logger.info(`- inputMessageId: ${inputMessageId}`);
-    let message = null;
+    let message;
     try {
       message = await interaction.channel.messages.fetch(inputMessageId);
     } catch (error) {

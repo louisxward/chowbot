@@ -24,8 +24,8 @@ async function getPreviousWeekId() {
   logger.info("repository - getPreviousWeekId");
   const db = await connect();
   const record = await db.get("SELECT MAX(id) as id FROM KarmaWeeklyLeaderboardWeek");
-  if (!record) throw error; // is this right?
   db.close();
+  if (!record) throw new Error("getPreviousWeekId - no record returned");
   return record.id;
 }
 

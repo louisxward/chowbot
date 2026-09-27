@@ -79,7 +79,7 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
       indexString = "💩";
     } else if (changeIndex < -1) {
       indexString = "⏬";
-    } else if (changeIndex < -0) {
+    } else if (changeIndex < 0) {
       indexString = "🔽";
     }
     // Concat
@@ -97,7 +97,7 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
 }
 
 async function getUsername(users, userId) {
-  if (!userId) throw error;
+  if (!userId) throw new Error("getUsername - userId is required");
   const cached = await getCachedUsername(userId);
   if (cached) return cached;
   try {

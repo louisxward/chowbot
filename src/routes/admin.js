@@ -1,3 +1,4 @@
+const logger = require("logger");
 const { clearSessionState } = require("services/sessionStateStorage");
 const { reloadAppConfig } = require("services/applicationConfigService");
 const { validateEmojis } = require("services/readyService");
