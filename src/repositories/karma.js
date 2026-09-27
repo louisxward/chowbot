@@ -46,7 +46,7 @@ async function getKarmaLeaderboardMap() {
   let index = 0;
   let minValue = null;
   records.forEach((e) => {
-    if (!minValue || minValue > e.total) {
+    if (minValue === null || minValue > e.total) {
       minValue = e.total;
       index += 1;
     }

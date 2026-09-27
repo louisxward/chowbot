@@ -158,6 +158,31 @@ describe("repositories", () => {
     expect(map.get("c")).toEqual({ index: 2, value: 1 });
   });
 
+  test("getKarmaLeaderboardMap shares rank for users tied on zero", async () => {
+    await karma.createKarma("g1", "m1", "a", "x", "up", 1, null, 0);
+    await karma.createKarma("g1", "m2", "b", "x", "up", 1, null, 0);
+    await karma.createKarma("g1", "m3", "b", "y", "down", -1, null, 0);
+    await karma.createKarma("g1", "m4", "c", "x", "up", 1, null, 0);
+    await karma.createKarma("g1", "m5", "c", "y", "down", -1, null, 0);
+    await karma.createKarma("g1", "m6", "d", "x", "down", -1, null, 0);
+    const map = await karma.getKarmaLeaderboardMap();
+    expect(map.get("a")).toEqual({ index: 1, value: 1 });
+    expect(map.get("b")).toEqual({ index: 2, value: 0 });
+    expect(map.get("c")).toEqual({ index: 2, value: 0 });
+    expect(map.get("d")).toEqual({ index: 3, value: -1 });
+  });
+
+  test("weekly leaderboard shares rank for users tied on zero", async () => {
+    const week = await weekly.createKarmaWeeklyLeaderboardWeek("2026-09-20T21:01:00.000Z");
+    await weekly.createKarmaWeeklyLeaderboardUser(week, "u1", 0);
+    await weekly.createKarmaWeeklyLeaderboardUser(week, "u2", 0);
+    await weekly.createKarmaWeeklyLeaderboardUser(week, "u3", -2);
+    const map = await weekly.getKarmaWeeklyLeaderboardMapByWeek(week);
+    expect(map.get("u1")).toEqual({ index: 1, value: 0 });
+    expect(map.get("u2")).toEqual({ index: 1, value: 0 });
+    expect(map.get("u3")).toEqual({ index: 2, value: -2 });
+  });
+
   test("weekly leaderboard persists and reads back the latest week", async () => {
     const week1 = await weekly.createKarmaWeeklyLeaderboardWeek("2026-09-13T21:01:00.000Z");
     const week2 = await weekly.createKarmaWeeklyLeaderboardWeek("2026-09-20T21:01:00.000Z");
