@@ -1,12 +1,19 @@
 const logger = require("logger");
-const { createKarma: repoCreateKarma, deleteKarma, updateKarma, getKarmaTotalByUserId } = require("repositories/karma");
+const {
+  createKarma,
+  upsertReactionKarma,
+  deleteKarma,
+  countKarmaSince,
+  getKarmaTotalByUserId
+} = require("repositories/karma");
 const { getAppConfig } = require("services/applicationConfigService");
 const KARMA_TYPE = { MESSAGE: 0, ETIQUETTE: 1 };
+const ETIQUETTE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 async function handleEvent(reaction, user, addReaction) {
   if (user.bot) return;
   const { emojiUpvoteId, emojiDownvoteId } = await getAppConfig();
-  const emojiId = reaction._emoji.id;
+  const emojiId = reaction.emoji.id;
   if (![emojiUpvoteId, emojiDownvoteId].includes(emojiId)) return;
   if (reaction.partial) {
     try {
@@ -37,10 +44,7 @@ async function updateUserKarma(serverId, messageId, userId, fromUserId, emojiId,
   logger.info(`- messageId: ${messageId}`);
   logger.info(`- fromUserId: ${fromUserId}`);
   logger.info(`- value: ${value}`);
-  //todo maybe remove this one day, if user reacts while down
-  if ((await updateKarma(serverId, messageId, fromUserId, emojiId, value)) == 0) {
-    await repoCreateKarma(serverId, messageId, userId, fromUserId, emojiId, value, null, type);
-  }
+  await upsertReactionKarma(serverId, messageId, userId, fromUserId, emojiId, value, type);
 }
 
 async function deleteUserKarma(serverId, messageId, fromUserId, emojiId) {
@@ -51,17 +55,21 @@ async function deleteUserKarma(serverId, messageId, fromUserId, emojiId) {
   await deleteKarma(serverId, messageId, fromUserId, emojiId);
 }
 
-async function createKarma(serverId, messageId, userId, fromUserId, emojiId, value, reason, type) {
-  logger.info("service - createUserKarma");
+// Returns false if fromUserId already reported userId in this server within the cooldown
+async function reportEtiquette(serverId, userId, fromUserId, good, reason) {
+  logger.info("service - reportEtiquette");
   logger.info(`- serverId: ${serverId}`);
   logger.info(`- userId: ${userId}`);
   logger.info(`- fromUserId: ${fromUserId}`);
-  logger.info(`- value: ${value}`);
-  await repoCreateKarma(serverId, messageId, userId, fromUserId, emojiId, value, reason, type);
+  logger.info(`- good: ${good}`);
+  const since = new Date(Date.now() - ETIQUETTE_COOLDOWN_MS).toISOString();
+  if ((await countKarmaSince(serverId, userId, fromUserId, KARMA_TYPE.ETIQUETTE, since)) > 0) return false;
+  await createKarma(serverId, null, userId, fromUserId, null, good ? 1 : -1, reason, KARMA_TYPE.ETIQUETTE);
+  return true;
 }
 
 async function getUserKarma(userId) {
   return await getKarmaTotalByUserId(userId);
 }
 
-module.exports = { handleEvent, updateUserKarma, deleteUserKarma, getUserKarma, createKarma, KARMA_TYPE };
+module.exports = { handleEvent, updateUserKarma, deleteUserKarma, getUserKarma, reportEtiquette, KARMA_TYPE };

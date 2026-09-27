@@ -5,7 +5,7 @@ const logger = require("logger");
 const { scheduledClearer } = require("services/messageClearer");
 const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const { getAppConfig, setEmojisValid } = require("services/applicationConfigService");
-const { getAllUsers } = require("services/invencheckerStorage");
+const { getAllUsers } = require("repositories/invencheckerUser");
 const { getUserAlerts, resolveAllAlerts } = require("services/invencheckerService");
 
 function schedule(expression, name, fn) {

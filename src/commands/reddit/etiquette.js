@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { createKarma, KARMA_TYPE } = require("services/karmaService");
+const { reportEtiquette } = require("services/karmaService");
 const logger = require("logger");
 
 module.exports = {
@@ -27,7 +27,14 @@ module.exports = {
     logger.info(`- whoId: ${who.id}`);
     logger.info(`- good: ${good}`);
     logger.info(`- reason: ${reason}`);
-    await createKarma(interaction.guildId, null, who.id, userId, null, good ? 1 : -1, reason, KARMA_TYPE.ETIQUETTE);
+    const accepted = await reportEtiquette(interaction.guildId, who.id, userId, good, reason);
+    if (!accepted) {
+      await interaction.reply({
+        content: `You've already reported ${who.displayName} in the last 24 hours`,
+        ephemeral: true
+      });
+      return;
+    }
     await interaction.reply({
       content: "Thank you for your input, please leave this with us as we investigate further",
       ephemeral: true

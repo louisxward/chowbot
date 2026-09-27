@@ -7,9 +7,22 @@ async function createKarma(serverId, messageId, userId, fromUserId, emojiId, val
   logger.info("repository - createKarma");
   getDb()
     .prepare(
-      "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type, created) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
-    .run(serverId, messageId, userId, fromUserId, emojiId, value, reason, type);
+    .run(serverId, messageId, userId, fromUserId, emojiId, value, reason, type, new Date().toISOString());
+}
+
+// One row per (server, message, voter, emoji), enforced by idx_karma_reaction
+async function upsertReactionKarma(serverId, messageId, userId, fromUserId, emojiId, value, type) {
+  logger.info("repository - upsertReactionKarma");
+  getDb()
+    .prepare(
+      "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, type, created) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+        "ON CONFLICT (serverId, messageId, fromUserId, emojiId) DO UPDATE SET value = excluded.value"
+    )
+    .run(serverId, messageId, userId, fromUserId, emojiId, value, type, new Date().toISOString());
 }
 
 async function deleteKarma(serverId, messageId, fromUserId, emojiId) {
@@ -19,14 +32,13 @@ async function deleteKarma(serverId, messageId, fromUserId, emojiId) {
     .run(serverId, messageId, fromUserId, emojiId);
 }
 
-// TODO: replace this two-step with a single upsert once existing duplicate rows have been
-// cleaned up and a UNIQUE index added to (serverId, messageId, fromUserId, emojiId).
-async function updateKarma(serverId, messageId, fromUserId, emojiId, value) {
-  logger.info("repository - updateKarma");
-  const result = getDb()
-    .prepare("UPDATE Karma SET value = ? WHERE serverId = ? AND messageId = ? AND fromUserId = ? AND emojiId = ?")
-    .run(value, serverId, messageId, fromUserId, emojiId);
-  return result.changes;
+async function countKarmaSince(serverId, userId, fromUserId, type, since) {
+  logger.info("repository - countKarmaSince");
+  return getDb()
+    .prepare(
+      "SELECT COUNT(*) AS n FROM Karma WHERE serverId = ? AND fromUserId = ? AND userId = ? AND type = ? AND created >= ?"
+    )
+    .get(serverId, fromUserId, userId, type, since).n;
 }
 
 async function getKarmaTotalByUserId(userId) {
@@ -64,8 +76,9 @@ async function getKarmaByMessageAndEmoji(serverId, messageId, emojiId) {
 
 module.exports = {
   createKarma,
+  upsertReactionKarma,
   deleteKarma,
-  updateKarma,
+  countKarmaSince,
   getKarmaTotalByUserId,
   getKarmaLeaderboardMap,
   getKarmaByMessageAndEmoji

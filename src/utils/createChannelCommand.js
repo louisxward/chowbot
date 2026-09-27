@@ -1,8 +1,10 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { getChannels, addChannel, removeChannel } = require("services/serverConfigStorage");
+const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require("discord.js");
+const { getChannels, addChannel, removeChannel } = require("repositories/serverChannel");
 
-function defaultValidateAdd(client, channelId) {
-  if (!client.channels.cache.get(channelId)) throw new Error("Channel doesn't exist");
+// Only allow channels in the server running the command, so one server's admins can't
+// target another server's channels
+function defaultValidateAdd(interaction, channel) {
+  if (channel.guildId !== interaction.guildId) throw new Error("Channel must be in this server");
 }
 
 function createChannelCommand({
@@ -22,7 +24,13 @@ function createChannelCommand({
         sub
           .setName("add")
           .setDescription(addDescription ?? `Add a channel to ${description.toLowerCase()}`)
-          .addStringOption((opt) => opt.setName("channel_id").setDescription("ID of the channel").setRequired(true))
+          .addChannelOption((opt) =>
+            opt
+              .setName("channel")
+              .setDescription("The channel")
+              .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+              .setRequired(true)
+          )
       )
       .addSubcommand((sub) =>
         sub
@@ -37,9 +45,9 @@ function createChannelCommand({
       await interaction.deferReply({ ephemeral: true });
       try {
         if (sub === "add") {
-          const channelId = interaction.options.getString("channel_id");
-          if (validateAdd) await validateAdd(interaction.client, channelId);
-          await addChannel(interaction.guildId, key, channelId);
+          const channel = interaction.options.getChannel("channel", true);
+          if (validateAdd) await validateAdd(interaction, channel);
+          await addChannel(interaction.guildId, key, channel.id);
           return interaction.editReply({ content: "Channel added" });
         }
         if (sub === "remove") {

@@ -1,32 +1,32 @@
 const logger = require("logger");
-const { readServerConfig, getClearChannels } = require("services/serverConfigStorage");
+const { getAllChannels, getChannels } = require("repositories/serverChannel");
 
 async function scheduledClearer(client) {
   logger.info("function - scheduledClearer");
-  const config = await readServerConfig();
-  if (Object.keys(config).length === 0) return;
-  for (const [serverId, serverConfig] of Object.entries(config)) {
-    logger.info(`- serverId: ${serverId}`);
-    clearChannels(client, serverConfig.clearChannels ?? []);
+  for (const { serverId, channelId } of await getAllChannels("clearChannels")) {
+    await clearChannel(client, serverId, channelId);
   }
 }
 
 async function manualServerClear(client, serverId) {
   logger.info("function - manualServerClear");
   logger.info(`- serverId: ${serverId}`);
-  const channelIds = await getClearChannels(serverId);
-  clearChannels(client, channelIds);
+  for (const channelId of await getChannels(serverId, "clearChannels")) {
+    await clearChannel(client, serverId, channelId);
+  }
 }
 
-async function clearChannels(client, channelIds) {
-  for (const channelId of channelIds) {
-    logger.info(`- channelId: ${channelId}`);
-    if (null == channelId) continue;
-    const channel = await client.channels.cache.get(channelId);
-    if (!channel) {
-      logger.error(`- skipping channelId: ${channelId}`);
-      continue;
-    }
+// Deletes every message in the channel. The channel must belong to serverId, so a channel id
+// from another server can never be cleared. Errors are logged, never thrown.
+async function clearChannel(client, serverId, channelId) {
+  logger.info(`- serverId: ${serverId}`);
+  logger.info(`- channelId: ${channelId}`);
+  const channel = client.channels.cache.get(channelId);
+  if (!channel || channel.guildId !== serverId) {
+    logger.error({ serverId, channelId }, "clearer - skipping channel, not found in this server");
+    return;
+  }
+  try {
     let lastMessageId;
     while (true) {
       const messages = await channel.messages.fetch({ limit: 100, before: lastMessageId });
@@ -37,12 +37,13 @@ async function clearChannels(client, channelIds) {
           await message.delete();
           await wait(500);
         } catch (error) {
-          logger.error(`- skipping messageId: ${message.id}`);
-          logger.error(error);
+          logger.error({ err: error, messageId: message.id }, "clearer - skipping message");
         }
       }
       lastMessageId = messages.last()?.id;
     }
+  } catch (error) {
+    logger.error({ err: error, serverId, channelId }, "clearer - failed to clear channel");
   }
 }
 
@@ -50,4 +51,4 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-module.exports = { manualServerClear, scheduledClearer };
+module.exports = { manualServerClear, scheduledClearer, clearChannel };

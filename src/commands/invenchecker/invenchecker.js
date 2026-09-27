@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { getUid, setUid } = require("services/invencheckerStorage");
+const { getUid, setUid } = require("repositories/invencheckerUser");
 const {
   createAccountByDiscord,
   addSteam64Id,

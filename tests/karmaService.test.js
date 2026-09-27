@@ -8,13 +8,14 @@ jest.mock("services/storageHelper", () => ({
 }));
 jest.mock("repositories/karma", () => ({
   createKarma: jest.fn(),
-  updateKarma: jest.fn(),
+  upsertReactionKarma: jest.fn(),
   deleteKarma: jest.fn(),
+  countKarmaSince: jest.fn(),
   getKarmaTotalByUserId: jest.fn()
 }));
 
-const { createKarma, updateKarma, deleteKarma } = require("repositories/karma");
-const { handleEvent, updateUserKarma } = require("services/karmaService");
+const { createKarma, upsertReactionKarma, deleteKarma, countKarmaSince } = require("repositories/karma");
+const { handleEvent, updateUserKarma, reportEtiquette, KARMA_TYPE } = require("services/karmaService");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -27,7 +28,7 @@ const makeReaction = ({
   messageId = "msg1",
   partial = false
 } = {}) => ({
-  _emoji: { id: emojiId },
+  emoji: { id: emojiId },
   partial,
   message: {
     author: { id: authorId },
@@ -44,27 +45,26 @@ describe("handleEvent", () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID });
     const user = makeUser({ bot: true });
     await handleEvent(reaction, user, true);
-    expect(updateKarma).not.toHaveBeenCalled();
+    expect(upsertReactionKarma).not.toHaveBeenCalled();
   });
 
   test("ignores unknown emoji", async () => {
     const reaction = makeReaction({ emojiId: "unknown_emoji" });
     const user = makeUser();
     await handleEvent(reaction, user, true);
-    expect(updateKarma).not.toHaveBeenCalled();
+    expect(upsertReactionKarma).not.toHaveBeenCalled();
   });
 
   test("ignores self-reactions", async () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID, authorId: "user1" });
     const user = makeUser({ id: "user1" });
     await handleEvent(reaction, user, true);
-    expect(updateKarma).not.toHaveBeenCalled();
+    expect(upsertReactionKarma).not.toHaveBeenCalled();
   });
 
   test("fetches partial reactions before processing", async () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID, partial: true });
     const user = makeUser();
-    updateKarma.mockResolvedValue(1);
     await handleEvent(reaction, user, true);
     expect(reaction.fetch).toHaveBeenCalled();
   });
@@ -72,9 +72,8 @@ describe("handleEvent", () => {
   test("upvote adds +1 karma", async () => {
     const reaction = makeReaction({ emojiId: UPVOTE_ID });
     const user = makeUser({ id: "user1" });
-    updateKarma.mockResolvedValue(1);
     await handleEvent(reaction, user, true);
-    expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", UPVOTE_ID, 1);
+    expect(upsertReactionKarma).toHaveBeenCalledWith("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, 0);
   });
 
   test("removing upvote deletes karma", async () => {
@@ -87,9 +86,8 @@ describe("handleEvent", () => {
   test("downvote adds -1 karma", async () => {
     const reaction = makeReaction({ emojiId: DOWNVOTE_ID });
     const user = makeUser({ id: "user1" });
-    updateKarma.mockResolvedValue(1);
     await handleEvent(reaction, user, true);
-    expect(updateKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", DOWNVOTE_ID, -1);
+    expect(upsertReactionKarma).toHaveBeenCalledWith("guild1", "msg1", "author1", "user1", DOWNVOTE_ID, -1, 0);
   });
 
   test("removing downvote deletes karma", async () => {
@@ -101,16 +99,55 @@ describe("handleEvent", () => {
 });
 
 describe("updateUserKarma", () => {
-  test("creates karma record when update affects 0 rows", async () => {
-    updateKarma.mockResolvedValue(0);
-    createKarma.mockResolvedValue();
+  test("upserts the reaction karma", async () => {
     await updateUserKarma("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, 0);
-    expect(createKarma).toHaveBeenCalledWith("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, null, 0);
+    expect(upsertReactionKarma).toHaveBeenCalledWith("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, 0);
+  });
+});
+
+describe("reportEtiquette", () => {
+  test("records good etiquette as +1", async () => {
+    countKarmaSince.mockResolvedValue(0);
+    expect(await reportEtiquette("guild1", "target", "reporter", true, "helpful")).toBe(true);
+    expect(createKarma).toHaveBeenCalledWith(
+      "guild1",
+      null,
+      "target",
+      "reporter",
+      null,
+      1,
+      "helpful",
+      KARMA_TYPE.ETIQUETTE
+    );
   });
 
-  test("does not create karma record when update succeeds", async () => {
-    updateKarma.mockResolvedValue(1);
-    await updateUserKarma("guild1", "msg1", "author1", "user1", UPVOTE_ID, 1, 0);
+  test("records bad etiquette as -1", async () => {
+    countKarmaSince.mockResolvedValue(0);
+    await reportEtiquette("guild1", "target", "reporter", false, "rude");
+    expect(createKarma).toHaveBeenCalledWith(
+      "guild1",
+      null,
+      "target",
+      "reporter",
+      null,
+      -1,
+      "rude",
+      KARMA_TYPE.ETIQUETTE
+    );
+  });
+
+  test("refuses a second report within 24 hours", async () => {
+    countKarmaSince.mockResolvedValue(1);
+    expect(await reportEtiquette("guild1", "target", "reporter", true, "again")).toBe(false);
     expect(createKarma).not.toHaveBeenCalled();
+  });
+
+  test("checks the cooldown from 24 hours ago", async () => {
+    countKarmaSince.mockResolvedValue(0);
+    const before = Date.now();
+    await reportEtiquette("guild1", "target", "reporter", true, "helpful");
+    const since = Date.parse(countKarmaSince.mock.calls[0][4]);
+    expect(before - since).toBeGreaterThanOrEqual(24 * 60 * 60 * 1000);
+    expect(before - since).toBeLessThan(24 * 60 * 60 * 1000 + 1000);
   });
 });

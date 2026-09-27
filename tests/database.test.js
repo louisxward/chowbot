@@ -4,11 +4,18 @@ const path = require("node:path");
 const Database = require("better-sqlite3");
 
 let mockDbPath;
+let mockDataDir;
 
 jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
 jest.mock("config", () => ({
   get DB_PATH() {
     return mockDbPath;
+  },
+  get SERVER_CONFIG_PATH() {
+    return `${mockDataDir}/serverConfig.json`;
+  },
+  get USER_CONFIG_PATH() {
+    return `${mockDataDir}/userConfig.json`;
   }
 }));
 
@@ -18,6 +25,7 @@ let databaseService;
 beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "chowbot-test-"));
   mockDbPath = path.join(tmpDir, "chowbot.db");
+  mockDataDir = tmpDir;
   jest.resetModules();
   databaseService = require("services/databaseService");
 });
@@ -26,6 +34,8 @@ afterEach(() => {
   databaseService.close();
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
+
+const LATEST_VERSION = 4;
 
 const V1_SCHEMA = `
   CREATE TABLE Server (id TEXT PRIMARY KEY, name TEXT NOT NULL, invited TEXT NOT NULL, ownerUserId TEXT NOT NULL);
@@ -47,12 +57,20 @@ describe("databaseService", () => {
   test("init creates the latest schema on a fresh database", () => {
     databaseService.init();
     const db = databaseService.getDb();
-    expect(db.pragma("user_version", { simple: true })).toBe(2);
+    expect(db.pragma("user_version", { simple: true })).toBe(LATEST_VERSION);
     const tables = db
       .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
       .all()
       .map((t) => t.name);
-    expect(tables).toEqual(["Karma", "KarmaWeeklyLeaderboardUser", "KarmaWeeklyLeaderboardWeek", "Message", "Server"]);
+    expect(tables).toEqual([
+      "InvencheckerUser",
+      "Karma",
+      "KarmaWeeklyLeaderboardUser",
+      "KarmaWeeklyLeaderboardWeek",
+      "Message",
+      "Server",
+      "ServerChannel"
+    ]);
   });
 
   test("init is idempotent", () => {
@@ -72,7 +90,7 @@ describe("databaseService", () => {
 
     databaseService.init();
     const db = databaseService.getDb();
-    expect(db.pragma("user_version", { simple: true })).toBe(2);
+    expect(db.pragma("user_version", { simple: true })).toBe(LATEST_VERSION);
     expect(db.prepare("SELECT * FROM Karma").get()).toEqual({
       id: 7,
       serverId: "g1",
@@ -82,7 +100,8 @@ describe("databaseService", () => {
       emojiId: "e1",
       value: 1,
       reason: null,
-      type: 0
+      type: 0,
+      created: null
     });
     expect(db.prepare("SELECT id, serverId, userId FROM Message").all()).toEqual([
       { id: "m1", serverId: "g1", userId: "author" }
@@ -108,6 +127,69 @@ describe("databaseService", () => {
   });
 });
 
+describe("migrations v3 and v4", () => {
+  // Builds a database at an older version by running the real migrations up to it
+  function createDatabaseAtVersion(version) {
+    const db = new Database(mockDbPath);
+    for (const migration of databaseService.MIGRATIONS.slice(0, version)) {
+      if (typeof migration === "function") migration(db);
+      else db.exec(migration);
+    }
+    db.pragma(`user_version = ${version}`);
+    return db;
+  }
+
+  test("v3 removes duplicate reaction rows and keeps etiquette rows", () => {
+    const db = createDatabaseAtVersion(2);
+    const insert = db.prepare(
+      "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    );
+    insert.run("g1", "m1", "author", "voter", "up", 1, null, 0);
+    insert.run("g1", "m1", "author", "voter", "up", 1, null, 0);
+    insert.run("g1", "m2", "author", "voter", "up", 1, null, 0);
+    insert.run("g1", null, "author", "voter", null, 1, "nice", 1);
+    insert.run("g1", null, "author", "voter", null, 1, "nice again", 1);
+    db.close();
+
+    databaseService.init();
+    const live = databaseService.getDb();
+    expect(live.prepare("SELECT id, messageId, reason FROM Karma ORDER BY id").all()).toEqual([
+      { id: 1, messageId: "m1", reason: null },
+      { id: 3, messageId: "m2", reason: null },
+      { id: 4, messageId: null, reason: "nice" },
+      { id: 5, messageId: null, reason: "nice again" }
+    ]);
+    expect(() =>
+      live
+        .prepare(
+          "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, type) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .run("g1", "m1", "author", "voter", "up", 1, 0)
+    ).toThrow(/UNIQUE/);
+  });
+
+  test("v4 imports serverConfig.json and userConfig.json", async () => {
+    createDatabaseAtVersion(3).close();
+    fs.writeFileSync(
+      `${mockDataDir}/serverConfig.json`,
+      JSON.stringify({ g1: { clearChannels: ["c1", "c2"], leaderboardChannels: ["l1"] }, g2: {} })
+    );
+    fs.writeFileSync(`${mockDataDir}/userConfig.json`, JSON.stringify({ u1: { invencheckerId: "uid-1" }, u2: {} }));
+
+    databaseService.init();
+    const channels = require("repositories/serverChannel");
+    const invUsers = require("repositories/invencheckerUser");
+    expect(await channels.getChannels("g1", "clearChannels")).toEqual(["c1", "c2"]);
+    expect(await channels.getChannels("g1", "leaderboardChannels")).toEqual(["l1"]);
+    expect(await invUsers.getAllUsers()).toEqual([{ discordId: "u1", uid: "uid-1" }]);
+  });
+
+  test("v4 works without any legacy json files", () => {
+    databaseService.init();
+    expect(databaseService.getDb().prepare("SELECT COUNT(*) AS n FROM ServerChannel").get().n).toBe(0);
+  });
+});
+
 describe("repositories", () => {
   let karma;
   let weekly;
@@ -118,18 +200,60 @@ describe("repositories", () => {
     weekly = require("repositories/karmaWeeklyLeaderboard");
   });
 
-  test("karma create, update, delete and total", async () => {
-    await karma.createKarma("g1", "m1", "u1", "u2", "up", 1, null, 0);
-    await karma.createKarma("g1", "m2", "u1", "u3", "up", 1, null, 0);
+  test("karma upsert, delete and total", async () => {
+    await karma.upsertReactionKarma("g1", "m1", "u1", "u2", "up", 1, 0);
+    await karma.upsertReactionKarma("g1", "m2", "u1", "u3", "up", 1, 0);
     expect(await karma.getKarmaTotalByUserId("u1")).toBe(2);
 
-    expect(await karma.updateKarma("g1", "m1", "u2", "up", -1)).toBe(1);
-    expect(await karma.updateKarma("g1", "missing", "u2", "up", -1)).toBe(0);
+    await karma.upsertReactionKarma("g1", "m1", "u1", "u2", "up", -1, 0);
     expect(await karma.getKarmaTotalByUserId("u1")).toBe(0);
+    expect(databaseService.getDb().prepare("SELECT COUNT(*) AS n FROM Karma").get().n).toBe(2);
 
     await karma.deleteKarma("g1", "m2", "u3", "up");
     expect(await karma.getKarmaTotalByUserId("u1")).toBe(-1);
     expect(await karma.getKarmaTotalByUserId("nobody")).toBeNull();
+  });
+
+  test("countKarmaSince counts etiquette reports from one user to another after a time", async () => {
+    await karma.createKarma("g1", null, "target", "reporter", null, 1, "nice", 1);
+    await karma.createKarma("g1", null, "target", "someone else", null, 1, "nice", 1);
+    await karma.createKarma("g2", null, "target", "reporter", null, 1, "nice", 1);
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const future = new Date(Date.now() + 60 * 1000).toISOString();
+    expect(await karma.countKarmaSince("g1", "target", "reporter", 1, hourAgo)).toBe(1);
+    expect(await karma.countKarmaSince("g1", "target", "reporter", 1, future)).toBe(0);
+    expect(await karma.countKarmaSince("g1", "target", "reporter", 0, hourAgo)).toBe(0);
+  });
+
+  test("serverChannel add, list, remove and duplicates", async () => {
+    const channels = require("repositories/serverChannel");
+    await channels.addChannel("g1", "clearChannels", "c1");
+    await channels.addChannel("g1", "clearChannels", "c2");
+    await channels.addChannel("g2", "clearChannels", "c3");
+    await channels.addChannel("g1", "leaderboardChannels", "l1");
+    await expect(channels.addChannel("g1", "clearChannels", "c1")).rejects.toThrow("already in the list");
+    expect(await channels.getChannels("g1", "clearChannels")).toEqual(["c1", "c2"]);
+    expect(await channels.getAllChannels("clearChannels")).toEqual([
+      { serverId: "g1", channelId: "c1" },
+      { serverId: "g1", channelId: "c2" },
+      { serverId: "g2", channelId: "c3" }
+    ]);
+    await channels.removeChannel("g1", "clearChannels", "c1");
+    await expect(channels.removeChannel("g1", "clearChannels", "c1")).rejects.toThrow("isn't in the list");
+    expect(await channels.getChannels("g1", "clearChannels")).toEqual(["c2"]);
+  });
+
+  test("invencheckerUser set, get and update", async () => {
+    const invUsers = require("repositories/invencheckerUser");
+    expect(await invUsers.getUid("u1")).toBeNull();
+    await invUsers.setUid("u1", "uid-1");
+    await invUsers.setUid("u1", "uid-2");
+    await invUsers.setUid("u2", "uid-3");
+    expect(await invUsers.getUid("u1")).toBe("uid-2");
+    expect(await invUsers.getAllUsers()).toEqual([
+      { discordId: "u1", uid: "uid-2" },
+      { discordId: "u2", uid: "uid-3" }
+    ]);
   });
 
   test("etiquette karma stores null message and emoji", async () => {

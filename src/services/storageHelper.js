@@ -23,15 +23,8 @@ async function readFile(filePath) {
   return clone(data);
 }
 
-async function writeFile(filePath, data) {
-  logger.debug("function - writeFile");
-  logger.debug(`- filePath: ${filePath}`);
-  cache.set(filePath, clone(data));
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-}
-
 function invalidateCache(filePath) {
   cache.delete(filePath);
 }
 
-module.exports = { readFile, writeFile, invalidateCache };
+module.exports = { readFile, invalidateCache };
