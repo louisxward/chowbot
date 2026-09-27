@@ -13,10 +13,14 @@ Discord bot for doing different things
 ## Quick Start
 
 ```bash
-# 1. Create required host directory
-mkdir -p data
+# 1. Create a .env and fill in TOKEN, CLIENT_ID and ADMIN_TOKEN
+cp .env.example .env
 
-# 2. Start the app
+# 2. Create the host directories and the external network docker-compose.yml expects
+sudo mkdir -p /opt/data/chowbot /var/log/chowbot
+docker network create invenchecker
+
+# 3. Start the app
 docker compose up --build
 ```
 
@@ -24,65 +28,23 @@ The app runs on port **33002**.
 
 ## Configuration
 
-### serverConfig.json — managed by the Discord server
+### Database — managed by the bot
 
-`data/serverConfig.json` is written to at runtime by Discord slash commands. You should not edit it manually. It is keyed by guild ID.
+`data/chowbot.db` is a SQLite database, created and migrated automatically on startup. It holds:
 
-```json
-{
-  "<guildId>": {
-    "clearChannels": ["<channelId>"],
-    "leaderboardChannels": ["<channelId>"]
-  }
-}
-```
+- karma from reactions and `/etiquette`, and the weekly leaderboard snapshots
+- each server's clear and leaderboard channel lists, managed by `/clearchannel` and `/leaderboardchannel`
+- invenchecker account links, managed by `/invenchecker account register`
 
-| Field                 | Type       | Managed by                                   |
-| --------------------- | ---------- | -------------------------------------------- |
-| `clearChannels`       | `string[]` | `/clearchannel add` / `/clearchannel remove` |
-| `leaderboardChannels` | `string[]` | (internal)                                   |
+Earlier versions kept the channel lists in `data/serverConfig.json` and the invenchecker links in `data/userConfig.json`. They are imported into the database once, on the first start after upgrading, and the files are no longer used after that.
 
----
-
-### sessionState.json — managed automatically
-
-`data/sessionState.json` is written to at runtime as a persistent cache. You should not edit it manually. Clear it with `POST /admin/clearstate`.
-
-```json
-{
-  "usernames": {
-    "<discordUserId>": { "username": "<string>", "cachedAt": "<timestamp ms>" }
-  }
-}
-```
-
-| Field       | Type                                 | Description                                                                          |
-| ----------- | ------------------------------------ | ------------------------------------------------------------------------------------ |
-| `usernames` | `{ userId: { username, cachedAt } }` | Discord username cache used by the karma leaderboard. Entries expire after 12 hours. |
-
----
-
-### userConfig.json — managed by users
-
-`data/userConfig.json` is written to at runtime by user-facing slash commands. You should not edit it manually. It is keyed by Discord user ID (global across all servers).
-
-```json
-{
-  "<discordUserId>": {
-    "invencheckerId": "<uid>"
-  }
-}
-```
-
-| Field            | Type     | Managed by                       |
-| ---------------- | -------- | -------------------------------- |
-| `invencheckerId` | `string` | `/invenchecker account register` |
+The leaderboard's Discord username cache is held in memory. Entries expire after 12 hours, and `POST /admin/clearstate` clears it.
 
 ---
 
 ### applicationConfig.json — managed manually
 
-`data/applicationConfig.json` is edited by hand and loaded at startup. Changes take effect immediately after running `/dev reloadconfig` or `POST /admin/reloadconfig` — no restart needed.
+`data/applicationConfig.json` is edited by hand and loaded at startup. Changes take effect immediately after `POST /admin/reloadconfig`, with no restart needed.
 
 ```json
 {
@@ -104,6 +66,10 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ## Discord Commands
 
+All commands except `/invenchecker` can only be used in a server.
+
+After changing a command's options, deploy the commands again (see [API Endpoints](#api-endpoints)).
+
 ### Utility
 
 | Command   | Description                                         | Permission    |
@@ -112,35 +78,47 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Karma
 
-| Command        | Options                                           | Description                              | Permission |
-| -------------- | ------------------------------------------------- | ---------------------------------------- | ---------- |
-| `/checkkarma`  | `whos` (user, optional)                           | Check karma for yourself or another user | Everyone   |
-| `/etiquette`   | `who` (user), `good` (boolean), `reason` (string) | Report a user for good/bad etiquette     | Everyone   |
-| `/leaderboard` | —                                                 | Show the karma weekly leaderboard        | Everyone   |
+| Command        | Options                                           | Description                                                              | Permission   |
+| -------------- | ------------------------------------------------- | ------------------------------------------------------------------------ | ------------ |
+| `/checkkarma`  | `whos` (user, optional)                           | Check karma for yourself or another user                                 | Everyone     |
+| `/etiquette`   | `who` (user), `good` (boolean), `reason` (string) | Report a user for good/bad etiquette. One report per user every 24 hours | Everyone     |
+| `/leaderboard` | —                                                 | Show the karma weekly leaderboard                                        | Everyone     |
+| `/react`       | `message_id` (string)                             | Add the karma reactions to a message in this channel                     | Manage Roles |
+
+### Leaderboard Channels
+
+The weekly karma leaderboard is posted to these channels every Sunday at 21:00 UTC.
+
+| Command                      | Options               | Description                               | Permission    |
+| ---------------------------- | --------------------- | ----------------------------------------- | ------------- |
+| `/leaderboardchannel add`    | `channel` (channel)   | Post the weekly leaderboard in a channel  | Administrator |
+| `/leaderboardchannel remove` | `channel_id` (string) | Stop posting the leaderboard in a channel | Administrator |
+| `/leaderboardchannel list`   | —                     | List leaderboard channels                 | Administrator |
 
 ### Message Clearer
 
-| Command                | Options                | Description                                                    | Permission    |
-| ---------------------- | ---------------------- | -------------------------------------------------------------- | ------------- |
-| `/clearchannel add`    | `channel_id`           | **DANGEROUS** — Add a channel to be cleared daily at 05:00 UTC | Administrator |
-| `/clearchannel remove` | `channel_id`           | Remove a channel from the daily clear list                     | Administrator |
-| `/clearchannel list`   | —                      | List channels currently in the clear list                      | Administrator |
-| `/runclear`            | `confirm` (type `RUN`) | **DANGEROUS** — Manually run the channel clear                 | Administrator |
+| Command                | Options               | Description                                                    | Permission    |
+| ---------------------- | --------------------- | -------------------------------------------------------------- | ------------- |
+| `/clearchannel add`    | `channel` (channel)   | **DANGEROUS** — Add a channel to be cleared daily at 05:00 UTC | Administrator |
+| `/clearchannel remove` | `channel_id` (string) | Remove a channel from the daily clear list                     | Administrator |
+| `/clearchannel list`   | —                     | List channels currently in the clear list                      | Administrator |
+
+`add` only accepts channels in the server you run it from. `remove` takes an ID so you can also remove a channel that has since been deleted.
 
 ### Invenchecker
 
-| Command                          | Options                                         | Description                                                       | Permission |
-| -------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- | ---------- |
-| `/invenchecker account register` | —                                               | Register your Discord account with invenchecker                   | Everyone   |
-| `/invenchecker steam add`        | `id`                                            | Add a Steam64 ID to your account                                  | Everyone   |
-| `/invenchecker steam remove`     | `id`                                            | Remove a Steam64 ID from your account                             | Everyone   |
-| `/invenchecker item add`         | `name`                                          | Add a custom item to track (by `market_hash_name`)                | Everyone   |
-| `/invenchecker item remove`      | `name`                                          | Remove a custom tracked item                                      | Everyone   |
-| `/invenchecker alerts list`      | —                                               | List unresolved price alerts                                      | Everyone   |
-| `/invenchecker alerts resolve`   | —                                               | Resolve all unresolved alerts                                     | Everyone   |
-| `/invenchecker view summary`     | —                                               | Inventory summary with latest prices per tracked item             | Everyone   |
-| `/invenchecker view progress`    | —                                               | Scan state (queued, last fetched, next scan) per account and item | Everyone   |
-| `/invenchecker view prices`      | `days` (int, default 7), `item` (str, optional) | Price history for your custom tracked items                       | Everyone   |
+| Command                          | Options                                      | Description                                                       | Permission |
+| -------------------------------- | -------------------------------------------- | ----------------------------------------------------------------- | ---------- |
+| `/invenchecker account register` | —                                            | Register your Discord account with invenchecker                   | Everyone   |
+| `/invenchecker steam add`        | `id` (17 digits)                             | Add a Steam64 ID to your account                                  | Everyone   |
+| `/invenchecker steam remove`     | `id`                                         | Remove a Steam64 ID from your account                             | Everyone   |
+| `/invenchecker item add`         | `name`                                       | Add a custom item to track (by `market_hash_name`)                | Everyone   |
+| `/invenchecker item remove`      | `name`                                       | Remove a custom tracked item                                      | Everyone   |
+| `/invenchecker alerts list`      | —                                            | List unresolved price alerts                                      | Everyone   |
+| `/invenchecker alerts resolve`   | —                                            | Resolve all unresolved alerts                                     | Everyone   |
+| `/invenchecker view summary`     | —                                            | Inventory summary with latest prices per tracked item             | Everyone   |
+| `/invenchecker view progress`    | —                                            | Scan state (queued, last fetched, next scan) per account and item | Everyone   |
+| `/invenchecker view prices`      | `days` (1–365, default 7), `item` (optional) | Price history for your custom tracked items                       | Everyone   |
 
 ## API Endpoints
 
@@ -152,26 +130,30 @@ Emoji IDs are validated against the bot's application emojis on startup. If eith
 
 ### Admin
 
-| Method | Path                                   | Body                       | Description                                           |
-| ------ | -------------------------------------- | -------------------------- | ----------------------------------------------------- |
-| `POST` | `/admin/clearstate`                    | —                          | Clear session state (username cache)                  |
-| `POST` | `/admin/reloadconfig`                  | —                          | Reload `applicationConfig.json` from disk             |
-| `POST` | `/admin/deploycommands`                | `{}` or `{"serverId":"…"}` | Deploy slash commands globally or to a specific guild |
-| `POST` | `/admin/sendLeaderboardRoute`          | —                          | Send karma weekly leaderboard now (responds 202)      |
-| `POST` | `/admin/persistKarmaWeeklyLeaderboard` | —                          | Persist weekly leaderboard snapshot (responds 202)    |
+Every admin route needs an `Authorization: Bearer <ADMIN_TOKEN>` header. If `ADMIN_TOKEN` isn't set, the admin API is disabled and returns 503.
+
+| Method | Path                                   | Body                       | Description                                                                        |
+| ------ | -------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
+| `POST` | `/admin/clearstate`                    | —                          | Clear session state (username cache)                                               |
+| `POST` | `/admin/reloadconfig`                  | —                          | Reload `applicationConfig.json` from disk                                          |
+| `POST` | `/admin/deploycommands`                | `{}` or `{"serverId":"…"}` | Deploy slash commands globally or to a specific guild. 502 if Discord rejects them |
+| `POST` | `/admin/sendLeaderboardRoute`          | —                          | Send karma weekly leaderboard now (responds 202)                                   |
+| `POST` | `/admin/persistKarmaWeeklyLeaderboard` | —                          | Persist weekly leaderboard snapshot (responds 202)                                 |
 
 **Examples:**
 
 ```bash
-curl -X POST http://localhost:33002/admin/reloadconfig
-curl -X POST http://localhost:33002/admin/clearstate
+AUTH="Authorization: Bearer $ADMIN_TOKEN"
+
+curl -X POST -H "$AUTH" http://localhost:33002/admin/reloadconfig
+curl -X POST -H "$AUTH" http://localhost:33002/admin/clearstate
 
 # Deploy commands globally
-curl -X POST http://localhost:33002/admin/deploycommands \
+curl -X POST -H "$AUTH" http://localhost:33002/admin/deploycommands \
   -H "Content-Type: application/json" -d '{}'
 
 # Deploy commands to one server
-curl -X POST http://localhost:33002/admin/deploycommands \
+curl -X POST -H "$AUTH" http://localhost:33002/admin/deploycommands \
   -H "Content-Type: application/json" -d '{"serverId":"YOUR_SERVER_ID"}'
 ```
 
@@ -201,21 +183,28 @@ services:
 
 ## Environment Variables
 
-Configured in `.env` or the host environment. Defined in `config.js`.
+Configured in `.env` or the host environment; variables already set in the environment take precedence over `.env`. See `.env.example`, and `config.js` for the defaults.
 
-| Variable               | Default                  | Required | Description                       |
-| ---------------------- | ------------------------ | -------- | --------------------------------- |
-| `TOKEN`                | —                        | Yes      | Discord bot token                 |
-| `CLIENT_ID`            | —                        | Yes      | Discord application client ID     |
-| `PORT`                 | `33002`                  | No       | HTTP server port                  |
-| `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker API |
+| Variable               | Default                  | Required | Description                                                          |
+| ---------------------- | ------------------------ | -------- | -------------------------------------------------------------------- |
+| `TOKEN`                | —                        | Yes      | Discord bot token                                                    |
+| `CLIENT_ID`            | —                        | Yes      | Discord application client ID                                        |
+| `PORT`                 | `33002`                  | No       | HTTP server port                                                     |
+| `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker API                                    |
+| `ADMIN_TOKEN`          | —                        | No       | Bearer token for the admin API. The admin API is disabled without it |
+| `LOG_LEVEL`            | `info`                   | No       | `trace`, `debug`, `info`, `warn`, `error` or `fatal`                 |
 
 ## Local Development (without Docker)
 
-Restarts on save
+Needs Node 24 or newer. `npm run dev` restarts on save.
 
 ```bash
 npm install
-mkdir -p data
+cp .env.example .env
 npm run dev
+```
+
+```bash
+npm test       # jest
+npm run lint   # eslint
 ```
