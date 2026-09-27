@@ -1,7 +1,7 @@
 const logger = require("logger");
-const { validateEmojis, setEmojisValid } = require("services/applicationConfigService");
 const { clearAllChannels } = require("services/clearerService");
 const { sendInvencheckerAlerts } = require("services/invencheckerAlertService");
+const { validateKarmaEmojis, clearKarmaEmojis } = require("services/karmaEmojiService");
 const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const { schedule } = require("services/schedulerService");
 const { rotateStatus } = require("services/statusService");
@@ -16,9 +16,9 @@ async function onReady(client) {
   schedule("*/1 * * * *", "invencheckerAlerts", () => sendInvencheckerAlerts(client));
 
   try {
-    await validateEmojis(client);
+    await validateKarmaEmojis(client);
   } catch (err) {
-    setEmojisValid(false);
+    clearKarmaEmojis();
     logger.error({ err }, "ready - emoji validation failed, karma reactions disabled");
   }
 

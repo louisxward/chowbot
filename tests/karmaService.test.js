@@ -2,9 +2,14 @@ const UPVOTE_ID = "upvote123";
 const DOWNVOTE_ID = "downvote456";
 
 jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
-jest.mock("services/applicationConfigService", () => ({
-  getAppConfig: jest.fn().mockResolvedValue({ emojiUpvoteId: "upvote123", emojiDownvoteId: "downvote456" })
-}));
+jest.mock("services/karmaEmojiService", () => {
+  const emojis = [
+    { id: "upvote123", sort: 1, value: 1 },
+    { id: "downvote456", sort: 2, value: -1 },
+    { id: "🔥", sort: 3, value: 3 }
+  ];
+  return { findKarmaEmoji: jest.fn((emoji) => emojis.find((e) => e.id === (emoji.id ?? emoji.name))) };
+});
 jest.mock("repositories/karma", () => ({
   createKarma: jest.fn(),
   upsertReactionKarma: jest.fn(),
@@ -94,6 +99,29 @@ describe("handleReaction", () => {
     const user = makeUser({ id: "user1" });
     await handleReaction(reaction, user, false);
     expect(deleteKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", DOWNVOTE_ID);
+  });
+});
+
+describe("configured karma emojis", () => {
+  test("uses the emoji's configured value", async () => {
+    const reaction = makeReaction({ emojiId: null });
+    reaction.emoji = { id: null, name: "🔥" };
+    await handleReaction(reaction, makeUser({ id: "user1" }), true);
+    expect(upsertReactionKarma).toHaveBeenCalledWith("guild1", "msg1", "author1", "user1", "🔥", 3, 0);
+  });
+
+  test("removing a unicode karma emoji deletes by its character", async () => {
+    const reaction = makeReaction({ emojiId: null });
+    reaction.emoji = { id: null, name: "🔥" };
+    await handleReaction(reaction, makeUser({ id: "user1" }), false);
+    expect(deleteKarma).toHaveBeenCalledWith("guild1", "msg1", "user1", "🔥");
+  });
+
+  test("ignores unicode emojis that aren't configured", async () => {
+    const reaction = makeReaction({ emojiId: null });
+    reaction.emoji = { id: null, name: "😀" };
+    await handleReaction(reaction, makeUser({ id: "user1" }), true);
+    expect(upsertReactionKarma).not.toHaveBeenCalled();
   });
 });
 

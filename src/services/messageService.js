@@ -1,6 +1,7 @@
 const logger = require("logger");
 const { upsertMessage } = require("repositories/message");
-const { getAppConfig, areEmojisValid } = require("services/applicationConfigService");
+const { getAppConfig } = require("services/applicationConfigService");
+const { getKarmaEmojis, hasKarmaEmojis } = require("services/karmaEmojiService");
 
 const MEDIA_TYPES = ["image", "video"];
 const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -22,11 +23,11 @@ function checkMessageAge(message) {
   return Date.now() - message.createdTimestamp <= EDIT_WINDOW_MS;
 }
 
+// Reacts with every karma emoji, in sort order
 async function addKarmaReactions(message) {
-  if (!areEmojisValid()) return;
-  const { emojiUpvoteId, emojiDownvoteId } = await getAppConfig();
-  await message.react(emojiUpvoteId);
-  await message.react(emojiDownvoteId);
+  for (const { id } of getKarmaEmojis()) {
+    await message.react(id);
+  }
 }
 
 async function storeMessage(message) {
@@ -36,7 +37,7 @@ async function storeMessage(message) {
 
 // Handles a new or edited message: adds karma reactions to qualifying posts and records them
 async function handleMessage(message, isUpdate) {
-  if (!areEmojisValid()) return;
+  if (!hasKarmaEmojis()) return;
   if (message.author?.bot) return;
   if (message.partial) {
     try {

@@ -7,7 +7,8 @@ jest.mock("config", () => ({
   }
 }));
 jest.mock("services/usernameCacheService", () => ({ clearUsernameCache: jest.fn() }));
-jest.mock("services/applicationConfigService", () => ({ reloadAppConfig: jest.fn(), validateEmojis: jest.fn() }));
+jest.mock("services/applicationConfigService", () => ({ reloadAppConfig: jest.fn() }));
+jest.mock("services/karmaEmojiService", () => ({ validateKarmaEmojis: jest.fn() }));
 jest.mock("services/leaderboardService", () => ({
   sendKarmaWeeklyLeaderboard: jest.fn().mockResolvedValue(),
   persistKarmaWeeklyLeaderboard: jest.fn().mockResolvedValue()

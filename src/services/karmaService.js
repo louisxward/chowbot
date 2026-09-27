@@ -6,18 +6,18 @@ const {
   countKarmaSince,
   getKarmaTotalByUserId
 } = require("repositories/karma");
-const { getAppConfig } = require("services/applicationConfigService");
+const { findKarmaEmoji } = require("services/karmaEmojiService");
 
 const KARMA_TYPE = { MESSAGE: 0, ETIQUETTE: 1 };
 const ETIQUETTE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
-// Handles an up/down vote reaction being added or removed. Other emojis, bots and self-votes
-// are ignored.
+// Handles a karma emoji reaction being added or removed. The emoji's configured value is the
+// karma it's worth. Other emojis, bots and self-votes are ignored.
 async function handleReaction(reaction, user, added) {
   if (user.bot) return;
-  const { emojiUpvoteId, emojiDownvoteId } = await getAppConfig();
-  const emojiId = reaction.emoji.id;
-  if (![emojiUpvoteId, emojiDownvoteId].includes(emojiId)) return;
+  const karmaEmoji = findKarmaEmoji(reaction.emoji);
+  if (!karmaEmoji) return;
+  const emojiId = karmaEmoji.id;
   if (reaction.partial) {
     try {
       await reaction.fetch();
@@ -34,8 +34,7 @@ async function handleReaction(reaction, user, added) {
     await deleteUserKarma(guildId, messageId, user.id, emojiId);
     return;
   }
-  const value = emojiId === emojiUpvoteId ? 1 : -1;
-  await updateUserKarma(guildId, messageId, authorId, user.id, emojiId, value, KARMA_TYPE.MESSAGE);
+  await updateUserKarma(guildId, messageId, authorId, user.id, emojiId, karmaEmoji.value, KARMA_TYPE.MESSAGE);
 }
 
 async function updateUserKarma(serverId, messageId, userId, fromUserId, emojiId, value, type) {

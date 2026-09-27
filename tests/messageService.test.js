@@ -2,8 +2,6 @@ jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn()
 jest.mock("repositories/message", () => ({ upsertMessage: jest.fn() }));
 jest.mock("services/applicationConfigService", () => ({
   getAppConfig: jest.fn().mockResolvedValue({
-    emojiUpvoteId: "upvote123",
-    emojiDownvoteId: "downvote456",
     domainList: [
       "youtube.com/",
       "twitter.com/",
@@ -14,11 +12,18 @@ jest.mock("services/applicationConfigService", () => ({
       "gyazo.com/",
       "twitch.com/"
     ]
-  }),
-  areEmojisValid: jest.fn().mockReturnValue(true)
+  })
+}));
+jest.mock("services/karmaEmojiService", () => ({
+  hasKarmaEmojis: jest.fn().mockReturnValue(true),
+  getKarmaEmojis: jest.fn().mockReturnValue([
+    { id: "up", sort: 1, value: 1 },
+    { id: "🔥", sort: 2, value: 3 },
+    { id: "down", sort: 3, value: -1 }
+  ])
 }));
 
-const { contentDetector, checkMessageAge } = require("services/messageService");
+const { contentDetector, checkMessageAge, addKarmaReactions } = require("services/messageService");
 
 describe("contentDetector", () => {
   const makeMessage = ({ embeds = [], attachments = [] } = {}) => ({
@@ -107,5 +112,13 @@ describe("checkMessageAge", () => {
   test("returns false for a very old message", () => {
     const message = { createdTimestamp: 0 };
     expect(checkMessageAge(message)).toBe(false);
+  });
+});
+
+describe("addKarmaReactions", () => {
+  test("reacts with every karma emoji in sort order", async () => {
+    const message = { react: jest.fn() };
+    await addKarmaReactions(message);
+    expect(message.react.mock.calls.map(([emoji]) => emoji)).toEqual(["up", "🔥", "down"]);
   });
 });

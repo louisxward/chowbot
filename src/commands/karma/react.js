@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType } = require("discord.js");
-const { areEmojisValid } = require("services/applicationConfigService");
+const { hasKarmaEmojis } = require("services/karmaEmojiService");
 const { addKarmaReactions } = require("services/messageService");
 
 module.exports = {
@@ -11,7 +11,7 @@ module.exports = {
     .addStringOption((option) => option.setName("message_id").setDescription("id of the message").setRequired(true)),
 
   async execute(interaction) {
-    if (!areEmojisValid()) {
+    if (!hasKarmaEmojis()) {
       await interaction.reply({ content: "emoji are ids not valid", flags: MessageFlags.Ephemeral });
       return;
     }

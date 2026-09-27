@@ -47,21 +47,42 @@ Earlier versions kept the channel lists in `data/serverConfig.json`, the invench
 
 ```json
 {
-  "emojiUpvoteId": "<applicationEmojiId>",
-  "emojiDownvoteId": "<applicationEmojiId>",
+  "karmaEmojis": [
+    { "id": "<applicationEmojiId>", "sort": 1, "value": 1 },
+    { "id": "<applicationEmojiId>", "sort": 2, "value": -1 },
+    { "id": "🔥", "sort": 3, "value": 3 }
+  ],
   "domainList": ["youtube.com"],
   "statuses": [{ "name": "something", "type": "Watching" }]
 }
 ```
 
-| Field             | Type               | Description                                                                                                         |
-| ----------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `emojiUpvoteId`   | `string`           | Application emoji ID for upvote reactions                                                                           |
-| `emojiDownvoteId` | `string`           | Application emoji ID for downvote reactions                                                                         |
-| `domainList`      | `string[]`         | Domains that trigger karma reactions on message post/edit                                                           |
-| `statuses`        | `{ name, type }[]` | Bot status rotation (cycles daily). `type` is a Discord `ActivityType` name e.g. `Watching`, `Playing`, `Listening` |
+| Field         | Type                    | Description                                                                                                         |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `karmaEmojis` | `{ id, sort, value }[]` | The reactions that give karma. Add as many as you like (see below)                                                  |
+| `domainList`  | `string[]`              | Domains that trigger karma reactions on message post/edit                                                           |
+| `statuses`    | `{ name, type }[]`      | Bot status rotation (cycles daily). `type` is a Discord `ActivityType` name e.g. `Watching`, `Playing`, `Listening` |
 
-Emoji IDs are validated against the bot's application emojis on startup. If either is invalid, karma reactions are disabled entirely until the config is fixed and reloaded.
+Each karma emoji has:
+
+| Key     | Type     | Description                                                                                                       |
+| ------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `id`    | `string` | An application emoji ID, **in quotes** (Discord IDs are too big for JSON numbers), or a unicode emoji like `"🔥"` |
+| `value` | integer  | Karma the reaction is worth, e.g. `1`, `-1` or `3`                                                                |
+| `sort`  | number   | Optional. The order the bot adds its reactions to a post, lowest first. Defaults to the list order                |
+
+Karma emojis are checked on startup and on `POST /admin/reloadconfig`. An invalid entry (unknown application emoji, missing id, value that isn't a whole number, duplicate) is logged and skipped, and the rest still work. If none are valid, karma reactions are disabled until the config is fixed and reloaded.
+
+A reaction's karma is saved with the value at the time it was added. Changing an emoji's `value` later only affects new reactions, and removing an emoji from `karmaEmojis` stops it counting for new reactions but keeps the karma it already gave.
+
+The older `emojiUpvoteId` / `emojiDownvoteId` keys still work as a +1 / −1 pair when `karmaEmojis` isn't set, with a warning in the log. Replace them with:
+
+```json
+"karmaEmojis": [
+  { "id": "<emojiUpvoteId>", "sort": 1, "value": 1 },
+  { "id": "<emojiDownvoteId>", "sort": 2, "value": -1 }
+]
+```
 
 ## Discord Commands
 

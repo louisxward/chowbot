@@ -2,8 +2,9 @@ const crypto = require("node:crypto");
 const express = require("express");
 const config = require("config");
 const logger = require("logger");
-const { reloadAppConfig, validateEmojis } = require("services/applicationConfigService");
+const { reloadAppConfig } = require("services/applicationConfigService");
 const { deployCommands } = require("services/commandService");
+const { validateKarmaEmojis } = require("services/karmaEmojiService");
 const { sendKarmaWeeklyLeaderboard, persistKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 const { clearUsernameCache } = require("services/usernameCacheService");
 
@@ -41,7 +42,7 @@ router.post("/clearstate", async (_req, res) => {
 
 router.post("/reloadconfig", async (req, res) => {
   await reloadAppConfig();
-  await validateEmojis(req.app.get("client"));
+  await validateKarmaEmojis(req.app.get("client"));
   res.json({ ok: true });
 });
 
