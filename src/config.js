@@ -10,5 +10,7 @@ module.exports = {
   PORT: process.env.PORT || 33002,
   INVENCHECKER_API_URL: process.env.INVENCHECKER_API_URL || "http://localhost:33001",
   TOKEN: process.env.TOKEN,
-  CLIENT_ID: process.env.CLIENT_ID
+  CLIENT_ID: process.env.CLIENT_ID,
+  ADMIN_TOKEN: process.env.ADMIN_TOKEN,
+  LOG_LEVEL: process.env.LOG_LEVEL || "info"
 };

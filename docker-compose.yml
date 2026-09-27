@@ -3,6 +3,8 @@ services:
     container_name: chowbot
     restart: unless-stopped
     build: .
+    # Runs a minimal init as PID 1 so SIGTERM reaches node and the bot shuts down cleanly
+    init: true
     expose:
       - "33002"
     networks:
@@ -12,6 +14,12 @@ services:
     volumes:
       - /opt/data/chowbot:/app/data
       - /var/log/chowbot:/app/log
+    # Docker's own log of stdout; the app also writes rotated files to /var/log/chowbot
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 networks:
   invenchecker:
     external: true

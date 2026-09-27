@@ -8,8 +8,11 @@ const { getAppConfig, setEmojisValid } = require("services/applicationConfigServ
 const { getAllUsers } = require("repositories/invencheckerUser");
 const { getUserAlerts, resolveAllAlerts } = require("services/invencheckerService");
 
+const tasks = [];
+
+// A run is skipped if the previous one is still going
 function schedule(expression, name, fn) {
-  cron.schedule(
+  const task = cron.schedule(
     expression,
     async () => {
       try {
@@ -19,8 +22,13 @@ function schedule(expression, name, fn) {
         logger.error({ err: error }, `scheduled - ${name} failed`);
       }
     },
-    { timezone: "UTC" }
+    { timezone: "UTC", name, noOverlap: true }
   );
+  tasks.push(task);
+}
+
+function stopSchedules() {
+  for (const task of tasks.splice(0)) task.stop();
 }
 
 async function validateEmojis(client) {
@@ -49,16 +57,7 @@ function mapStatuses(statuses) {
 }
 
 async function readyup(client) {
-  await validateEmojis(client);
-
-  // Set initial status
-  const { statuses: initialStatuses = [] } = await getAppConfig();
-  const initialMapped = mapStatuses(initialStatuses);
   let currentIndex = 0;
-  if (initialMapped.length > 0) {
-    await client.user.setActivity(initialMapped[currentIndex].name, { type: initialMapped[currentIndex].type });
-    currentIndex = 1;
-  }
 
   schedule("0 0 * * *", "statusUpdate", async () => {
     const { statuses = [] } = await getAppConfig();
@@ -74,9 +73,35 @@ async function readyup(client) {
   schedule("0 21 * * 0", "sendKarmaWeeklyLeaderboard", () => sendKarmaWeeklyLeaderboard(client));
   schedule("1 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
 
-  schedule("*/1 * * * *", "invencheckerAlerts", async () => {
-    const users = await getAllUsers();
-    for (const { discordId, uid } of users) {
+  schedule("*/1 * * * *", "invencheckerAlerts", () => sendInvencheckerAlerts(client));
+
+  // Scheduling comes first so a failure below can't stop the jobs from running
+  try {
+    await validateEmojis(client);
+  } catch (err) {
+    setEmojisValid(false);
+    logger.error({ err }, "ready - emoji validation failed, karma reactions disabled");
+  }
+
+  // Set initial status
+  try {
+    const { statuses: initialStatuses = [] } = await getAppConfig();
+    const initialMapped = mapStatuses(initialStatuses);
+    if (initialMapped.length > 0) {
+      await client.user.setActivity(initialMapped[0].name, { type: initialMapped[0].type });
+      currentIndex = 1;
+    }
+  } catch (err) {
+    logger.error({ err }, "ready - failed to set initial status");
+  }
+}
+
+// DMs each registered user their new price alerts. Alerts are only resolved once the DM is
+// delivered, so a failed DM is retried on the next run. One user's failure doesn't stop the rest.
+async function sendInvencheckerAlerts(client) {
+  const users = await getAllUsers();
+  for (const { discordId, uid } of users) {
+    try {
       const alerts = await getUserAlerts(uid);
       if (!alerts.length) continue;
       const embed = new EmbedBuilder()
@@ -84,19 +109,18 @@ async function readyup(client) {
         .setColor(0xffa500)
         .setDescription(
           alerts
-            .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ $${a.price_at_alert.toFixed(2)}`)
+            .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ £${a.price_at_alert.toFixed(2)}`)
             .join("\n")
+            .slice(0, 4096)
         )
         .setTimestamp();
-      try {
-        const user = await client.users.fetch(discordId);
-        await user.send({ embeds: [embed] });
-      } catch (err) {
-        logger.warn({ err, discordId }, "invencheckerAlerts - failed to DM user");
-      }
+      const user = await client.users.fetch(discordId);
+      await user.send({ embeds: [embed] });
       await resolveAllAlerts(uid);
+    } catch (err) {
+      logger.warn({ err, discordId }, "invencheckerAlerts - failed, will retry next run");
     }
-  });
+  }
 }
 
-module.exports = { readyup, validateEmojis };
+module.exports = { readyup, validateEmojis, stopSchedules, sendInvencheckerAlerts };
