@@ -26,6 +26,8 @@ docker compose up --build
 
 The app runs on port **33002**.
 
+Upgrading an existing install? Follow [deployment.txt](deployment.txt).
+
 ## Configuration
 
 ### Database — managed by the bot

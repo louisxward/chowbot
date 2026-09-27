@@ -1,0 +1,169 @@
+CHOWBOT DEPLOYMENT: 0.4.0 -> 0.4.1
+===================================
+
+Run these on the server, in the chowbot checkout, in order. Commands that
+touch /opt or /var need sudo.
+
+
+WHAT CHANGES FOR DEPLOYMENT
+---------------------------
+- Node 24 and better-sqlite3 (the image handles both, nothing to install)
+- The database migrates from v2 to v5 on first start. This is one-way, so
+  back up first.
+- Channel lists (serverConfig.json), invenchecker links (userConfig.json) and
+  the username cache (sessionState.json) are imported into the database once.
+- The admin API needs ADMIN_TOKEN. Without it, every /admin/* call returns 503.
+- Slash commands changed, so they have to be deployed again.
+- Karma emojis move to a karmaEmojis list (the old config still works).
+- docker-compose.yml adds init: true (clean shutdown) and a limit on Docker's
+  log size.
+
+
+1. BACK UP THE DATA
+-------------------
+    sudo cp -a /opt/data/chowbot /opt/data/chowbot-backup-0.4.0-$(date +%F)
+
+This keeps chowbot.db and the JSON files. It's what you restore if you roll
+back.
+
+
+2. GET THE CODE
+---------------
+    git fetch
+    git checkout main
+    git pull
+
+(Or check out tooling-cleanup if the PR isn't merged yet.)
+
+
+3. ADD ADMIN_TOKEN TO .env
+--------------------------
+Generate a token:
+
+    openssl rand -hex 32
+
+Add it to .env:
+
+    ADMIN_TOKEN=<the token>
+
+Compare .env with .env.example for any other new optional variables
+(LOG_LEVEL, for example).
+
+
+4. UPDATE applicationConfig.json (optional, but do it at some point)
+--------------------------------------------------------------------
+File: /opt/data/chowbot/applicationConfig.json
+
+The old keys still work as a +1 / -1 pair, but they log a deprecation warning.
+Replace:
+
+    "emojiUpvoteId": "<up id>",
+    "emojiDownvoteId": "<down id>",
+
+with:
+
+    "karmaEmojis": [
+      { "id": "<up id>", "sort": 1, "value": 1 },
+      { "id": "<down id>", "sort": 2, "value": -1 }
+    ],
+
+Keep the ids in quotes. An id can also be a unicode emoji such as "🔥".
+You can add more entries with any whole-number value.
+
+If you edit this file after the bot is running, apply it with the reloadconfig
+call in step 7. No restart is needed.
+
+
+5. BUILD AND START
+------------------
+    docker compose up -d --build
+
+This rebuilds the image and recreates the container with the new compose
+settings.
+
+
+6. CHECK THE STARTUP LOGS
+-------------------------
+    docker compose logs -f chowbot
+
+Expect to see:
+    database - applying migration      (version 3, 4 and 5)
+    database - importing legacy json   (once for each JSON file that exists)
+    startup - database ready
+    startup - api listening
+    ready - logged in
+    karma - karma emojis loaded
+
+Look into any of these if they appear:
+    FATAL ...                          startup failed (bad TOKEN/CLIENT_ID?)
+    startup - ADMIN_TOKEN is not set   step 3 was missed
+    karma - skipping invalid karma emoji / no valid karma emojis
+                                       check step 4
+    karma - emojiUpvoteId/emojiDownvoteId are deprecated
+                                       fine for now, see step 4
+
+Stop following the logs with Ctrl+C.
+
+
+7. DEPLOY THE SLASH COMMANDS
+----------------------------
+Port 33002 isn't published, so run the admin calls inside the container. They
+read ADMIN_TOKEN from the container's environment:
+
+    docker exec chowbot sh -c 'wget -qO- --header "Authorization: Bearer $ADMIN_TOKEN" --post-data "" http://localhost:33002/admin/deploycommands'
+
+It should print {"ok":true,"serverId":"global","count":8}. Changes can take
+a few minutes to show up in Discord.
+
+Other admin calls work the same way. Change the last part of the URL:
+    /admin/reloadconfig      reload applicationConfig.json
+    /admin/clearstate        clear the username cache
+
+If a call fails, wget only prints the status (such as "HTTP/1.1 502"). The
+reason is in: docker compose logs chowbot
+
+
+8. CHECK IT WORKS
+-----------------
+    docker inspect --format '{{.State.Health.Status}}' chowbot
+
+This shows "healthy" after about 30 seconds.
+
+In Discord:
+    /health                  status OK
+    /clearchannel list       shows the channels imported from serverConfig.json
+    /leaderboardchannel list shows the imported leaderboard channels
+    /leaderboard             shows 20 per page, and the ◀ ▶ buttons turn pages
+    /checkkarma              totals match what they were before
+    post a YouTube link      the bot adds the karma reactions in sort order
+    /invenchecker alerts list (if you use invenchecker) works, with pages if
+                             the list is long
+
+
+9. TIDY UP (once you're happy)
+------------------------------
+The legacy JSON files aren't read any more. Delete them:
+
+    sudo rm /opt/data/chowbot/serverConfig.json \
+            /opt/data/chowbot/userConfig.json \
+            /opt/data/chowbot/sessionState.json
+
+Update anything that calls /admin/* (deploy.sh, curl scripts) to send
+"Authorization: Bearer <ADMIN_TOKEN>".
+
+Keep the backup from step 1 for a while, then delete it.
+
+
+ROLLBACK
+--------
+The database changes are one-way, and 0.4.0 still reads the JSON files. So
+roll back the data and the code together:
+
+    docker compose down
+    sudo rm -rf /opt/data/chowbot
+    sudo cp -a /opt/data/chowbot-backup-0.4.0-<date> /opt/data/chowbot
+    git checkout c1d3247            # main before 0.4.1
+    docker compose up -d --build
+
+Anything changed after the deploy (karma, channel lists) is lost in a
+rollback.
