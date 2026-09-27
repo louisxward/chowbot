@@ -42,5 +42,5 @@ module.exports = {
   removeClearChannel: (serverId, channelId) => removeChannel(serverId, "clearChannels", channelId),
   getLeaderboardChannels: (serverId) => getChannels(serverId, "leaderboardChannels"),
   addLeaderboardChannel: (serverId, channelId) => addChannel(serverId, "leaderboardChannels", channelId),
-  removeLeaderboardChannel: (serverId, channelId) => removeChannel(serverId, "leaderboardChannels", channelId),
+  removeLeaderboardChannel: (serverId, channelId) => removeChannel(serverId, "leaderboardChannels", channelId)
 };

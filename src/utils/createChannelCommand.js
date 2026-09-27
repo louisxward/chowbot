@@ -5,7 +5,14 @@ function defaultValidateAdd(client, channelId) {
   if (!client.channels.cache.get(channelId)) throw new Error("Channel doesn't exist");
 }
 
-function createChannelCommand({ name, description, key, addDescription, validateAdd = defaultValidateAdd, permission = PermissionFlagsBits.Administrator }) {
+function createChannelCommand({
+  name,
+  description,
+  key,
+  addDescription,
+  validateAdd = defaultValidateAdd,
+  permission = PermissionFlagsBits.Administrator
+}) {
   return {
     data: new SlashCommandBuilder()
       .setName(name)
@@ -15,21 +22,15 @@ function createChannelCommand({ name, description, key, addDescription, validate
         sub
           .setName("add")
           .setDescription(addDescription ?? `Add a channel to ${description.toLowerCase()}`)
-          .addStringOption((opt) =>
-            opt.setName("channel_id").setDescription("ID of the channel").setRequired(true)
-          )
+          .addStringOption((opt) => opt.setName("channel_id").setDescription("ID of the channel").setRequired(true))
       )
       .addSubcommand((sub) =>
         sub
           .setName("remove")
           .setDescription(`Remove a channel from ${description.toLowerCase()}`)
-          .addStringOption((opt) =>
-            opt.setName("channel_id").setDescription("ID of the channel").setRequired(true)
-          )
+          .addStringOption((opt) => opt.setName("channel_id").setDescription("ID of the channel").setRequired(true))
       )
-      .addSubcommand((sub) =>
-        sub.setName("list").setDescription(`List channels in ${description.toLowerCase()}`)
-      ),
+      .addSubcommand((sub) => sub.setName("list").setDescription(`List channels in ${description.toLowerCase()}`)),
 
     async execute(interaction) {
       const sub = interaction.options.getSubcommand();

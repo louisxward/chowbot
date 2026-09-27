@@ -69,12 +69,20 @@ async function getKarmaLeaderboardMap() {
 async function getKarmaByMessageAndEmoji(serverId, messageId, emojiId) {
   logger.info("repository - getKarmaByMessageAndEmoji");
   const db = await connect();
-  const result = await db.all(
-    "SELECT fromUserId FROM Karma WHERE serverId = ? AND messageId = ? AND emojiId = ?",
-    [serverId, messageId, emojiId]
-  );
+  const result = await db.all("SELECT fromUserId FROM Karma WHERE serverId = ? AND messageId = ? AND emojiId = ?", [
+    serverId,
+    messageId,
+    emojiId
+  ]);
   db.close();
   return result;
 }
 
-module.exports = { createKarma, deleteKarma, updateKarma, getKarmaTotalByUserId, getKarmaLeaderboardMap, getKarmaByMessageAndEmoji };
+module.exports = {
+  createKarma,
+  deleteKarma,
+  updateKarma,
+  getKarmaTotalByUserId,
+  getKarmaLeaderboardMap,
+  getKarmaByMessageAndEmoji
+};
