@@ -1,6 +1,5 @@
 const path = require("path");
 
-console.log(__dirname);
 const DATA_DIR = path.join(__dirname, "../data");
 module.exports = {
   DB_PATH: path.join(DATA_DIR, "chowbot.db"),

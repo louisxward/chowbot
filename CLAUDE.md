@@ -68,7 +68,3 @@ All paths are defined in `src/config.js`. `data/` and `log/` are created at runt
 - Scheduled jobs go through the `schedule()` wrapper in `readyService.js`, which catches and logs errors.
 - Most command replies are `ephemeral: true`.
 - Tests live in `tests/*.test.js`. They mock `logger`, `config` and the repositories, so they never touch Discord or SQLite.
-
-## Gotchas
-
-- `src/config.js` has a stray `console.log(__dirname)`.
