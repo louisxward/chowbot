@@ -12,6 +12,7 @@ npm test                        # jest
 npm run lint                    # eslint (flat config in eslint.config.js)
 npx jest tests/karmaService.test.js   # a single test file
 docker compose up --build       # production-like; needs the external `invenchecker` network
+                                # multi-stage Dockerfile: build tools stay in the build stage
 ```
 
 To run the bot you need a `.env` with `TOKEN` and `CLIENT_ID`. Optional variables are `PORT` (default 33002) and `INVENCHECKER_API_URL` (default http://localhost:33001).
@@ -31,7 +32,7 @@ Use this style. Don't write relative `../` paths. The one exception is `routes/i
 
 The layers are `events/` and `commands/` → `services/` → `repositories/` (SQLite) or JSON storage.
 
-- **`src/index.js`** does startup. It validates env, auto-loads every `commands/<folder>/*.js` and every `events/*.js`, runs DB migrations, starts Express and logs in.
+- **`src/index.js`** does startup. It validates env, auto-loads every `commands/<folder>/*.js` and every `events/*.js`, then, inside `start()`, awaits the DB migrations before it starts Express and logs in. A startup failure (e.g. a bad token) logs `FATAL` and exits 1.
 - **`commands/<folder>/*.js`** each export `{ data: SlashCommandBuilder, execute(interaction) }`. They're discovered automatically by both `index.js` and `services/commandDeployer.js`, so adding a file is all it takes. After changing `data`, you have to deploy commands again (`--deploy-commands` or `POST /admin/deploycommands`). `utils/createChannelCommand.js` is a factory for add/remove/list channel-list commands.
 - **`events/*.js`** each export `{ name: Events.X, once?, execute }`. Keep them thin and delegate to a service.
 - **`services/readyService.js`** runs on `ClientReady`. It validates the emoji IDs and registers every cron job (UTC): daily status rotation, the channel clear at 05:00, the leaderboard send/persist on Sunday at 21:00/21:01, and invenchecker alert DMs every minute.
@@ -70,6 +71,4 @@ All paths are defined in `src/config.js`. `data/` and `log/` are created at runt
 
 ## Gotchas
 
-- `interactionCreate.js` logs when a command isn't found but doesn't `return`, so it goes on to call `command.execute` on `undefined`.
-- `databaseService.init()` isn't awaited at startup.
 - `src/config.js` has a stray `console.log(__dirname)`.

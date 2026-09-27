@@ -66,11 +66,6 @@ for (const file of fs.readdirSync(path.join(__dirname, "events")).filter((f) => 
   client[event.once ? "once" : "on"](event.name, (...args) => event.execute(...args));
 }
 
-// Database
-//todo doesnt wait for it to start/fail
-logger.info("startup - database");
-init();
-
 // Express app
 const app = express();
 app.set("client", client);
@@ -83,16 +78,27 @@ app.use((err, req, res, _next) => {
   res.status(err.status || 500).json({ error: err.message || "Internal server error" });
 });
 
-app.listen(config.PORT, () => {
-  logger.info({ port: config.PORT }, "startup - api");
-});
+// Database migrations must finish before the API or Discord events can touch the db
+async function start() {
+  logger.info("startup - database");
+  await init();
 
-// Login
-logger.info("startup - login");
-client.login(config.TOKEN);
+  app.listen(config.PORT, () => {
+    logger.info({ port: config.PORT }, "startup - api");
+  });
 
-// Deploy commands if flag is set
-if (process.argv.includes("--deploy-commands")) {
-  logger.info("startup - deploying commands (--deploy-commands flag)");
-  deployCommands().catch((err) => logger.error({ err }, "startup - deployCommands failed"));
+  // Login
+  logger.info("startup - login");
+  await client.login(config.TOKEN);
+
+  // Deploy commands if flag is set
+  if (process.argv.includes("--deploy-commands")) {
+    logger.info("startup - deploying commands (--deploy-commands flag)");
+    deployCommands().catch((err) => logger.error({ err }, "startup - deployCommands failed"));
+  }
 }
+
+start().catch((err) => {
+  logger.fatal({ err }, "startup - failed");
+  process.exit(1);
+});
