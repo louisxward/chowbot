@@ -1,5 +1,4 @@
-const sqlite3 = require("sqlite3").verbose();
-const { open } = require("sqlite");
+const Database = require("better-sqlite3");
 const { DB_PATH } = require("config");
 
 const MIGRATIONS = [
@@ -65,22 +64,29 @@ const MIGRATIONS = [
   `
 ];
 
-async function init() {
-  const db = await connect();
-  const { user_version: version } = await db.get("PRAGMA user_version");
+let db = null;
+
+// Opens the shared connection and applies pending migrations. Each migration and its
+// user_version bump run in one transaction, so a failed migration leaves the db untouched.
+function init() {
+  db = new Database(DB_PATH);
+  const version = db.pragma("user_version", { simple: true });
   for (let i = version; i < MIGRATIONS.length; i++) {
-    await db.exec(MIGRATIONS[i]);
-    await db.exec(`PRAGMA user_version = ${i + 1}`);
+    db.transaction(() => {
+      db.exec(MIGRATIONS[i]);
+      db.pragma(`user_version = ${i + 1}`);
+    })();
   }
-  db.close();
 }
 
-async function connect() {
-  const db = await open({
-    filename: DB_PATH,
-    driver: sqlite3.Database
-  });
+function getDb() {
+  if (!db) throw new Error("database not initialised, call init() first");
   return db;
 }
 
-module.exports = { init, connect };
+function close() {
+  db?.close();
+  db = null;
+}
+
+module.exports = { init, getDb, close };

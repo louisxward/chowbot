@@ -1,4 +1,4 @@
-const { connect } = require("services/databaseService");
+const { getDb } = require("services/databaseService");
 const logger = require("logger");
 
 async function getStatus(client) {
@@ -6,9 +6,7 @@ async function getStatus(client) {
 
   let db = "ok";
   try {
-    const conn = await connect();
-    await conn.get("select * from server limit 1");
-    await conn.close();
+    getDb().prepare("select * from server limit 1").get();
   } catch (error) {
     logger.error(error);
     db = "error";

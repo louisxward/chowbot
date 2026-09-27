@@ -1,58 +1,48 @@
 const logger = require("logger");
-const { connect } = require("services/databaseService");
+const { getDb } = require("services/databaseService");
 
 //todo rename methods karma is wide table
 
 async function createKarma(serverId, messageId, userId, fromUserId, emojiId, value, reason, type) {
   logger.info("repository - createKarma");
-  const db = await connect();
-  await db.run(
-    "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [serverId, messageId, userId, fromUserId, emojiId, value, reason, type]
-  );
-  db.close();
+  getDb()
+    .prepare(
+      "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    .run(serverId, messageId, userId, fromUserId, emojiId, value, reason, type);
 }
 
 async function deleteKarma(serverId, messageId, fromUserId, emojiId) {
   logger.info("repository - deleteKarma");
-  const db = await connect();
-  await db.run("DELETE FROM Karma WHERE serverId = ? AND messageId = ? AND fromUserId = ? AND emojiId = ?", [
-    serverId,
-    messageId,
-    fromUserId,
-    emojiId
-  ]);
-  db.close();
+  getDb()
+    .prepare("DELETE FROM Karma WHERE serverId = ? AND messageId = ? AND fromUserId = ? AND emojiId = ?")
+    .run(serverId, messageId, fromUserId, emojiId);
 }
 
 // TODO: replace this two-step with a single upsert once existing duplicate rows have been
 // cleaned up and a UNIQUE index added to (serverId, messageId, fromUserId, emojiId).
 async function updateKarma(serverId, messageId, fromUserId, emojiId, value) {
   logger.info("repository - updateKarma");
-  const db = await connect();
-  const result = await db.run(
-    "UPDATE Karma SET value = ? WHERE serverId = ? AND messageId = ? AND fromUserId = ? AND emojiId = ?",
-    [value, serverId, messageId, fromUserId, emojiId]
-  );
-  db.close();
+  const result = getDb()
+    .prepare("UPDATE Karma SET value = ? WHERE serverId = ? AND messageId = ? AND fromUserId = ? AND emojiId = ?")
+    .run(value, serverId, messageId, fromUserId, emojiId);
   return result.changes;
 }
 
 async function getKarmaTotalByUserId(userId) {
   logger.info("repository - getKarmaTotalByUserId");
-  const db = await connect();
-  const result = await db.get("SELECT SUM(value) AS total FROM Karma WHERE userId = ? GROUP BY userId", [userId]);
-  db.close();
+  const result = getDb().prepare("SELECT SUM(value) AS total FROM Karma WHERE userId = ? GROUP BY userId").get(userId);
   return result ? result.total : null;
 }
 
 async function getKarmaLeaderboardMap() {
   logger.info("repository - getKarmaLeaderboardMap");
-  const db = await connect();
   const result = new Map();
-  const records = await db.all(
-    "SELECT CAST(userId AS TEXT) AS userId, SUM(value) AS total FROM Karma GROUP BY userId ORDER BY total DESC"
-  );
+  const records = getDb()
+    .prepare(
+      "SELECT CAST(userId AS TEXT) AS userId, SUM(value) AS total FROM Karma GROUP BY userId ORDER BY total DESC"
+    )
+    .all();
   let index = 0;
   let minValue = null;
   records.forEach((e) => {
@@ -62,20 +52,14 @@ async function getKarmaLeaderboardMap() {
     }
     result.set(e.userId, { index: index, value: e.total });
   });
-  db.close();
   return result;
 }
 
 async function getKarmaByMessageAndEmoji(serverId, messageId, emojiId) {
   logger.info("repository - getKarmaByMessageAndEmoji");
-  const db = await connect();
-  const result = await db.all("SELECT fromUserId FROM Karma WHERE serverId = ? AND messageId = ? AND emojiId = ?", [
-    serverId,
-    messageId,
-    emojiId
-  ]);
-  db.close();
-  return result;
+  return getDb()
+    .prepare("SELECT fromUserId FROM Karma WHERE serverId = ? AND messageId = ? AND emojiId = ?")
+    .all(serverId, messageId, emojiId);
 }
 
 module.exports = {

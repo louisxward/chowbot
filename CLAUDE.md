@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Discord bot (discord.js v14, CommonJS, Node 22) with an Express API sitting next to it. Features: Reddit-style karma from up/down vote reactions, a weekly karma leaderboard, scheduled channel clearing, and a Discord front end for the external **invenchecker** service (Steam inventory price alerts). The user-facing docs are in [readme.md](readme.md). Keep the command, endpoint and config tables there in sync when you change behaviour.
+Discord bot (discord.js v14, CommonJS, Node 24) with an Express API sitting next to it. Features: Reddit-style karma from up/down vote reactions, a weekly karma leaderboard, scheduled channel clearing, and a Discord front end for the external **invenchecker** service (Steam inventory price alerts). The user-facing docs are in [readme.md](readme.md). Keep the command, endpoint and config tables there in sync when you change behaviour.
 
 ## Commands
 
@@ -32,7 +32,7 @@ Use this style. Don't write relative `../` paths. The one exception is `routes/i
 
 The layers are `events/` and `commands/` → `services/` → `repositories/` (SQLite) or JSON storage.
 
-- **`src/index.js`** does startup. It validates env, auto-loads every `commands/<folder>/*.js` and every `events/*.js`, then, inside `start()`, awaits the DB migrations before it starts Express and logs in. A startup failure (e.g. a bad token) logs `FATAL` and exits 1.
+- **`src/index.js`** does startup. It validates env, auto-loads every `commands/<folder>/*.js` and every `events/*.js`, then, inside `start()`, runs the DB migrations before it starts Express and logs in. A startup failure (e.g. a bad token) logs `FATAL` and exits 1.
 - **`commands/<folder>/*.js`** each export `{ data: SlashCommandBuilder, execute(interaction) }`. They're discovered automatically by both `index.js` and `services/commandDeployer.js`, so adding a file is all it takes. After changing `data`, you have to deploy commands again (`--deploy-commands` or `POST /admin/deploycommands`). `utils/createChannelCommand.js` is a factory for add/remove/list channel-list commands.
 - **`events/*.js`** each export `{ name: Events.X, once?, execute }`. Keep them thin and delegate to a service.
 - **`services/readyService.js`** runs on `ClientReady`. It validates the emoji IDs and registers every cron job (UTC): daily status rotation, the channel clear at 05:00, the leaderboard send/persist on Sunday at 21:00/21:01, and invenchecker alert DMs every minute.
@@ -40,7 +40,7 @@ The layers are `events/` and `commands/` → `services/` → `repositories/` (SQ
 
 ### Persistence: two mechanisms
 
-1. **SQLite** (`data/chowbot.db`) through `services/databaseService.js`. Migrations are an ordered `MIGRATIONS` array tracked by `PRAGMA user_version`. **To change the schema, append a new entry. Never edit an existing one.** Repositories open and close their own connection on every call (`connect()` … `db.close()`), so follow that pattern.
+1. **SQLite** (`data/chowbot.db`) through **better-sqlite3**, which is synchronous, in `services/databaseService.js`. `init()` opens one shared connection and runs migrations. The migrations are an ordered `MIGRATIONS` array tracked by `PRAGMA user_version`, and each one runs in its own transaction. **To change the schema, append a new entry. Never edit an existing one.** Repositories call `getDb().prepare(sql).run/get/all(...params)`. Never open or close connections in a repository. Repository functions stay `async` so callers don't change. better-sqlite3 rejects JS booleans as parameters, so pass `1`/`0` instead.
 2. **JSON files** in `data/` through `services/storageHelper.js`, which provides an in-memory cache and returns deep clones:
    - `serverConfig.json`: per guild, written by slash commands (`serverConfigStorage.js`)
    - `userConfig.json`: per user, holds the invenchecker uid (`invencheckerStorage.js`)
@@ -67,4 +67,4 @@ All paths are defined in `src/config.js`. `data/` and `log/` are created at runt
 - Logging uses pino (`require("logger")`). The existing pattern is a `"layer - action"` message followed by `"- key: value"` lines, e.g. `logger.info("service - updateUserKarma")`. For errors, use `logger.error({ err }, "msg")`.
 - Scheduled jobs go through the `schedule()` wrapper in `readyService.js`, which catches and logs errors.
 - Most command replies are `ephemeral: true`.
-- Tests live in `tests/*.test.js`. They mock `logger`, `config` and the repositories, so they never touch Discord or SQLite.
+- Tests live in `tests/*.test.js`. Service tests mock `logger`, `config` and the repositories. `tests/database.test.js` runs the real migrations and repository SQL against a temporary SQLite file. Add repository tests there.
