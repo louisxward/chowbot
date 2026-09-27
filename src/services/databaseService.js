@@ -104,6 +104,20 @@ const MIGRATIONS = [
     for (const [userId, user] of Object.entries(readLegacyJson(config.USER_CONFIG_PATH))) {
       if (user?.invencheckerId) insertUser.run(userId, user.invencheckerId);
     }
+  },
+  // v5 — leaderboard username cache, previously sessionState.json; imports any existing entries
+  (db) => {
+    db.exec(`
+      CREATE TABLE UsernameCache (
+        userId TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        cachedAt INTEGER NOT NULL
+      );
+    `);
+    const insert = db.prepare("INSERT OR IGNORE INTO UsernameCache (userId, username, cachedAt) VALUES (?, ?, ?)");
+    for (const [userId, entry] of Object.entries(readLegacyJson(config.SESSION_STATE_PATH).usernames ?? {})) {
+      if (entry?.username && Number.isFinite(entry.cachedAt)) insert.run(userId, entry.username, entry.cachedAt);
+    }
   }
 ];
 

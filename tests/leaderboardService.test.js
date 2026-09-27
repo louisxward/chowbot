@@ -7,6 +7,14 @@ jest.mock("repositories/karmaWeeklyLeaderboard", () => ({
   getKarmaWeeklyLeaderboardMapByWeek: jest.fn()
 }));
 jest.mock("repositories/serverChannel", () => ({ getAllChannels: jest.fn() }));
+jest.mock("services/sessionStateStorage", () => {
+  const cache = new Map();
+  return {
+    getCachedUsername: jest.fn(async (id) => cache.get(id) ?? null),
+    setCachedUsername: jest.fn(async (id, name) => cache.set(id, name)),
+    clearSessionState: jest.fn(async () => cache.clear())
+  };
+});
 
 const { getKarmaLeaderboardMap } = require("repositories/karma");
 const { getKarmaWeeklyLeaderboardMapByWeek } = require("repositories/karmaWeeklyLeaderboard");
@@ -74,6 +82,14 @@ describe("getKarmaWeeklyLeaderboardFormatted", () => {
     expect(lines[2].startsWith("🐣")).toBe(true); // not on last week's board
     expect(lines[3].startsWith("🔽")).toBe(true);
     expect(lines[4].startsWith("💩")).toBe(true); // down 4 places and score went down
+  });
+
+  test("uses cached usernames instead of fetching them again", async () => {
+    getKarmaLeaderboardMap.mockResolvedValue(board([["a", 1, 1]]));
+    getKarmaWeeklyLeaderboardMapByWeek.mockResolvedValue(new Map());
+    await getKarmaWeeklyLeaderboardFormatted(users);
+    await getKarmaWeeklyLeaderboardFormatted(users);
+    expect(users.fetch).toHaveBeenCalledTimes(1);
   });
 
   test("uses the user id when Discord can't find the user", async () => {

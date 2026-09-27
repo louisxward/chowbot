@@ -6,7 +6,7 @@ const Database = require("better-sqlite3");
 let mockDbPath;
 let mockDataDir;
 
-jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
+jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
 jest.mock("config", () => ({
   get DB_PATH() {
     return mockDbPath;
@@ -16,6 +16,9 @@ jest.mock("config", () => ({
   },
   get USER_CONFIG_PATH() {
     return `${mockDataDir}/userConfig.json`;
+  },
+  get SESSION_STATE_PATH() {
+    return `${mockDataDir}/sessionState.json`;
   }
 }));
 
@@ -35,7 +38,7 @@ afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-const LATEST_VERSION = 4;
+const LATEST_VERSION = 5;
 
 const V1_SCHEMA = `
   CREATE TABLE Server (id TEXT PRIMARY KEY, name TEXT NOT NULL, invited TEXT NOT NULL, ownerUserId TEXT NOT NULL);
@@ -69,7 +72,8 @@ describe("databaseService", () => {
       "KarmaWeeklyLeaderboardWeek",
       "Message",
       "Server",
-      "ServerChannel"
+      "ServerChannel",
+      "UsernameCache"
     ]);
   });
 
@@ -127,7 +131,7 @@ describe("databaseService", () => {
   });
 });
 
-describe("migrations v3 and v4", () => {
+describe("migrations v3 to v5", () => {
   // Builds a database at an older version by running the real migrations up to it
   function createDatabaseAtVersion(version) {
     const db = new Database(mockDbPath);
@@ -182,6 +186,25 @@ describe("migrations v3 and v4", () => {
     expect(await channels.getChannels("g1", "clearChannels")).toEqual(["c1", "c2"]);
     expect(await channels.getChannels("g1", "leaderboardChannels")).toEqual(["l1"]);
     expect(await invUsers.getAllUsers()).toEqual([{ discordId: "u1", uid: "uid-1" }]);
+  });
+
+  test("v5 imports the username cache from sessionState.json", async () => {
+    createDatabaseAtVersion(4).close();
+    fs.writeFileSync(
+      `${mockDataDir}/sessionState.json`,
+      JSON.stringify({
+        usernames: {
+          u1: { username: "Alice", cachedAt: 1000 },
+          u2: { username: "Bob" },
+          u3: { cachedAt: 2000 }
+        }
+      })
+    );
+
+    databaseService.init();
+    expect(databaseService.getDb().prepare("SELECT * FROM UsernameCache").all()).toEqual([
+      { userId: "u1", username: "Alice", cachedAt: 1000 }
+    ]);
   });
 
   test("v4 works without any legacy json files", () => {
@@ -254,6 +277,30 @@ describe("repositories", () => {
       { discordId: "u1", uid: "uid-2" },
       { discordId: "u2", uid: "uid-3" }
     ]);
+  });
+
+  test("usernameCache only returns entries cached after the cut-off", async () => {
+    const cache = require("repositories/usernameCache");
+    await cache.setUsername("u1", "Alice", 1000);
+    expect(await cache.getUsername("u1", 999)).toBe("Alice");
+    expect(await cache.getUsername("u1", 1000)).toBeNull();
+    await cache.setUsername("u1", "Alice2", 5000);
+    expect(await cache.getUsername("u1", 1000)).toBe("Alice2");
+    expect(await cache.getUsername("nobody", 0)).toBeNull();
+    await cache.clearUsernames();
+    expect(await cache.getUsername("u1", 0)).toBeNull();
+  });
+
+  test("sessionStateStorage keeps usernames for 12 hours", async () => {
+    const { getCachedUsername, setCachedUsername } = require("services/sessionStateStorage");
+    const now = Date.now();
+    const spy = jest.spyOn(Date, "now").mockReturnValue(now);
+    await setCachedUsername("u1", "Alice");
+    spy.mockReturnValue(now + 12 * 60 * 60 * 1000 - 1);
+    expect(await getCachedUsername("u1")).toBe("Alice");
+    spy.mockReturnValue(now + 12 * 60 * 60 * 1000);
+    expect(await getCachedUsername("u1")).toBeNull();
+    spy.mockRestore();
   });
 
   test("etiquette karma stores null message and emoji", async () => {

@@ -41,11 +41,10 @@ The layers are `events/` and `commands/` → `services/` → `repositories/` (SQ
 ### Persistence
 
 1. **SQLite** (`data/chowbot.db`) through **better-sqlite3**, which is synchronous, in `services/databaseService.js`. `init()` opens one shared connection and runs migrations. The migrations are an ordered `MIGRATIONS` array tracked by `PRAGMA user_version`, and each one runs in its own transaction. **To change the schema, append a new entry. Never edit an existing one.** Repositories call `getDb().prepare(sql).run/get/all(...params)`. Never open or close connections in a repository. Repository functions stay `async` so callers don't change. better-sqlite3 rejects JS booleans as parameters, so pass `1`/`0` instead.
-   A migration is either a SQL string or a function taking the db (v4 uses one to import the legacy JSON files). Tables: `Karma`, `KarmaWeeklyLeaderboardWeek`/`User`, `Message`, `Server`, `ServerChannel` (per-guild channel lists keyed by `type`, e.g. `clearChannels`) and `InvencheckerUser`. `Karma` has a UNIQUE index on `(serverId, messageId, fromUserId, emojiId)`, so reactions are saved with an upsert. Etiquette rows have null `messageId`/`emojiId`, so they're never caught by it.
+   A migration is either a SQL string or a function taking the db (v4 and v5 use one to import the legacy JSON files). Tables: `Karma`, `KarmaWeeklyLeaderboardWeek`/`User`, `Message`, `Server`, `ServerChannel` (per-guild channel lists keyed by `type`, e.g. `clearChannels`), `InvencheckerUser` and `UsernameCache` (the leaderboard's username cache, 12h TTL, through `services/sessionStateStorage.js`). `Karma` has a UNIQUE index on `(serverId, messageId, fromUserId, emojiId)`, so reactions are saved with an upsert. Etiquette rows have null `messageId`/`emojiId`, so they're never caught by it.
 2. **`data/applicationConfig.json`**, **edited by hand**, read through `services/storageHelper.js`. It holds the emoji IDs, `domainList` and `statuses`. `applicationConfigService.js` caches it, and you reload it with `POST /admin/reloadconfig`.
-3. **In memory:** the leaderboard's username cache (`sessionStateStorage.js`, 12h TTL).
 
-`serverConfig.json` and `userConfig.json` are legacy. Migration v4 imports them once and nothing reads them afterwards.
+`serverConfig.json`, `userConfig.json` and `sessionState.json` are legacy. Migrations v4 and v5 import them once and nothing reads them afterwards.
 
 All paths are defined in `src/config.js`. `data/` and `log/` are created at runtime and are volume-mounted in Docker.
 

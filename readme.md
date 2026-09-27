@@ -35,10 +35,9 @@ The app runs on port **33002**.
 - karma from reactions and `/etiquette`, and the weekly leaderboard snapshots
 - each server's clear and leaderboard channel lists, managed by `/clearchannel` and `/leaderboardchannel`
 - invenchecker account links, managed by `/invenchecker account register`
+- the leaderboard's Discord username cache. Entries expire after 12 hours, and `POST /admin/clearstate` clears it
 
-Earlier versions kept the channel lists in `data/serverConfig.json` and the invenchecker links in `data/userConfig.json`. They are imported into the database once, on the first start after upgrading, and the files are no longer used after that.
-
-The leaderboard's Discord username cache is held in memory. Entries expire after 12 hours, and `POST /admin/clearstate` clears it.
+Earlier versions kept the channel lists in `data/serverConfig.json`, the invenchecker links in `data/userConfig.json` and the username cache in `data/sessionState.json`. They are imported into the database once, on the first start after upgrading, and the files are no longer used after that.
 
 ---
 
