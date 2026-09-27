@@ -1,10 +1,17 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  PermissionFlagsBits,
+  MessageFlags,
+  InteractionContextType
+} = require("discord.js");
 const { getStatus } = require("services/healthService");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("health")
     .setDescription("Show bot health status")
+    .setContexts(InteractionContextType.Guild)
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     const status = await getStatus(interaction.client);
@@ -22,6 +29,6 @@ module.exports = {
       )
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 };

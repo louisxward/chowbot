@@ -1,4 +1,10 @@
-const { SlashCommandBuilder, PermissionFlagsBits, ChannelType } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ChannelType,
+  MessageFlags,
+  InteractionContextType
+} = require("discord.js");
 const { getChannels, addChannel, removeChannel } = require("repositories/serverChannel");
 
 // Only allow channels in the server running the command, so one server's admins can't
@@ -20,6 +26,7 @@ function createChannelCommand({
       .setName(name)
       .setDescription(description)
       .setDefaultMemberPermissions(permission)
+      .setContexts(InteractionContextType.Guild)
       .addSubcommand((sub) =>
         sub
           .setName("add")
@@ -42,7 +49,7 @@ function createChannelCommand({
 
     async execute(interaction) {
       const sub = interaction.options.getSubcommand();
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       try {
         if (sub === "add") {
           const channel = interaction.options.getChannel("channel", true);
@@ -63,7 +70,7 @@ function createChannelCommand({
       } catch (err) {
         const msg = err.message ?? err;
         if (interaction.deferred) return interaction.editReply({ content: `Failed: ${msg}` });
-        return interaction.reply({ ephemeral: true, content: `Failed: ${msg}` });
+        return interaction.reply({ flags: MessageFlags.Ephemeral, content: `Failed: ${msg}` });
       }
     }
   };

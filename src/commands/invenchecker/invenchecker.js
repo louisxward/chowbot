@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const { getUid, setUid } = require("repositories/invencheckerUser");
 const {
   createAccountByDiscord,
@@ -14,11 +14,13 @@ const {
 } = require("services/invencheckerService");
 const logger = require("logger");
 
+const STEAM64_ID = /^\d{17}$/;
+
 async function requireUid(interaction) {
   const uid = await getUid(interaction.user.id);
   if (!uid) {
     await interaction.reply({
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       content: "No invenchecker account linked. Use `/invenchecker account register` first."
     });
     return null;
@@ -51,7 +53,14 @@ module.exports = {
           sub
             .setName("add")
             .setDescription("Add a Steam64 ID to your account")
-            .addStringOption((opt) => opt.setName("id").setDescription("Steam64 ID").setRequired(true))
+            .addStringOption((opt) =>
+              opt
+                .setName("id")
+                .setDescription("Steam64 ID (17 digits)")
+                .setMinLength(17)
+                .setMaxLength(17)
+                .setRequired(true)
+            )
         )
         .addSubcommand((sub) =>
           sub
@@ -111,7 +120,12 @@ module.exports = {
             .setName("prices")
             .setDescription("Price history for your custom tracked items")
             .addIntegerOption((opt) =>
-              opt.setName("days").setDescription("Number of days of history to return (default: 7)").setRequired(false)
+              opt
+                .setName("days")
+                .setDescription("Number of days of history to return (default: 7)")
+                .setMinValue(1)
+                .setMaxValue(365)
+                .setRequired(false)
             )
             .addStringOption((opt) =>
               opt.setName("item").setDescription("Filter to a single item by market_hash_name").setRequired(false)
@@ -127,9 +141,12 @@ module.exports = {
       if (group === "account" && sub === "register") {
         const existing = await getUid(interaction.user.id);
         if (existing) {
-          return interaction.reply({ ephemeral: true, content: `Already registered (uid: \`${existing}\`).` });
+          return interaction.reply({
+            flags: MessageFlags.Ephemeral,
+            content: `Already registered (uid: \`${existing}\`).`
+          });
         }
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         try {
           await interaction.user.send("Verifying DMs for invenchecker registration…");
         } catch {
@@ -147,9 +164,12 @@ module.exports = {
         const uid = await requireUid(interaction);
         if (!uid) return;
         const id = interaction.options.getString("id");
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         if (sub === "add") {
+          if (!STEAM64_ID.test(id)) {
+            return interaction.editReply({ content: "That isn't a Steam64 ID. It should be 17 digits." });
+          }
           const account = await addSteam64Id(uid, id);
           return interaction.editReply({ content: `Added \`${id}\`. Steam64 IDs: ${account.steam64ids.join(", ")}` });
         }
@@ -164,7 +184,7 @@ module.exports = {
         const uid = await requireUid(interaction);
         if (!uid) return;
         const name = interaction.options.getString("name");
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         if (sub === "add") {
           const account = await addCustomItem(uid, name);
@@ -182,7 +202,7 @@ module.exports = {
       if (group === "alerts") {
         const uid = await requireUid(interaction);
         if (!uid) return;
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         if (sub === "list") {
           const alerts = await getUserAlerts(uid);
@@ -210,7 +230,7 @@ module.exports = {
       if (group === "view") {
         const uid = await requireUid(interaction);
         if (!uid) return;
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         if (sub === "summary") {
           const summary = await getAccountSummary(uid);
@@ -302,7 +322,7 @@ module.exports = {
       if (interaction.deferred) {
         return interaction.editReply({ content: msg });
       }
-      return interaction.reply({ ephemeral: true, content: msg });
+      return interaction.reply({ flags: MessageFlags.Ephemeral, content: msg });
     }
   }
 };
