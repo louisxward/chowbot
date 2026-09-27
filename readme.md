@@ -81,12 +81,12 @@ After changing a command's options, deploy the commands again (see [API Endpoint
 | -------------- | ------------------------------------------------- | ------------------------------------------------------------------------ | ------------ |
 | `/checkkarma`  | `whos` (user, optional)                           | Check karma for yourself or another user                                 | Everyone     |
 | `/etiquette`   | `who` (user), `good` (boolean), `reason` (string) | Report a user for good/bad etiquette. One report per user every 24 hours | Everyone     |
-| `/leaderboard` | —                                                 | Show the karma weekly leaderboard                                        | Everyone     |
+| `/leaderboard` | —                                                 | Show the karma leaderboard, 20 per page with ◀ ▶ buttons                 | Everyone     |
 | `/react`       | `message_id` (string)                             | Add the karma reactions to a message in this channel                     | Manage Roles |
 
 ### Leaderboard Channels
 
-The weekly karma leaderboard is posted to these channels every Sunday at 21:00 UTC.
+The weekly karma leaderboard is posted to these channels every Sunday at 21:00 UTC. Its page buttons open a private copy for whoever clicks, so paging doesn't change the post for everyone.
 
 | Command                      | Options               | Description                               | Permission    |
 | ---------------------------- | --------------------- | ----------------------------------------- | ------------- |
@@ -118,6 +118,8 @@ The weekly karma leaderboard is posted to these channels every Sunday at 21:00 U
 | `/invenchecker view summary`     | —                                            | Inventory summary with latest prices per tracked item             | Everyone   |
 | `/invenchecker view progress`    | —                                            | Scan state (queued, last fetched, next scan) per account and item | Everyone   |
 | `/invenchecker view prices`      | `days` (1–365, default 7), `item` (optional) | Price history for your custom tracked items                       | Everyone   |
+
+Long alert lists, summaries, progress and price histories are split into pages with ◀ ▶ buttons instead of being cut off. Price alert DMs that don't fit in one message are sent as several messages.
 
 ## API Endpoints
 

@@ -63,3 +63,28 @@ test("does nothing for users with no alerts", async () => {
   expect(client.users.fetch).not.toHaveBeenCalled();
   expect(resolveAllAlerts).not.toHaveBeenCalled();
 });
+
+test("splits a long alert list over several DMs and resolves once all are sent", async () => {
+  getAllUsers.mockResolvedValue([{ discordId: "d1", uid: "u1" }]);
+  getUserAlerts.mockResolvedValue(
+    Array.from({ length: 150 }, (_, i) => ({ ...alert, market_hash_name: `Item ${i} ${"x".repeat(40)}` }))
+  );
+  const send = jest.fn();
+  await sendInvencheckerAlerts(makeClient({ d1: send }));
+  expect(send.mock.calls.length).toBeGreaterThan(1);
+  const titles = send.mock.calls.map(([message]) => message.embeds[0].data.title);
+  expect(titles[0]).toBe(`Price Alert (1/${titles.length})`);
+  const all = send.mock.calls.map(([message]) => message.embeds[0].data.description).join("\n");
+  expect(all.split("\n")).toHaveLength(150);
+  expect(resolveAllAlerts).toHaveBeenCalledTimes(1);
+});
+
+test("doesn't resolve if a later DM in the batch fails", async () => {
+  getAllUsers.mockResolvedValue([{ discordId: "d1", uid: "u1" }]);
+  getUserAlerts.mockResolvedValue(
+    Array.from({ length: 150 }, (_, i) => ({ ...alert, market_hash_name: `Item ${i} ${"x".repeat(40)}` }))
+  );
+  const send = jest.fn().mockResolvedValueOnce().mockRejectedValueOnce(new Error("rate limited"));
+  await sendInvencheckerAlerts(makeClient({ d1: send }));
+  expect(resolveAllAlerts).not.toHaveBeenCalled();
+});

@@ -15,12 +15,24 @@ const {
   getAccountPrices
 } = require("services/invencheckerService");
 const { formatPrice } = require("utils/format");
+const {
+  EMBED_DESCRIPTION_LIMIT,
+  buildPageButtons,
+  chunkLines,
+  clampPage,
+  paginateFields,
+  sectionsToFields
+} = require("utils/pagination");
 
 const STEAM64_ID = /^\d{17}$/;
 const SUMMARY_COLOUR = 0x00aaff;
 const PROGRESS_COLOUR = 0x00cc66;
 const PRICES_COLOUR = 0xffcc00;
-const FIELD_LIMIT = 1024; // Discord's embed field value limit
+const DEFAULT_PRICE_DAYS = 7;
+const NO_ACCOUNT_REPLY = {
+  content: "No invenchecker account linked. Use `/invenchecker account register` first.",
+  flags: MessageFlags.Ephemeral
+};
 
 // Subcommands that need a linked account. Each gets (interaction, uid) after the reply is
 // deferred, and returns what to edit the reply to.
@@ -29,11 +41,24 @@ const ACCOUNT_HANDLERS = {
   "steam remove": steamRemove,
   "item add": itemAdd,
   "item remove": itemRemove,
-  "alerts list": alertsList,
+  "alerts list": (_interaction, uid) => renderView("alerts", uid),
   "alerts resolve": alertsResolve,
-  "view summary": viewSummary,
-  "view progress": viewProgress,
-  "view prices": viewPrices
+  "view summary": (_interaction, uid) => renderView("summary", uid),
+  "view progress": (_interaction, uid) => renderView("progress", uid),
+  "view prices": (interaction, uid) =>
+    renderView("prices", uid, 0, {
+      days: interaction.options.getInteger("days") ?? DEFAULT_PRICE_DAYS,
+      item: interaction.options.getString("item")
+    })
+};
+
+// Views that can run over one embed. Each loads its data and returns the embed's title and
+// colour plus either lines (shown in the description) or sections ({ name, lines } fields).
+const VIEWS = {
+  alerts: loadAlertsView,
+  summary: loadSummaryView,
+  progress: loadProgressView,
+  prices: loadPricesView
 };
 
 module.exports = {
@@ -150,10 +175,7 @@ module.exports = {
       }
       const uid = await getUid(interaction.user.id);
       if (!uid) {
-        await interaction.reply({
-          content: "No invenchecker account linked. Use `/invenchecker account register` first.",
-          flags: MessageFlags.Ephemeral
-        });
+        await interaction.reply(NO_ACCOUNT_REPLY);
         return;
       }
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -166,6 +188,25 @@ module.exports = {
       } else {
         await interaction.reply({ content, flags: MessageFlags.Ephemeral });
       }
+    }
+  },
+
+  // Page buttons: "invenchecker:<view>:<page>:<days>". The view is loaded again for the user who
+  // clicked, so the buttons keep working after a restart.
+  async handleButton(interaction, [view, page, days]) {
+    if (!VIEWS[view]) return;
+    const uid = await getUid(interaction.user.id);
+    if (!uid) {
+      await interaction.reply(NO_ACCOUNT_REPLY);
+      return;
+    }
+    await interaction.deferUpdate();
+    try {
+      const options = { days: Number(days) || DEFAULT_PRICE_DAYS };
+      await interaction.editReply(await renderView(view, uid, Number(page), options));
+    } catch (err) {
+      logger.warn({ err, view }, "invenchecker - page failed");
+      await interaction.followUp({ content: describeApiError(err), flags: MessageFlags.Ephemeral });
     }
   }
 };
@@ -216,72 +257,94 @@ async function itemRemove(interaction, uid) {
   return { content: `Removed \`${name}\`. Remaining: ${listOrNone(account.customItems)}` };
 }
 
-async function alertsList(_interaction, uid) {
-  const alerts = await getUserAlerts(uid);
-  if (!alerts.length) return { content: "No unresolved alerts." };
-  const embed = new EmbedBuilder()
-    .setTitle("Unresolved Alerts")
-    .setColor(ALERT_COLOUR)
-    .setDescription(alerts.map(formatAlert).join("\n"))
-    .setTimestamp();
-  return { embeds: [embed] };
-}
-
 async function alertsResolve(_interaction, uid) {
   const { resolved } = await resolveAllAlerts(uid);
   return { content: `Resolved ${resolved} alert(s).` };
 }
 
-async function viewSummary(_interaction, uid) {
+// Renders one page of a view, with page buttons when it runs over one embed. An item filter on
+// prices isn't kept in the button id, so filtered prices only show their first page (a single
+// item is always one page).
+async function renderView(view, uid, requestedPage = 0, options = {}) {
+  const { title, colour, lines, sections, empty, emptyAsText } = await VIEWS[view](uid, options);
+  const pages = lines ? chunkLines(lines, EMBED_DESCRIPTION_LIMIT) : paginateFields(sectionsToFields(sections));
+  const embed = new EmbedBuilder().setTitle(title).setColor(colour).setTimestamp();
+  if (pages.length === 0) {
+    return emptyAsText
+      ? { content: empty, embeds: [], components: [] }
+      : { embeds: [embed.setDescription(empty)], components: [] };
+  }
+  const page = clampPage(requestedPage, pages.length);
+  if (lines) embed.setDescription(pages[page]);
+  else embed.addFields(pages[page]);
+  const components = options.item
+    ? []
+    : buildPageButtons((target) => `invenchecker:${view}:${target}:${options.days ?? ""}`, page, pages.length);
+  return { content: "", embeds: [embed], components };
+}
+
+async function loadAlertsView(uid) {
+  const alerts = await getUserAlerts(uid);
+  return {
+    title: "Unresolved Alerts",
+    colour: ALERT_COLOUR,
+    lines: alerts.map(formatAlert),
+    empty: "No unresolved alerts.",
+    emptyAsText: true
+  };
+}
+
+async function loadSummaryView(uid) {
   const summary = await getAccountSummary(uid);
-  const embed = new EmbedBuilder().setTitle("Inventory Summary").setColor(SUMMARY_COLOUR).setTimestamp();
-  for (const [steam64id, items] of Object.entries(summary.steam64ids || {})) {
-    if (!items.length) continue;
-    const lines = items.map(
+  const steamSections = Object.entries(summary.steam64ids || {}).map(([steam64id, items]) => ({
+    name: steam64id,
+    lines: items.map(
       (item) => `\`${item.market_hash_name}\` — ${formatLowestPrice(item)}${item.missing ? " *(missing)*" : ""}`
-    );
-    embed.addFields({ name: steam64id, value: toFieldValue(lines) });
-  }
-  const customItems = summary.customItems || [];
-  if (customItems.length) {
-    const lines = customItems.map((item) => `\`${item.market_hash_name}\` — ${formatLowestPrice(item)}`);
-    embed.addFields({ name: "Custom Items", value: toFieldValue(lines) });
-  }
-  return { embeds: [withEmptyMessage(embed, "No tracked items found.")] };
+    )
+  }));
+  const customSection = {
+    name: "Custom Items",
+    lines: (summary.customItems || []).map((item) => `\`${item.market_hash_name}\` — ${formatLowestPrice(item)}`)
+  };
+  return {
+    title: "Inventory Summary",
+    colour: SUMMARY_COLOUR,
+    sections: [...steamSections, customSection],
+    empty: "No tracked items found."
+  };
 }
 
-async function viewProgress(_interaction, uid) {
+async function loadProgressView(uid) {
   const progress = await getAccountProgress(uid);
-  const embed = new EmbedBuilder().setTitle("Scan Progress").setColor(PROGRESS_COLOUR).setTimestamp();
-  const steamEntries = Object.entries(progress.steam64ids || {});
-  if (steamEntries.length) {
-    const lines = steamEntries.map(([id, p]) => formatScanState(id, p, p.lastFetch?.fetched_at, "never fetched"));
-    embed.addFields({ name: "Steam Accounts", value: toFieldValue(lines) });
-  }
-  const itemEntries = Object.entries(progress.customItems || {});
-  if (itemEntries.length) {
-    const lines = itemEntries.map(([name, p]) => formatScanState(name, p, p.lastPrice?.captured_at, "never priced"));
-    embed.addFields({ name: "Custom Items", value: toFieldValue(lines) });
-  }
-  return { embeds: [withEmptyMessage(embed, "No tracked items found.")] };
+  const steamLines = Object.entries(progress.steam64ids || {}).map(([id, state]) =>
+    formatScanState(id, state, state.lastFetch?.fetched_at, "never fetched")
+  );
+  const itemLines = Object.entries(progress.customItems || {}).map(([name, state]) =>
+    formatScanState(name, state, state.lastPrice?.captured_at, "never priced")
+  );
+  return {
+    title: "Scan Progress",
+    colour: PROGRESS_COLOUR,
+    sections: [
+      { name: "Steam Accounts", lines: steamLines },
+      { name: "Custom Items", lines: itemLines }
+    ],
+    empty: "No tracked items found."
+  };
 }
 
-async function viewPrices(interaction, uid) {
-  const days = interaction.options.getInteger("days") ?? 7;
-  const item = interaction.options.getString("item");
+async function loadPricesView(uid, { days = DEFAULT_PRICE_DAYS, item = null }) {
   const prices = await getAccountPrices(uid, days, item);
-  const embed = new EmbedBuilder().setTitle(`Price History (${days}d)`).setColor(PRICES_COLOUR).setTimestamp();
-  for (const [name, snapshots] of Object.entries(prices)) {
-    if (!snapshots.length) continue;
-    const lines = snapshots.slice(-10).map((snapshot) => {
+  const sections = Object.entries(prices).map(([name, snapshots]) => ({
+    name,
+    lines: snapshots.slice(-10).map((snapshot) => {
       const date = new Date(snapshot.captured_at * 1000).toLocaleDateString();
       const low = snapshot.lowest_price != null ? formatPrice(snapshot.lowest_price) : "—";
       const median = snapshot.median_price != null ? formatPrice(snapshot.median_price) : "—";
       return `${date}: ${low} low / ${median} med`;
-    });
-    embed.addFields({ name, value: toFieldValue(lines) });
-  }
-  return { embeds: [withEmptyMessage(embed, "No price data found.")] };
+    })
+  }));
+  return { title: `Price History (${days}d)`, colour: PRICES_COLOUR, sections, empty: "No price data found." };
 }
 
 function formatLowestPrice(item) {
@@ -298,15 +361,6 @@ function formatScanState(name, state, lastAt, neverLabel) {
 
 function listOrNone(values) {
   return values.length ? values.join(", ") : "none";
-}
-
-function toFieldValue(lines) {
-  return lines.join("\n").slice(0, FIELD_LIMIT);
-}
-
-function withEmptyMessage(embed, message) {
-  if (!embed.data.fields?.length) embed.setDescription(message);
-  return embed;
 }
 
 function describeApiError(err) {

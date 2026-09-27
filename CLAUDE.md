@@ -44,7 +44,7 @@ src/
   commands/<group>/  slash commands: karma, clearer, invenchecker, utility
   events/            one file per Discord event
   routes/            health.js (open), admin.js (token auth)
-  utils/             createChannelCommand, format (formatPrice), ranking (toRankedMap)
+  utils/             createChannelCommand, format (formatPrice), pagination, ranking (toRankedMap)
 ```
 
 Services:
@@ -56,9 +56,9 @@ Services:
 | `commandService`           | loads `commands/<group>/*.js`, deploys them to Discord                                     |
 | `healthService`            | `/health` and `/health` command status                                                     |
 | `invencheckerService`      | HTTP client for the invenchecker API (10s timeout)                                         |
-| `invencheckerAlertService` | DMs price alerts, resolves them only once delivered                                        |
+| `invencheckerAlertService` | DMs price alerts (several messages if needed), resolves them only once all are delivered   |
 | `karmaService`             | reaction karma, etiquette reports and cooldown, totals                                     |
-| `leaderboardService`       | weekly snapshot, formatting, posting                                                       |
+| `leaderboardService`       | weekly snapshot, formatting, pages of 20 (`buildLeaderboardMessage`), posting              |
 | `messageService`           | detects qualifying posts, adds karma reactions, stores messages                            |
 | `readyService`             | `onReady`: schedules jobs, validates emojis, sets the first status                         |
 | `schedulerService`         | `schedule()` wrapper around node-cron (UTC, `noOverlap`, errors logged), `stopSchedules()` |
@@ -70,6 +70,8 @@ Services:
 
 - **`src/index.js`** validates env, loads commands (`commandService.loadCommands`) and every `events/*.js`, then, inside `start()`, runs the DB migrations before it starts Express and logs in. A startup failure (e.g. a bad token) logs `FATAL` and exits 1. Every event handler is wrapped in a try/catch that logs, because an error thrown from an async listener would otherwise crash the process. SIGTERM/SIGINT trigger a graceful shutdown (cron jobs, API, Discord client, database).
 - **`commands/<group>/*.js`** each export `{ data: SlashCommandBuilder, execute(interaction) }` and are discovered automatically, so adding a file is all it takes. Errors thrown from `execute` get a generic reply from `events/interactionCreate.js`. Commands that need a guild must call `.setContexts(InteractionContextType.Guild)`; only `/invenchecker` also works in DMs. After changing `data`, deploy commands again (`--deploy-commands` or `POST /admin/deploycommands`).
+- **Buttons**: a button's custom id is `"<commandName>:<args...>"`. `events/interactionCreate.js` routes clicks to that command's optional `handleButton(interaction, args)`. Buttons are stateless: the id carries everything needed to redo the work, so they survive restarts. Keep ids under Discord's 100 character limit.
+- **Embed limits** (4096 description, 1024 per field, 6000 per embed): use `utils/pagination.js` rather than `.slice()`. `chunkLines` splits on whole lines, `sectionsToFields` splits long fields into "(cont.)" fields, `paginateFields` groups fields into pages, and `buildPageButtons` makes the ◀ / x/y / ▶ row. The leaderboard (`leaderboard:<page>`) and `/invenchecker` views (`invenchecker:<view>:<page>:<days>`) are paginated this way.
 - **`utils/createChannelCommand.js`** is a factory for add/remove/list channel-list commands (`type` is the `ServerChannel.type`). Its `add` only accepts channels in the current guild. Anything that acts on a stored channel id (the clearer, the leaderboard post) must also check `channel.guildId` against the server the id was stored for.
 - **`readyService.onReady`** schedules every cron job first, then validates the emoji IDs, so a validation failure can't stop the jobs: status rotation daily, the channel clear at 05:00, the leaderboard send/persist on Sunday at 21:00/21:01, and invenchecker alert DMs every minute.
 - **`routes/`**: `GET /health` (open) and `POST /admin/*`, which requires `Authorization: Bearer <ADMIN_TOKEN>`. The Discord client is available through `req.app.get("client")`.
@@ -95,7 +97,7 @@ All paths are defined in `src/config.js`. `data/` and `log/` are created at runt
 
 ### invenchecker
 
-`services/invencheckerService.js` is the API client; the contract is in [docs/invencheckeropenapi.yaml](docs/invencheckeropenapi.yaml). Account links live in the `InvencheckerUser` table. `/invenchecker` routes each subcommand through a handler table (`ACCOUNT_HANDLERS`); every handler except `account register` gets the user's uid after the reply is deferred and returns the reply to send. Prices are formatted with `utils/format.formatPrice` (£).
+`services/invencheckerService.js` is the API client; the contract is in [docs/invencheckeropenapi.yaml](docs/invencheckeropenapi.yaml). Account links live in the `InvencheckerUser` table. `/invenchecker` routes each subcommand through a handler table (`ACCOUNT_HANDLERS`); every handler except `account register` gets the user's uid after the reply is deferred and returns the reply to send. The list-style views are defined in `VIEWS` (each returns `lines` or `sections`) and rendered with pages by `renderView`. Prices are formatted with `utils/format.formatPrice` (£).
 
 ## Conventions
 

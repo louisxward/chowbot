@@ -9,12 +9,13 @@ const {
 } = require("repositories/karmaWeeklyLeaderboard");
 const { getAllChannels } = require("repositories/serverChannel");
 const { getCachedUsername, setCachedUsername } = require("services/usernameCacheService");
+const { buildPageButtons, clampPage, pageCount } = require("utils/pagination");
 
 const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
 const LRM = "\u200E";
-const MAX_DESCRIPTION = 4096; // Discord's embed description limit
-const USERNAME_FETCH_BATCH = 10;
+// 20 lines of at most ~100 characters stays well under the 4096 embed description limit
+const PAGE_SIZE = 20;
 const MEDALS = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 // Saves everyone's current total as this week's snapshot, which next week's leaderboard
@@ -28,42 +29,28 @@ async function persistKarmaWeeklyLeaderboard() {
   logger.info({ weekId, users: leaderboard.size }, "leaderboard - weekly snapshot saved");
 }
 
-async function buildLeaderboardEmbed(users) {
-  const description = await getKarmaWeeklyLeaderboardFormatted(users);
-  return new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(description);
+// The leaderboard message for one page, with page buttons whose ids are "leaderboard:<page>".
+// The leaderboard command's handleButton serves those clicks.
+async function buildLeaderboardMessage(users, requestedPage = 0) {
+  const { description, page, count } = await getLeaderboardPage(users, requestedPage);
+  const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(description);
+  return { embeds: [embed], components: buildPageButtons((target) => `leaderboard:${target}`, page, count) };
 }
 
-async function getKarmaWeeklyLeaderboardFormatted(users) {
+// One page of the formatted leaderboard. Usernames are only fetched for that page.
+async function getLeaderboardPage(users, requestedPage = 0) {
   const currentMap = await getKarmaLeaderboardMap();
-  if (currentMap.size === 0) {
-    return "Empty";
-  }
-  const weekId = await getPreviousWeekId();
-  const prevMap = await getKarmaWeeklyLeaderboardMapByWeek(weekId);
-  const entries = [...currentMap.entries()];
-  let description = "";
-  // Fetch usernames a batch at a time and stop once the embed is full
-  for (let start = 0; start < entries.length; start += USERNAME_FETCH_BATCH) {
-    const batch = entries.slice(start, start + USERNAME_FETCH_BATCH);
-    const usernames = await Promise.all(batch.map(([userId]) => getUsername(users, userId)));
-    for (let i = 0; i < batch.length; i++) {
-      const [userId, currentEntry] = batch[i];
-      const line = formatLine(currentEntry, prevMap.get(userId), usernames[i]);
-      const shown = start + i;
-      const next = description ? description + JOIN + line : line;
-      const remainingAfter = entries.length - shown - 1;
-      const footer = remainingAfter > 0 ? moreFooter(remainingAfter) : "";
-      if (next.length + footer.length > MAX_DESCRIPTION) {
-        return description + moreFooter(entries.length - shown);
-      }
-      description = next;
-    }
-  }
-  return description;
-}
-
-function moreFooter(count) {
-  return `${JOIN}…and ${count} more`;
+  if (currentMap.size === 0) return { description: "Empty", page: 0, count: 1 };
+  const prevMap = await getKarmaWeeklyLeaderboardMapByWeek(await getPreviousWeekId());
+  const entries = [...currentMap];
+  const count = pageCount(entries.length, PAGE_SIZE);
+  const page = clampPage(requestedPage, count);
+  const pageEntries = entries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const usernames = await Promise.all(pageEntries.map(([userId]) => getUsername(users, userId)));
+  const description = pageEntries
+    .map(([userId, entry], i) => formatLine(entry, prevMap.get(userId), usernames[i]))
+    .join(JOIN);
+  return { description, page, count };
 }
 
 function formatLine(currentEntry, prevEntry, username) {
@@ -120,7 +107,7 @@ function getSafeText(input) {
 async function sendKarmaWeeklyLeaderboard(client) {
   const channels = await getAllChannels("leaderboardChannels");
   if (channels.length === 0) return;
-  const embed = await buildLeaderboardEmbed(client.users);
+  const message = await buildLeaderboardMessage(client.users);
   for (const { serverId, channelId } of channels) {
     const channel = client.channels.cache.get(channelId);
     if (!channel || channel.guildId !== serverId) {
@@ -128,7 +115,7 @@ async function sendKarmaWeeklyLeaderboard(client) {
       continue;
     }
     try {
-      await channel.send({ embeds: [embed] });
+      await channel.send(message);
       logger.info({ serverId, channelId }, "leaderboard - posted");
     } catch (err) {
       logger.error({ err, serverId, channelId }, "leaderboard - failed to post");
@@ -138,7 +125,7 @@ async function sendKarmaWeeklyLeaderboard(client) {
 
 module.exports = {
   persistKarmaWeeklyLeaderboard,
-  buildLeaderboardEmbed,
-  getKarmaWeeklyLeaderboardFormatted,
+  buildLeaderboardMessage,
+  getLeaderboardPage,
   sendKarmaWeeklyLeaderboard
 };
