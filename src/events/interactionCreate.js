@@ -1,33 +1,27 @@
 const { Events, MessageFlags } = require("discord.js");
 const logger = require("logger");
 
+const ERROR_REPLY = { content: "There was an error while executing this command!", flags: MessageFlags.Ephemeral };
+
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
-    logger.info("event - InteractionCreate");
-    logger.info(`- serverId: ${interaction.guildId}`);
-    logger.info(`- userId: ${interaction.user.id}`);
-    logger.info(`- command: ${interaction.commandName}`);
     if (!interaction.isChatInputCommand()) return;
-    const command = interaction.client.commands.get(interaction.commandName);
+    const { commandName, guildId, user } = interaction;
+    logger.info({ command: commandName, serverId: guildId, userId: user.id }, "command - received");
+    const command = interaction.client.commands.get(commandName);
     if (!command) {
-      logger.warn(`Command '${interaction.commandName}' not found`);
+      logger.warn({ command: commandName }, "command - not found");
       return;
     }
     try {
       await command.execute(interaction);
-    } catch (error) {
-      logger.error(error);
+    } catch (err) {
+      logger.error({ err, command: commandName }, "command - failed");
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({
-          content: "There was an error while executing this command!",
-          flags: MessageFlags.Ephemeral
-        });
+        await interaction.followUp(ERROR_REPLY);
       } else {
-        await interaction.reply({
-          content: "There was an error while executing this command!",
-          flags: MessageFlags.Ephemeral
-        });
+        await interaction.reply(ERROR_REPLY);
       }
     }
   }

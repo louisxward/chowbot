@@ -1,3 +1,4 @@
+const { EmbedBuilder, escapeMarkdown } = require("discord.js");
 const logger = require("logger");
 const { getKarmaLeaderboardMap } = require("repositories/karma");
 const {
@@ -6,26 +7,30 @@ const {
   getPreviousWeekId,
   getKarmaWeeklyLeaderboardMapByWeek
 } = require("repositories/karmaWeeklyLeaderboard");
-const { EmbedBuilder, escapeMarkdown } = require("discord.js");
 const { getAllChannels } = require("repositories/serverChannel");
-const { getCachedUsername, setCachedUsername } = require("services/sessionStateStorage");
+const { getCachedUsername, setCachedUsername } = require("services/usernameCacheService");
 
 const SPACING = "\u00A0\u00A0\u00A0";
 const JOIN = "\n\n";
 const LRM = "\u200E";
 const MAX_DESCRIPTION = 4096; // Discord's embed description limit
 const USERNAME_FETCH_BATCH = 10;
+const MEDALS = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
+// Saves everyone's current total as this week's snapshot, which next week's leaderboard
+// compares against
 async function persistKarmaWeeklyLeaderboard() {
-  logger.info("function - persistKarmaWeeklyLeaderboard");
-  const created = new Date().toISOString();
-  logger.info(`- date: ${created}`);
-  const weekId = await createKarmaWeeklyLeaderboardWeek(created);
-  logger.info(`- weekId: ${weekId}`);
-  const map = await getKarmaLeaderboardMap();
-  for (const [userId, e] of map.entries()) {
-    await createKarmaWeeklyLeaderboardUser(weekId, userId, e.value);
+  const weekId = await createKarmaWeeklyLeaderboardWeek(new Date().toISOString());
+  const leaderboard = await getKarmaLeaderboardMap();
+  for (const [userId, { value }] of leaderboard) {
+    await createKarmaWeeklyLeaderboardUser(weekId, userId, value);
   }
+  logger.info({ weekId, users: leaderboard.size }, "leaderboard - weekly snapshot saved");
+}
+
+async function buildLeaderboardEmbed(users) {
+  const description = await getKarmaWeeklyLeaderboardFormatted(users);
+  return new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(description);
 }
 
 async function getKarmaWeeklyLeaderboardFormatted(users) {
@@ -34,7 +39,6 @@ async function getKarmaWeeklyLeaderboardFormatted(users) {
     return "Empty";
   }
   const weekId = await getPreviousWeekId();
-  logger.info(`- previous weekId: ${weekId}`);
   const prevMap = await getKarmaWeeklyLeaderboardMapByWeek(weekId);
   const entries = [...currentMap.entries()];
   let description = "";
@@ -63,95 +67,61 @@ function moreFooter(count) {
 }
 
 function formatLine(currentEntry, prevEntry, username) {
-  // Current
-  const currentScore = currentEntry.value;
-  const currentIndex = currentEntry.index;
-  // Previous
-  let prevScore = 0;
-  let prevIndex = 0;
-  if (prevEntry) {
-    prevScore = prevEntry.value;
-    prevIndex = prevEntry.index;
-  }
-  // Compare
-  const changeScore = currentScore - prevScore;
-  let changeIndex = null;
-  if (prevEntry) {
-    changeIndex = prevIndex - currentIndex;
-  }
-  // Medal
-  let medal = null;
-  if (currentIndex === 1) {
-    medal = `🥇`;
-  } else if (currentIndex === 2) {
-    medal = `🥈`;
-  } else if (currentIndex === 3) {
-    medal = `🥉`;
-  }
-  // Streak
-  let indexString = null;
-  if (changeIndex === null) {
-    indexString = "🐣"; // if user is new
-  } else if (changeIndex > 2 && changeScore > 0) {
-    indexString = "🔥";
-  } else if (changeIndex > 1) {
-    indexString = "⏫";
-  } else if (changeIndex > 0) {
-    indexString = "🔼";
-  } else if (changeIndex === 0) {
-    indexString = "↔️";
-  } else if (changeIndex < -2 && changeScore < 0) {
-    indexString = "💩";
-  } else if (changeIndex < -1) {
-    indexString = "⏬";
-  } else if (changeIndex < 0) {
-    indexString = "🔽";
-  }
-  // Concat
-  const line =
-    `${indexString ? indexString : ""}${SPACING}` +
-    `${medal ? medal : currentIndex + "."}${SPACING}` +
-    `${currentIndex < 4 ? "**" + username + "**" : username}:${SPACING}` +
-    `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
-    `${changeScore > 0 ? "+" + changeScore : changeScore}${SPACING}` +
-    `${changeScore > 6 || changeScore < -6 ? "**" : ""}` +
-    `/${SPACING}${currentScore}`;
-  return line;
+  const { value: currentScore, index: currentIndex } = currentEntry;
+  const changeScore = currentScore - (prevEntry?.value ?? 0);
+  const changeIndex = prevEntry ? prevEntry.index - currentIndex : null;
+  const movement = getMovementIcon(changeIndex, changeScore);
+  const rank = MEDALS[currentIndex] ?? `${currentIndex}.`;
+  const name = currentIndex <= 3 ? `**${username}**` : username;
+  const bold = Math.abs(changeScore) > 6 ? "**" : "";
+  const signedChange = changeScore > 0 ? `+${changeScore}` : `${changeScore}`;
+  return (
+    `${movement}${SPACING}${rank}${SPACING}${name}:${SPACING}` +
+    `${bold}${signedChange}${SPACING}${bold}/${SPACING}${currentScore}`
+  );
 }
 
+// changeIndex is places moved up since last week (negative for down), or null for a new user
+function getMovementIcon(changeIndex, changeScore) {
+  if (changeIndex === null) return "🐣";
+  if (changeIndex > 2 && changeScore > 0) return "🔥";
+  if (changeIndex > 1) return "⏫";
+  if (changeIndex > 0) return "🔼";
+  if (changeIndex === 0) return "↔️";
+  if (changeIndex < -2 && changeScore < 0) return "💩";
+  if (changeIndex < -1) return "⏬";
+  return "🔽";
+}
+
+// Cached display name, then Discord, then the raw user id if Discord can't find them
 async function getUsername(users, userId) {
   if (!userId) throw new Error("getUsername - userId is required");
   const cached = await getCachedUsername(userId);
   if (cached) return cached;
   try {
     const user = await users.fetch(userId);
-    const safeUsername = getSafeText(user.displayName);
-    const username = safeUsername ? safeUsername : user.username;
+    const username = getSafeText(user.displayName) ?? user.username;
     await setCachedUsername(userId, username);
     return username;
-  } catch (error) {
-    //logger.warn(error);
+  } catch (err) {
+    logger.debug({ err, userId }, "leaderboard - user not found, showing id");
+    return userId;
   }
-  return userId;
 }
 
+// Escapes markdown and ends with a left-to-right mark so right-to-left names don't reorder the line
 function getSafeText(input) {
   if (!input || typeof input !== "string") return null;
-  let clean = escapeMarkdown(input);
-  if (clean.length === 0) return null;
-  clean = clean + LRM;
-  return clean;
+  const clean = escapeMarkdown(input);
+  return clean.length === 0 ? null : clean + LRM;
 }
 
+// Posts the leaderboard to every configured channel that belongs to the server that set it up
 async function sendKarmaWeeklyLeaderboard(client) {
-  logger.info("function - sendKarmaWeeklyLeaderboard");
   const channels = await getAllChannels("leaderboardChannels");
   if (channels.length === 0) return;
-  const content = await getKarmaWeeklyLeaderboardFormatted(client.users);
-  const embed = new EmbedBuilder().setTitle("Karma Leaderboard").setDescription(content);
+  const embed = await buildLeaderboardEmbed(client.users);
   for (const { serverId, channelId } of channels) {
-    logger.info(`- serverId: ${serverId}`);
-    logger.info(`- channelId: ${channelId}`);
     const channel = client.channels.cache.get(channelId);
     if (!channel || channel.guildId !== serverId) {
       logger.error({ serverId, channelId }, "leaderboard - skipping channel, not found in this server");
@@ -159,14 +129,16 @@ async function sendKarmaWeeklyLeaderboard(client) {
     }
     try {
       await channel.send({ embeds: [embed] });
-    } catch (error) {
-      logger.error({ err: error, serverId, channelId }, "leaderboard - failed to send");
+      logger.info({ serverId, channelId }, "leaderboard - posted");
+    } catch (err) {
+      logger.error({ err, serverId, channelId }, "leaderboard - failed to post");
     }
   }
 }
 
 module.exports = {
   persistKarmaWeeklyLeaderboard,
+  buildLeaderboardEmbed,
   getKarmaWeeklyLeaderboardFormatted,
   sendKarmaWeeklyLeaderboard
 };

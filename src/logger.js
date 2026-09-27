@@ -1,7 +1,6 @@
-const pino = require("pino");
-
 const fs = require("node:fs");
 const path = require("node:path");
+const pino = require("pino");
 const { LOG_LEVEL } = require("config");
 
 const loggerPath = path.join(__dirname, "../log");

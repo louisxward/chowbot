@@ -1,81 +1,20 @@
-const { ActivityType, EmbedBuilder } = require("discord.js");
-const cron = require("node-cron");
 const logger = require("logger");
-
-const { scheduledClearer } = require("services/messageClearer");
+const { validateEmojis, setEmojisValid } = require("services/applicationConfigService");
+const { clearAllChannels } = require("services/clearerService");
+const { sendInvencheckerAlerts } = require("services/invencheckerAlertService");
 const { persistKarmaWeeklyLeaderboard, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
-const { getAppConfig, setEmojisValid } = require("services/applicationConfigService");
-const { getAllUsers } = require("repositories/invencheckerUser");
-const { getUserAlerts, resolveAllAlerts } = require("services/invencheckerService");
+const { schedule } = require("services/schedulerService");
+const { rotateStatus } = require("services/statusService");
 
-const tasks = [];
-
-// A run is skipped if the previous one is still going
-function schedule(expression, name, fn) {
-  const task = cron.schedule(
-    expression,
-    async () => {
-      try {
-        logger.info(`scheduled - ${name}`);
-        await fn();
-      } catch (error) {
-        logger.error({ err: error }, `scheduled - ${name} failed`);
-      }
-    },
-    { timezone: "UTC", name, noOverlap: true }
-  );
-  tasks.push(task);
-}
-
-function stopSchedules() {
-  for (const task of tasks.splice(0)) task.stop();
-}
-
-async function validateEmojis(client) {
-  const appEmojis = await client.application.emojis.fetch();
-  const { emojiUpvoteId, emojiDownvoteId } = await getAppConfig();
-  let allValid = true;
-  for (const [varName, emojiId] of Object.entries({ emojiUpvoteId, emojiDownvoteId })) {
-    if (!emojiId) {
-      logger.warn(`post - ${varName} is missing from applicationConfig`);
-      allValid = false;
-      continue;
-    }
-    const emoji = appEmojis.get(emojiId);
-    if (!emoji) {
-      logger.warn(`post - emoji not found for ${varName} (id: ${emojiId})`);
-      allValid = false;
-    } else {
-      logger.info(`post - emoji ok: ${varName} -> ${emoji.name}`);
-    }
-  }
-  setEmojisValid(allValid);
-}
-
-function mapStatuses(statuses) {
-  return statuses.map(({ name, type }) => ({ name, type: ActivityType[type] }));
-}
-
-async function readyup(client) {
-  let currentIndex = 0;
-
-  schedule("0 0 * * *", "statusUpdate", async () => {
-    const { statuses = [] } = await getAppConfig();
-    const mapped = mapStatuses(statuses);
-    if (mapped.length === 0) return;
-    const status = mapped[currentIndex % mapped.length];
-    await client.user.setActivity(status.name, { type: status.type });
-    currentIndex = (currentIndex + 1) % mapped.length;
-  });
-
-  schedule("0 5 * * *", "scheduledClearer", () => scheduledClearer(client));
-
+// Runs once the Discord client is ready. Jobs are scheduled first, so a failure in the later
+// steps can't stop them from running.
+async function onReady(client) {
+  schedule("0 0 * * *", "statusRotation", () => rotateStatus(client));
+  schedule("0 5 * * *", "clearChannels", () => clearAllChannels(client));
   schedule("0 21 * * 0", "sendKarmaWeeklyLeaderboard", () => sendKarmaWeeklyLeaderboard(client));
   schedule("1 21 * * 0", "persistKarmaWeeklyLeaderboard", () => persistKarmaWeeklyLeaderboard());
-
   schedule("*/1 * * * *", "invencheckerAlerts", () => sendInvencheckerAlerts(client));
 
-  // Scheduling comes first so a failure below can't stop the jobs from running
   try {
     await validateEmojis(client);
   } catch (err) {
@@ -83,44 +22,11 @@ async function readyup(client) {
     logger.error({ err }, "ready - emoji validation failed, karma reactions disabled");
   }
 
-  // Set initial status
   try {
-    const { statuses: initialStatuses = [] } = await getAppConfig();
-    const initialMapped = mapStatuses(initialStatuses);
-    if (initialMapped.length > 0) {
-      await client.user.setActivity(initialMapped[0].name, { type: initialMapped[0].type });
-      currentIndex = 1;
-    }
+    await rotateStatus(client);
   } catch (err) {
     logger.error({ err }, "ready - failed to set initial status");
   }
 }
 
-// DMs each registered user their new price alerts. Alerts are only resolved once the DM is
-// delivered, so a failed DM is retried on the next run. One user's failure doesn't stop the rest.
-async function sendInvencheckerAlerts(client) {
-  const users = await getAllUsers();
-  for (const { discordId, uid } of users) {
-    try {
-      const alerts = await getUserAlerts(uid);
-      if (!alerts.length) continue;
-      const embed = new EmbedBuilder()
-        .setTitle("Price Alert")
-        .setColor(0xffa500)
-        .setDescription(
-          alerts
-            .map((a) => `**${a.market_hash_name}** — +${a.spike_pct.toFixed(1)}% @ £${a.price_at_alert.toFixed(2)}`)
-            .join("\n")
-            .slice(0, 4096)
-        )
-        .setTimestamp();
-      const user = await client.users.fetch(discordId);
-      await user.send({ embeds: [embed] });
-      await resolveAllAlerts(uid);
-    } catch (err) {
-      logger.warn({ err, discordId }, "invencheckerAlerts - failed, will retry next run");
-    }
-  }
-}
-
-module.exports = { readyup, validateEmojis, stopSchedules, sendInvencheckerAlerts };
+module.exports = { onReady };

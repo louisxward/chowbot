@@ -1,12 +1,12 @@
 const crypto = require("node:crypto");
+const express = require("express");
 const config = require("config");
 const logger = require("logger");
-const { clearSessionState } = require("services/sessionStateStorage");
-const { reloadAppConfig } = require("services/applicationConfigService");
-const { validateEmojis } = require("services/readyService");
+const { reloadAppConfig, validateEmojis } = require("services/applicationConfigService");
+const { deployCommands } = require("services/commandService");
 const { sendKarmaWeeklyLeaderboard, persistKarmaWeeklyLeaderboard } = require("services/leaderboardService");
-const { deployCommands } = require("services/commandDeployer");
-const express = require("express");
+const { clearUsernameCache } = require("services/usernameCacheService");
+
 const router = express.Router();
 
 // Every admin route needs "Authorization: Bearer <ADMIN_TOKEN>". Without ADMIN_TOKEN set, the
@@ -35,7 +35,7 @@ function tokensMatch(a, b) {
 router.use(requireAdminToken);
 
 router.post("/clearstate", async (_req, res) => {
-  await clearSessionState();
+  await clearUsernameCache();
   res.json({ ok: true });
 });
 
@@ -54,7 +54,7 @@ router.post("/persistKarmaWeeklyLeaderboard", async (_req, res) => {
 
 router.post("/sendLeaderboardRoute", async (req, res) => {
   await sendKarmaWeeklyLeaderboard(req.app.get("client")).catch((err) =>
-    logger.error({ err }, "admin - sendleaderboard failed")
+    logger.error({ err }, "admin - send leaderboard failed")
   );
   res.status(202).json({ ok: true });
 });
@@ -65,7 +65,7 @@ router.post("/deploycommands", async (req, res) => {
     const count = await deployCommands(serverId);
     res.json({ ok: true, serverId: serverId ?? "global", count });
   } catch (err) {
-    logger.error({ err }, "admin - deploycommands failed");
+    logger.error({ err, serverId }, "admin - deploy commands failed");
     res.status(502).json({ error: `Discord rejected the deploy: ${err.message}` });
   }
 });

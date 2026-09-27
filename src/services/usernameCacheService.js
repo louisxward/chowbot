@@ -11,8 +11,8 @@ async function setCachedUsername(userId, username) {
   await setUsername(userId, username, Date.now());
 }
 
-async function clearSessionState() {
+async function clearUsernameCache() {
   await clearUsernames();
 }
 
-module.exports = { getCachedUsername, setCachedUsername, clearSessionState };
+module.exports = { getCachedUsername, setCachedUsername, clearUsernameCache };

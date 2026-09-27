@@ -1,16 +1,10 @@
-jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
-jest.mock("services/messageClearer", () => ({ scheduledClearer: jest.fn() }));
-jest.mock("services/leaderboardService", () => ({
-  persistKarmaWeeklyLeaderboard: jest.fn(),
-  sendKarmaWeeklyLeaderboard: jest.fn()
-}));
-jest.mock("services/applicationConfigService", () => ({ getAppConfig: jest.fn(), setEmojisValid: jest.fn() }));
+jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
 jest.mock("repositories/invencheckerUser", () => ({ getAllUsers: jest.fn() }));
 jest.mock("services/invencheckerService", () => ({ getUserAlerts: jest.fn(), resolveAllAlerts: jest.fn() }));
 
 const { getAllUsers } = require("repositories/invencheckerUser");
 const { getUserAlerts, resolveAllAlerts } = require("services/invencheckerService");
-const { sendInvencheckerAlerts } = require("services/readyService");
+const { sendInvencheckerAlerts } = require("services/invencheckerAlertService");
 
 const alert = { market_hash_name: "AK-47 | Redline", spike_pct: 12.345, price_at_alert: 9.5 };
 

@@ -1,5 +1,5 @@
 const logger = require("logger");
-const { getDb } = require("services/databaseService");
+const { getDb } = require("database");
 
 // Returns the cached username if it was cached after cachedAfter (ms since epoch)
 async function getUsername(userId, cachedAfter) {
@@ -21,7 +21,7 @@ async function setUsername(userId, username, cachedAt) {
 }
 
 async function clearUsernames() {
-  logger.info("repository - clearUsernames");
+  logger.debug("repository - clearUsernames");
   getDb().prepare("DELETE FROM UsernameCache").run();
 }
 

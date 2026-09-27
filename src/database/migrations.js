@@ -1,8 +1,9 @@
 const fs = require("node:fs");
-const Database = require("better-sqlite3");
 const config = require("config");
 const logger = require("logger");
 
+// Applied in order by database/index.js and tracked with PRAGMA user_version. Append new
+// migrations to the end; never edit one that has shipped. Each is SQL or a function taking the db.
 const MIGRATIONS = [
   // v1 — initial schema
   `
@@ -125,36 +126,8 @@ function readLegacyJson(filePath) {
   if (!filePath || !fs.existsSync(filePath)) return {};
   const content = fs.readFileSync(filePath, "utf8");
   if (!content.trim()) return {};
-  logger.info(`database - importing ${filePath}`);
+  logger.info({ filePath }, "database - importing legacy json");
   return JSON.parse(content);
 }
 
-let db = null;
-
-// Opens the shared connection and applies pending migrations. A migration is either SQL or a
-// function taking the db. Each migration and its user_version bump run in one transaction, so a
-// failed migration leaves the db untouched.
-function init() {
-  db = new Database(config.DB_PATH);
-  const version = db.pragma("user_version", { simple: true });
-  for (let i = version; i < MIGRATIONS.length; i++) {
-    db.transaction(() => {
-      const migration = MIGRATIONS[i];
-      if (typeof migration === "function") migration(db);
-      else db.exec(migration);
-      db.pragma(`user_version = ${i + 1}`);
-    })();
-  }
-}
-
-function getDb() {
-  if (!db) throw new Error("database not initialised, call init() first");
-  return db;
-}
-
-function close() {
-  db?.close();
-  db = null;
-}
-
-module.exports = { init, getDb, close, MIGRATIONS };
+module.exports = { MIGRATIONS };

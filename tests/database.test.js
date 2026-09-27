@@ -30,7 +30,7 @@ beforeEach(() => {
   mockDbPath = path.join(tmpDir, "chowbot.db");
   mockDataDir = tmpDir;
   jest.resetModules();
-  databaseService = require("services/databaseService");
+  databaseService = require("database");
 });
 
 afterEach(() => {
@@ -135,7 +135,7 @@ describe("migrations v3 to v5", () => {
   // Builds a database at an older version by running the real migrations up to it
   function createDatabaseAtVersion(version) {
     const db = new Database(mockDbPath);
-    for (const migration of databaseService.MIGRATIONS.slice(0, version)) {
+    for (const migration of require("database/migrations").MIGRATIONS.slice(0, version)) {
       if (typeof migration === "function") migration(db);
       else db.exec(migration);
     }
@@ -292,7 +292,7 @@ describe("repositories", () => {
   });
 
   test("sessionStateStorage keeps usernames for 12 hours", async () => {
-    const { getCachedUsername, setCachedUsername } = require("services/sessionStateStorage");
+    const { getCachedUsername, setCachedUsername } = require("services/usernameCacheService");
     const now = Date.now();
     const spy = jest.spyOn(Date, "now").mockReturnValue(now);
     await setCachedUsername("u1", "Alice");
@@ -306,16 +306,6 @@ describe("repositories", () => {
   test("etiquette karma stores null message and emoji", async () => {
     await karma.createKarma("g1", null, "u1", "u2", null, 1, "helpful", 1);
     expect(await karma.getKarmaTotalByUserId("u1")).toBe(1);
-  });
-
-  test("getKarmaByMessageAndEmoji lists voters", async () => {
-    await karma.createKarma("g1", "m1", "u1", "u2", "up", 1, null, 0);
-    await karma.createKarma("g1", "m1", "u1", "u3", "up", 1, null, 0);
-    await karma.createKarma("g1", "m1", "u1", "u4", "down", -1, null, 0);
-    expect(await karma.getKarmaByMessageAndEmoji("g1", "m1", "up")).toEqual([
-      { fromUserId: "u2" },
-      { fromUserId: "u3" }
-    ]);
   });
 
   test("getKarmaLeaderboardMap ranks users and shares rank on ties", async () => {
@@ -386,7 +376,10 @@ describe("repositories", () => {
     const { createServer, deleteServer } = require("repositories/server");
     await createServer("g1", "Guild", "owner");
     await createServer("g1", "Guild", "owner");
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("UNIQUE"));
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ err: expect.objectContaining({ message: expect.stringContaining("UNIQUE") }) }),
+      expect.any(String)
+    );
     await deleteServer("g1");
     expect(databaseService.getDb().prepare("SELECT COUNT(*) AS n FROM Server").get().n).toBe(0);
   });

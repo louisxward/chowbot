@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, MessageFlags, InteractionContextType } = require("discord.js");
 const { reportEtiquette } = require("services/karmaService");
-const logger = require("logger");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,31 +13,17 @@ module.exports = {
     .addStringOption((option) => option.setName("reason").setDescription("please explain...").setRequired(true)),
 
   async execute(interaction) {
-    const userId = interaction.user.id;
     const who = interaction.options.getUser("who");
-    if (userId === who.id) {
-      await interaction.reply({
-        content: "Sorry but you cannot report yourself",
-        flags: MessageFlags.Ephemeral
-      });
+    if (who.id === interaction.user.id) {
+      await interaction.reply({ content: "Sorry but you cannot report yourself", flags: MessageFlags.Ephemeral });
       return;
     }
     const good = interaction.options.getBoolean("good");
     const reason = interaction.options.getString("reason");
-    logger.info(`- whoId: ${who.id}`);
-    logger.info(`- good: ${good}`);
-    logger.info(`- reason: ${reason}`);
-    const accepted = await reportEtiquette(interaction.guildId, who.id, userId, good, reason);
-    if (!accepted) {
-      await interaction.reply({
-        content: `You've already reported ${who.displayName} in the last 24 hours`,
-        flags: MessageFlags.Ephemeral
-      });
-      return;
-    }
-    await interaction.reply({
-      content: "Thank you for your input, please leave this with us as we investigate further",
-      flags: MessageFlags.Ephemeral
-    });
+    const accepted = await reportEtiquette(interaction.guildId, who.id, interaction.user.id, good, reason);
+    const content = accepted
+      ? "Thank you for your input, please leave this with us as we investigate further"
+      : `You've already reported ${who.displayName} in the last 24 hours`;
+    await interaction.reply({ content, flags: MessageFlags.Ephemeral });
   }
 };

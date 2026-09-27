@@ -1,4 +1,4 @@
-jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
+jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
 jest.mock("repositories/karma", () => ({ getKarmaLeaderboardMap: jest.fn() }));
 jest.mock("repositories/karmaWeeklyLeaderboard", () => ({
   createKarmaWeeklyLeaderboardWeek: jest.fn(),
@@ -7,19 +7,19 @@ jest.mock("repositories/karmaWeeklyLeaderboard", () => ({
   getKarmaWeeklyLeaderboardMapByWeek: jest.fn()
 }));
 jest.mock("repositories/serverChannel", () => ({ getAllChannels: jest.fn() }));
-jest.mock("services/sessionStateStorage", () => {
+jest.mock("services/usernameCacheService", () => {
   const cache = new Map();
   return {
     getCachedUsername: jest.fn(async (id) => cache.get(id) ?? null),
     setCachedUsername: jest.fn(async (id, name) => cache.set(id, name)),
-    clearSessionState: jest.fn(async () => cache.clear())
+    clearUsernameCache: jest.fn(async () => cache.clear())
   };
 });
 
 const { getKarmaLeaderboardMap } = require("repositories/karma");
 const { getKarmaWeeklyLeaderboardMapByWeek } = require("repositories/karmaWeeklyLeaderboard");
 const { getAllChannels } = require("repositories/serverChannel");
-const { clearSessionState } = require("services/sessionStateStorage");
+const { clearUsernameCache } = require("services/usernameCacheService");
 const { getKarmaWeeklyLeaderboardFormatted, sendKarmaWeeklyLeaderboard } = require("services/leaderboardService");
 
 const users = { fetch: jest.fn(async (id) => ({ displayName: `name_${id}`, username: id })) };
@@ -29,7 +29,7 @@ const board = (rows) => new Map(rows.map(([userId, index, value]) => [userId, { 
 
 beforeEach(async () => {
   jest.clearAllMocks();
-  await clearSessionState();
+  await clearUsernameCache();
 });
 
 describe("getKarmaWeeklyLeaderboardFormatted", () => {

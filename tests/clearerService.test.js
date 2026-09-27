@@ -1,9 +1,9 @@
-jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
+jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
 jest.mock("repositories/serverChannel", () => ({ getAllChannels: jest.fn(), getChannels: jest.fn() }));
 
 const logger = require("logger");
 const { getAllChannels } = require("repositories/serverChannel");
-const { clearChannel, scheduledClearer } = require("services/messageClearer");
+const { clearChannel, clearAllChannels } = require("services/clearerService");
 
 // A channel whose history is served in pages, like channel.messages.fetch({ limit, before })
 function makeChannel(guildId, pages) {
@@ -81,7 +81,7 @@ describe("clearChannel", () => {
   });
 });
 
-describe("scheduledClearer", () => {
+describe("clearAllChannels", () => {
   test("clears each configured channel in its own server only", async () => {
     const mine = makeChannel("g1", [["m1"]]);
     const theirs = makeChannel("g2", [["m2"]]);
@@ -89,7 +89,7 @@ describe("scheduledClearer", () => {
       { serverId: "g1", channelId: "mine" },
       { serverId: "g1", channelId: "theirs" }
     ]);
-    await run(scheduledClearer(clientWith({ mine, theirs })));
+    await run(clearAllChannels(clientWith({ mine, theirs })));
     expect(mine.deleted).toEqual(["m1"]);
     expect(theirs.deleted).toEqual([]);
   });

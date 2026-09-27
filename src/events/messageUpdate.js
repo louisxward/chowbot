@@ -1,9 +1,9 @@
 const { Events } = require("discord.js");
-const { handleMessageEvent } = require("services/contentDetector");
+const { handleMessage } = require("services/messageService");
 
 module.exports = {
   name: Events.MessageUpdate,
-  async execute(oldMessage, newMessage) {
-    await handleMessageEvent(newMessage, true);
+  async execute(_oldMessage, newMessage) {
+    await handleMessage(newMessage, true);
   }
 };

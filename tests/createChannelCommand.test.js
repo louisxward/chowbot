@@ -7,7 +7,7 @@ jest.mock("repositories/serverChannel", () => ({
 const { addChannel, removeChannel, getChannels } = require("repositories/serverChannel");
 const { createChannelCommand } = require("utils/createChannelCommand");
 
-const command = createChannelCommand({ name: "clearchannel", description: "Test channels", key: "clearChannels" });
+const command = createChannelCommand({ name: "clearchannel", description: "Test channels", type: "clearChannels" });
 
 function makeInteraction(sub, { channel, channelId } = {}) {
   return {

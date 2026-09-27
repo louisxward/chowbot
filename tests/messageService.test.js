@@ -1,7 +1,7 @@
-jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
-jest.mock("config", () => ({ APPLICATION_CONFIG_PATH: "/fake/applicationConfig.json" }));
-jest.mock("services/storageHelper", () => ({
-  readFile: jest.fn().mockResolvedValue({
+jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
+jest.mock("repositories/message", () => ({ upsertMessage: jest.fn() }));
+jest.mock("services/applicationConfigService", () => ({
+  getAppConfig: jest.fn().mockResolvedValue({
     emojiUpvoteId: "upvote123",
     emojiDownvoteId: "downvote456",
     domainList: [
@@ -14,10 +14,11 @@ jest.mock("services/storageHelper", () => ({
       "gyazo.com/",
       "twitch.com/"
     ]
-  })
+  }),
+  areEmojisValid: jest.fn().mockReturnValue(true)
 }));
 
-const { contentDetector, checkMessageAge } = require("services/contentDetector");
+const { contentDetector, checkMessageAge } = require("services/messageService");
 
 describe("contentDetector", () => {
   const makeMessage = ({ embeds = [], attachments = [] } = {}) => ({

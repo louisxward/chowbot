@@ -1,27 +1,23 @@
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType } = require("discord.js");
-const logger = require("logger");
-const { addKarmaReactions } = require("services/contentDetector");
 const { areEmojisValid } = require("services/applicationConfigService");
+const { addKarmaReactions } = require("services/messageService");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("react")
     .setDescription("Manually react to a message in this channel")
     .setContexts(InteractionContextType.Guild)
-    .addStringOption((option) => option.setName("message_id").setDescription("id of the message").setRequired(true))
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+    .addStringOption((option) => option.setName("message_id").setDescription("id of the message").setRequired(true)),
+
   async execute(interaction) {
     if (!areEmojisValid()) {
       await interaction.reply({ content: "emoji are ids not valid", flags: MessageFlags.Ephemeral });
       return;
     }
-    const inputMessageId = interaction.options.getString("message_id");
-    logger.info(`- inputMessageId: ${inputMessageId}`);
-    let message;
-    try {
-      message = await interaction.channel.messages.fetch(inputMessageId);
-    } catch (error) {
-      logger.error(error);
+    const messageId = interaction.options.getString("message_id");
+    const message = await interaction.channel.messages.fetch(messageId).catch(() => null);
+    if (!message) {
       await interaction.reply({ content: "message_id is invalid", flags: MessageFlags.Ephemeral });
       return;
     }

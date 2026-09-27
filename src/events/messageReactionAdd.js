@@ -1,9 +1,9 @@
 const { Events } = require("discord.js");
-const { handleEvent } = require("services/karmaService");
+const { handleReaction } = require("services/karmaService");
 
 module.exports = {
   name: Events.MessageReactionAdd,
   async execute(reaction, user) {
-    await handleEvent(reaction, user, true);
+    await handleReaction(reaction, user, true);
   }
 };

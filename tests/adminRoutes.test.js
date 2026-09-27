@@ -1,23 +1,22 @@
 let mockAdminToken;
 
-jest.mock("logger", () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
+jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
 jest.mock("config", () => ({
   get ADMIN_TOKEN() {
     return mockAdminToken;
   }
 }));
-jest.mock("services/sessionStateStorage", () => ({ clearSessionState: jest.fn() }));
-jest.mock("services/applicationConfigService", () => ({ reloadAppConfig: jest.fn() }));
-jest.mock("services/readyService", () => ({ validateEmojis: jest.fn() }));
+jest.mock("services/usernameCacheService", () => ({ clearUsernameCache: jest.fn() }));
+jest.mock("services/applicationConfigService", () => ({ reloadAppConfig: jest.fn(), validateEmojis: jest.fn() }));
 jest.mock("services/leaderboardService", () => ({
   sendKarmaWeeklyLeaderboard: jest.fn().mockResolvedValue(),
   persistKarmaWeeklyLeaderboard: jest.fn().mockResolvedValue()
 }));
-jest.mock("services/commandDeployer", () => ({ deployCommands: jest.fn() }));
+jest.mock("services/commandService", () => ({ deployCommands: jest.fn() }));
 jest.mock("services/healthService", () => ({ getStatus: jest.fn() }));
 
-const { clearSessionState } = require("services/sessionStateStorage");
-const { deployCommands } = require("services/commandDeployer");
+const { clearUsernameCache } = require("services/usernameCacheService");
+const { deployCommands } = require("services/commandService");
 const { getStatus } = require("services/healthService");
 const { createApp } = require("app");
 
@@ -51,24 +50,24 @@ describe("admin auth", () => {
   test("rejects a request with no token", async () => {
     const res = await post("/admin/clearstate");
     expect(res.status).toBe(401);
-    expect(clearSessionState).not.toHaveBeenCalled();
+    expect(clearUsernameCache).not.toHaveBeenCalled();
   });
 
   test("rejects a wrong token", async () => {
     expect((await post("/admin/clearstate", { token: "nope" })).status).toBe(401);
-    expect(clearSessionState).not.toHaveBeenCalled();
+    expect(clearUsernameCache).not.toHaveBeenCalled();
   });
 
   test("accepts the right token", async () => {
     const res = await post("/admin/clearstate", { token: "s3cret" });
     expect(res.status).toBe(200);
-    expect(clearSessionState).toHaveBeenCalled();
+    expect(clearUsernameCache).toHaveBeenCalled();
   });
 
   test("is disabled when ADMIN_TOKEN is not set", async () => {
     mockAdminToken = undefined;
     expect((await post("/admin/clearstate", { token: "anything" })).status).toBe(503);
-    expect(clearSessionState).not.toHaveBeenCalled();
+    expect(clearUsernameCache).not.toHaveBeenCalled();
   });
 });
 

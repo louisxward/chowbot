@@ -4,19 +4,18 @@ try {
 } catch (err) {
   if (err.code !== "ENOENT") throw err;
 }
+// Must run before any bare require("services/...") style import below
 require("app-module-path").addPath(__dirname);
 
-const { Client, Collection, Events, GatewayIntentBits, Partials } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
-
+const { Client, Collection, Events, GatewayIntentBits, Partials } = require("discord.js");
 const config = require("config");
 const logger = require("logger");
-const { init, close: closeDatabase } = require("services/databaseService");
+const { init: initDatabase, close: closeDatabase } = require("database");
 const { getAppConfig } = require("services/applicationConfigService");
-const { deployCommands } = require("services/commandDeployer");
-const { stopSchedules } = require("services/readyService");
-const { loadCommands } = require("utils/loadCommands");
+const { loadCommands, deployCommands } = require("services/commandService");
+const { stopSchedules } = require("services/schedulerService");
 const { createApp } = require("./app");
 
 // Anything that slips past a handler is logged rather than taking the bot down
@@ -39,10 +38,7 @@ getAppConfig()
 const REQUIRED_VARS = ["TOKEN", "CLIENT_ID"];
 const missing = REQUIRED_VARS.filter((key) => !process.env[key]);
 if (missing.length > 0) {
-  logger.fatal(
-    { missingVariables: missing },
-    `startup - missing required environment variables: ${missing.join(", ")}`
-  );
+  logger.fatal({ missing }, "startup - missing required environment variables");
   process.exit(1);
 }
 if (!config.ADMIN_TOKEN) logger.warn("startup - ADMIN_TOKEN is not set, admin API is disabled");
@@ -51,7 +47,6 @@ if (!config.ADMIN_TOKEN) logger.warn("startup - ADMIN_TOKEN is not set, admin AP
 fs.mkdirSync(path.join(__dirname, "../data"), { recursive: true });
 
 // Client
-logger.info("startup - client init");
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -65,14 +60,10 @@ const client = new Client({
 client.on(Events.Error, (err) => logger.error({ err }, "client - error"));
 
 // Commands
-logger.info("startup - import commands");
-client.commands = new Collection();
-for (const command of loadCommands()) {
-  client.commands.set(command.data.name, command);
-}
+client.commands = new Collection(loadCommands().map((command) => [command.data.name, command]));
+logger.info({ count: client.commands.size }, "startup - commands loaded");
 
 // Events. A failing handler is logged and doesn't affect other events.
-logger.info("startup - import events");
 for (const file of fs.readdirSync(path.join(__dirname, "events")).filter((f) => f.endsWith(".js"))) {
   const event = require(path.join(__dirname, "events", file));
   client[event.once ? "once" : "on"](event.name, async (...args) => {
@@ -89,21 +80,17 @@ let server;
 
 // Database migrations must finish before the API or Discord events can touch the db
 async function start() {
-  logger.info("startup - database");
-  init();
+  initDatabase();
+  logger.info("startup - database ready");
 
   server = app.listen(config.PORT, () => {
-    logger.info({ port: config.PORT }, "startup - api");
+    logger.info({ port: config.PORT }, "startup - api listening");
   });
 
-  // Login
-  logger.info("startup - login");
   await client.login(config.TOKEN);
 
-  // Deploy commands if flag is set
   if (process.argv.includes("--deploy-commands")) {
-    logger.info("startup - deploying commands (--deploy-commands flag)");
-    deployCommands().catch((err) => logger.error({ err }, "startup - deployCommands failed"));
+    deployCommands().catch((err) => logger.error({ err }, "startup - deploy commands failed"));
   }
 }
 
