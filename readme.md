@@ -39,8 +39,6 @@ Upgrading an existing install? Follow [deployment.txt](deployment.txt).
 - invenchecker account links, managed by `/invenchecker account register`
 - the leaderboard's Discord username cache. Entries expire after 12 hours, and `POST /admin/clearstate` clears it
 
-Earlier versions kept the channel lists in `data/serverConfig.json`, the invenchecker links in `data/userConfig.json` and the username cache in `data/sessionState.json`. They are imported into the database once, on the first start after upgrading, and the files are no longer used after that.
-
 ---
 
 ### applicationConfig.json — managed manually

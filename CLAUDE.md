@@ -38,7 +38,7 @@ src/
   app.js             Express app (createApp)
   config.js          env vars and file paths
   logger.js          pino, LOG_LEVEL
-  database/          index.js (init, getDb, close), migrations.js (MIGRATIONS)
+  database/          index.js (init, getDb, close), migrations.js (BASELINE_VERSION, SCHEMA, MIGRATIONS)
   repositories/      one file per table, all SQL lives here
   services/          business logic, one concern per file (see below)
   commands/<group>/  slash commands: karma, clearer, invenchecker, utility
@@ -79,11 +79,9 @@ Services:
 
 ### Persistence
 
-1. **SQLite** (`data/chowbot.db`) through **better-sqlite3**, which is synchronous. `database.init()` opens one shared connection and applies `database/migrations.js`, an ordered `MIGRATIONS` array tracked by `PRAGMA user_version`. Each migration runs in its own transaction and is either SQL or a function taking the db (v4 and v5 use one to import the legacy JSON files). **To change the schema, append a new entry. Never edit an existing one.** Repositories call `getDb().prepare(sql).run/get/all(...params)` and never open or close connections. Repository functions stay `async` so callers don't change. better-sqlite3 rejects JS booleans as parameters, so pass `1`/`0` instead.
+1. **SQLite** (`data/chowbot.db`) through **better-sqlite3**, which is synchronous. `database.init()` opens one shared connection and brings the schema up to date, tracked by `PRAGMA user_version`. A new database gets `SCHEMA` at `BASELINE_VERSION` (5, the version every deployment had reached when the old migrations were removed); an unversioned or older database is refused, pointing at commit 3fd77de, which can still upgrade it. After that, `MIGRATIONS` applies in order (the first takes the database to version 6), each in its own transaction and either SQL or a function taking the db. **To change the schema, append a new entry to `MIGRATIONS`. Never edit an existing one, and never change `SCHEMA` without a matching migration.** Repositories call `getDb().prepare(sql).run/get/all(...params)` and never open or close connections. Repository functions stay `async` so callers don't change. better-sqlite3 rejects JS booleans as parameters, so pass `1`/`0` instead.
    Tables: `Karma`, `KarmaWeeklyLeaderboardWeek`/`User`, `Message`, `Server`, `ServerChannel` (per-guild channel lists keyed by `type`, e.g. `clearChannels`), `InvencheckerUser` and `UsernameCache`. `Karma` has a UNIQUE index on `(serverId, messageId, fromUserId, emojiId)`, so reactions are saved with an upsert. Etiquette rows have null `messageId`/`emojiId`, so they're never caught by it.
 2. **`data/applicationConfig.json`**, **edited by hand**, read by `applicationConfigService`. It holds `karmaEmojis`, `domainList` and `statuses`. It's cached until `POST /admin/reloadconfig`.
-
-`serverConfig.json`, `userConfig.json` and `sessionState.json` are legacy. Migrations v4 and v5 import them once and nothing reads them afterwards.
 
 All paths are defined in `src/config.js`. `data/` and `log/` are created at runtime and are volume-mounted in Docker.
 
@@ -110,4 +108,4 @@ All paths are defined in `src/config.js`. `data/` and `log/` are created at runt
 - Caught errors are named `err`. Module-level constants are `UPPER_SNAKE_CASE`, including embed colours.
 - Scheduled jobs go through `schedulerService.schedule()`.
 - Most command replies are ephemeral: use `flags: MessageFlags.Ephemeral`, not the deprecated `ephemeral: true`. Option builder callbacks are named `option`.
-- Tests live in `tests/*.test.js`, named after the module they test. Service tests mock `logger` (include `debug`), `config` and the repositories. `tests/database.test.js` runs the real migrations and repository SQL against a temporary SQLite file, so add repository and migration tests there. `tests/adminRoutes.test.js` starts the real Express app with `createApp()` on a random port.
+- Tests live in `tests/*.test.js`, named after the module they test. Service tests mock `logger` (include `debug`), `config` and the repositories. `tests/database.test.js` runs the real `init()` and repository SQL against a temporary SQLite file, so add repository and migration tests there (tests can push temporary entries onto `MIGRATIONS` after `jest.resetModules()`). `tests/adminRoutes.test.js` starts the real Express app with `createApp()` on a random port.
