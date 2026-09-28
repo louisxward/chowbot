@@ -209,14 +209,14 @@ services:
 
 Configured in `.env` or the host environment; variables already set in the environment take precedence over `.env`. See `.env.example`, and `config.js` for the defaults.
 
-| Variable               | Default                  | Required | Description                                                          |
-| ---------------------- | ------------------------ | -------- | -------------------------------------------------------------------- |
-| `TOKEN`                | —                        | Yes      | Discord bot token                                                    |
-| `CLIENT_ID`            | —                        | Yes      | Discord application client ID                                        |
-| `PORT`                 | `33002`                  | No       | HTTP server port                                                     |
-| `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker API                                    |
-| `ADMIN_TOKEN`          | —                        | No       | Bearer token for the admin API. The admin API is disabled without it |
-| `LOG_LEVEL`            | `info`                   | No       | `trace`, `debug`, `info`, `warn`, `error` or `fatal`                 |
+| Variable               | Default                  | Required | Description                                                                                                                                        |
+| ---------------------- | ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TOKEN`                | —                        | Yes      | Discord bot token                                                                                                                                  |
+| `CLIENT_ID`            | —                        | Yes      | Discord application client ID                                                                                                                      |
+| `PORT`                 | `33002`                  | No       | HTTP server port                                                                                                                                   |
+| `INVENCHECKER_API_URL` | `http://localhost:33001` | No       | Base URL for the invenchecker API. `docker-compose.yml` sets it to `http://invenchecker:33001` (invenchecker's service name on the shared network) |
+| `ADMIN_TOKEN`          | —                        | No       | Bearer token for the admin API. The admin API is disabled without it                                                                               |
+| `LOG_LEVEL`            | `info`                   | No       | `trace`, `debug`, `info`, `warn`, `error` or `fatal`                                                                                               |
 
 ## Local Development (without Docker)
 

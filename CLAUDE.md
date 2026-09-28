@@ -99,7 +99,7 @@ All paths are defined in `src/config.js`. `data/` and `log/` are created at runt
 
 ### invenchecker
 
-`services/invencheckerService.js` is the API client; the contract is in [docs/invencheckeropenapi.yaml](docs/invencheckeropenapi.yaml). Account links live in the `InvencheckerUser` table. `/invenchecker` routes each subcommand through a handler table (`ACCOUNT_HANDLERS`); every handler except `account register` gets the user's uid after the reply is deferred and returns the reply to send. The list-style views are defined in `VIEWS` (each returns `lines` or `sections`) and rendered with pages by `renderView`. Prices are formatted with `utils/format.formatPrice` (£).
+`services/invencheckerService.js` is the API client; the contract is in [docs/invencheckeropenapi.yaml](docs/invencheckeropenapi.yaml). In Docker the base URL is `http://invenchecker:33001`, set in `docker-compose.yml`: invenchecker runs as a separate Compose project, and its service name resolves on the shared external `invenchecker` network. `localhost` inside the chowbot container is chowbot itself. The `localhost` default in `config.js` is only for running both locally. Account links live in the `InvencheckerUser` table. `/invenchecker` routes each subcommand through a handler table (`ACCOUNT_HANDLERS`); every handler except `account register` gets the user's uid after the reply is deferred and returns the reply to send. The list-style views are defined in `VIEWS` (each returns `lines` or `sections`) and rendered with pages by `renderView`. Prices are formatted with `utils/format.formatPrice` (£).
 
 ## Conventions
 
