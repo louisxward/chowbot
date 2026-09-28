@@ -1,9 +1,9 @@
 const { Events } = require("discord.js");
-const { botUnInvited } = require("services/serverStorage");
+const { serverLeft } = require("services/serverService");
 
 module.exports = {
   name: Events.GuildDelete,
   async execute(guild) {
-    await botUnInvited(guild.id);
+    await serverLeft(guild);
   }
 };

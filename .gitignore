@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data (SQLite db, JSON config/state) and logs
+/data/
+/log/
+*.log
+
+# Local deploy script
+deploy.sh
+
+# Tooling caches and output
+coverage/
+.eslintcache
+
+# Claude Code local settings
+/.claude/
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,31 +1,26 @@
 const logger = require("logger");
-const { connect } = require("services/databaseService");
+const { getDb } = require("database");
 
+// Errors are logged, not thrown: joining a server the bot was already in isn't a failure
 async function createServer(id, name, ownerUserId) {
-  logger.info("repository - createServer");
-  const db = await connect();
-  //todo - not sure on using datatime in sql maybe use from req but in weird format
+  logger.debug("repository - createServer");
+  // TODO: not sure on using datetime in SQL, maybe take it from the request instead
   try {
-    await db.run("INSERT INTO Server (id, name, invited, ownerUserId) VALUES (?, ?, datetime('now'), ?)", [
-      id,
-      name,
-      ownerUserId
-    ]);
-  } catch (error) {
-    logger.warn(error.message);
+    getDb()
+      .prepare("INSERT INTO Server (id, name, invited, ownerUserId) VALUES (?, ?, datetime('now'), ?)")
+      .run(id, name, ownerUserId);
+  } catch (err) {
+    logger.warn({ err, serverId: id }, "repository - createServer failed");
   }
-  db.close();
 }
 
 async function deleteServer(id) {
-  logger.info("repository - deleteServer");
-  const db = await connect();
+  logger.debug("repository - deleteServer");
   try {
-    await db.run("DELETE FROM Server WHERE id = ?", [id]);
-  } catch (error) {
-    logger.warn(error.message);
+    getDb().prepare("DELETE FROM Server WHERE id = ?").run(id);
+  } catch (err) {
+    logger.warn({ err, serverId: id }, "repository - deleteServer failed");
   }
-  db.close();
 }
 
 module.exports = { createServer, deleteServer };

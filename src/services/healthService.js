@@ -1,26 +1,23 @@
-const { connect } = require("services/databaseService");
 const logger = require("logger");
+const { getDb } = require("database");
 
+// "ok" when the Discord client is ready and the database answers a query, otherwise "degraded"
 async function getStatus(client) {
   const ready = client?.isReady() ?? false;
-
   let db = "ok";
   try {
-    const conn = await connect();
-    await conn.get("select * from server limit 1");
-    await conn.close();
-  } catch (error) {
-    logger.error(error);
+    getDb().prepare("SELECT 1 FROM Server LIMIT 1").get();
+  } catch (err) {
+    logger.error({ err }, "health - database check failed");
     db = "error";
   }
-  const result = {
+  return {
     status: ready && db === "ok" ? "ok" : "degraded",
     ready,
     uptime: Math.floor(process.uptime()),
     ping: client?.ws?.ping ?? -1,
     db
   };
-  return result;
 }
 
 module.exports = { getStatus };

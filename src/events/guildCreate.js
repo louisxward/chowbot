@@ -1,9 +1,9 @@
 const { Events } = require("discord.js");
-const { botInvited } = require("services/serverStorage");
+const { serverJoined } = require("services/serverService");
 
 module.exports = {
   name: Events.GuildCreate,
   async execute(guild) {
-    await botInvited(guild.id, guild.name, guild.commands.guild.ownerId);
+    await serverJoined(guild);
   }
 };

@@ -1,55 +1,35 @@
 const logger = require("logger");
-const { connect } = require("services/databaseService");
+const { getDb } = require("database");
+const { toRankedMap } = require("utils/ranking");
 
 async function createKarmaWeeklyLeaderboardWeek(created) {
-  logger.info("repository - createKarmaWeeklyLeaderboardWeek");
-  const db = await connect();
-  const result = await db.run("INSERT INTO KarmaWeeklyLeaderboardWeek (created) VALUES (?)", [created]);
-  db.close();
-  return result.lastID;
+  logger.debug("repository - createKarmaWeeklyLeaderboardWeek");
+  return getDb().prepare("INSERT INTO KarmaWeeklyLeaderboardWeek (created) VALUES (?)").run(created).lastInsertRowid;
 }
 
 async function createKarmaWeeklyLeaderboardUser(weekId, userId, value) {
-  logger.info("repository - createKarmaWeeklyLeaderboardUser");
-  const db = await connect();
-  await db.run("INSERT INTO KarmaWeeklyLeaderboardUser (weekId, userId, value) VALUES (?, ?, ?)", [
-    weekId,
-    userId,
-    value
-  ]);
-  db.close();
+  logger.debug("repository - createKarmaWeeklyLeaderboardUser");
+  getDb()
+    .prepare("INSERT INTO KarmaWeeklyLeaderboardUser (weekId, userId, value) VALUES (?, ?, ?)")
+    .run(weekId, userId, value);
 }
 
+// The most recent week's id, or null if no week has been saved yet
 async function getPreviousWeekId() {
-  logger.info("repository - getPreviousWeekId");
-  const db = await connect();
-  const record = await db.get("SELECT MAX(id) as id FROM KarmaWeeklyLeaderboardWeek");
-  if (!record) throw error; // is this right?
-  db.close();
-  return record.id;
+  logger.debug("repository - getPreviousWeekId");
+  return getDb().prepare("SELECT MAX(id) AS id FROM KarmaWeeklyLeaderboardWeek").get().id;
 }
 
+// TODO: could store each user's position with the snapshot instead of calculating it here
 async function getKarmaWeeklyLeaderboardMapByWeek(weekId) {
-  logger.info("repository - getKarmaWeeklyLeaderboardMapByWeek");
-  const db = await connect();
-  const result = new Map();
-  const records = await db.all(
-    "SELECT CAST(userId AS TEXT) AS userId, value AS total FROM KarmaWeeklyLeaderboardUser " +
-      "WHERE weekId = ? " +
-      "GROUP BY userId ORDER BY total DESC",
-    [weekId]
-  ); // gets the most recent leaderboard, we could store the pos too instead of cacling
-  let index = 0;
-  let minValue = null;
-  records.forEach((e) => {
-    if (!minValue || minValue > e.total) {
-      minValue = e.total;
-      index += 1;
-    }
-    result.set(e.userId, { index: index, value: e.total });
-  });
-  db.close();
-  return result;
+  logger.debug("repository - getKarmaWeeklyLeaderboardMapByWeek");
+  const rows = getDb()
+    .prepare(
+      "SELECT CAST(userId AS TEXT) AS userId, value AS total FROM KarmaWeeklyLeaderboardUser " +
+        "WHERE weekId = ? GROUP BY userId ORDER BY total DESC"
+    )
+    .all(weekId);
+  return toRankedMap(rows);
 }
 
 module.exports = {

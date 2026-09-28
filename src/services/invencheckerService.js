@@ -1,10 +1,13 @@
 const { INVENCHECKER_API_URL } = require("config");
 
+const REQUEST_TIMEOUT_MS = 10_000;
+
 async function request(method, path, body) {
   const res = await fetch(`${INVENCHECKER_API_URL}${path}`, {
     method,
     headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
   });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;

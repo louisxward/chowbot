@@ -1,28 +1,29 @@
-const { readFile, invalidateCache } = require("services/storageHelper");
+const fs = require("node:fs/promises");
 const { APPLICATION_CONFIG_PATH } = require("config");
 const logger = require("logger");
 
+// data/applicationConfig.json is edited by hand. It's read once and cached until reloaded.
 let cache = null;
-let emojisValid = false;
+
+async function readConfigFile() {
+  try {
+    const content = await fs.readFile(APPLICATION_CONFIG_PATH, "utf8");
+    return content.trim() ? JSON.parse(content) : {};
+  } catch (err) {
+    if (err.code === "ENOENT") return {};
+    throw err;
+  }
+}
 
 async function getAppConfig() {
-  if (!cache) cache = await readFile(APPLICATION_CONFIG_PATH);
+  if (!cache) cache = await readConfigFile();
   return cache;
 }
 
 async function reloadAppConfig() {
-  logger.info("map - reload app config");
-  invalidateCache(APPLICATION_CONFIG_PATH);
-  cache = await readFile(APPLICATION_CONFIG_PATH);
+  logger.info("config - reloading applicationConfig.json");
+  cache = await readConfigFile();
   return cache;
 }
 
-function setEmojisValid(val) {
-  emojisValid = val;
-}
-
-function areEmojisValid() {
-  return emojisValid;
-}
-
-module.exports = { getAppConfig, reloadAppConfig, setEmojisValid, areEmojisValid };
+module.exports = { getAppConfig, reloadAppConfig };
