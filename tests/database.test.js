@@ -4,21 +4,11 @@ const path = require("node:path");
 const Database = require("better-sqlite3");
 
 let mockDbPath;
-let mockDataDir;
 
 jest.mock("logger", () => ({ debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() }));
 jest.mock("config", () => ({
   get DB_PATH() {
     return mockDbPath;
-  },
-  get SERVER_CONFIG_PATH() {
-    return `${mockDataDir}/serverConfig.json`;
-  },
-  get USER_CONFIG_PATH() {
-    return `${mockDataDir}/userConfig.json`;
-  },
-  get SESSION_STATE_PATH() {
-    return `${mockDataDir}/sessionState.json`;
   }
 }));
 
@@ -28,7 +18,6 @@ let databaseService;
 beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "chowbot-test-"));
   mockDbPath = path.join(tmpDir, "chowbot.db");
-  mockDataDir = tmpDir;
   jest.resetModules();
   databaseService = require("database");
 });
@@ -38,34 +27,25 @@ afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-const LATEST_VERSION = 5;
+const tables = (db) =>
+  db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+    .all()
+    .map((t) => t.name);
 
-const V1_SCHEMA = `
-  CREATE TABLE Server (id TEXT PRIMARY KEY, name TEXT NOT NULL, invited TEXT NOT NULL, ownerUserId TEXT NOT NULL);
-  CREATE TABLE Karma (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, serverId TEXT NOT NULL, messageId TEXT NOT NULL,
-    messageUserId TEXT NOT NULL, reactionUserId TEXT NOT NULL, reactionEmojiId TEXT NOT NULL, value INTEGER NOT NULL
-  );
-  CREATE TABLE KarmaWeeklyLeaderboardWeek (id INTEGER PRIMARY KEY AUTOINCREMENT, created TEXT NOT NULL);
-  CREATE TABLE KarmaWeeklyLeaderboardUser (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, weekId INTEGER NOT NULL, userId TEXT NOT NULL, value INTEGER NOT NULL
-  );
-`;
+const version = (db) => db.pragma("user_version", { simple: true });
 
 describe("databaseService", () => {
   test("getDb throws before init", () => {
     expect(() => databaseService.getDb()).toThrow("not initialised");
   });
 
-  test("init creates the latest schema on a fresh database", () => {
+  test("init creates the full schema on a fresh database, at the baseline version", () => {
+    const { BASELINE_VERSION, MIGRATIONS } = require("database/migrations");
     databaseService.init();
     const db = databaseService.getDb();
-    expect(db.pragma("user_version", { simple: true })).toBe(LATEST_VERSION);
-    const tables = db
-      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
-      .all()
-      .map((t) => t.name);
-    expect(tables).toEqual([
+    expect(version(db)).toBe(BASELINE_VERSION + MIGRATIONS.length);
+    expect(tables(db)).toEqual([
       "InvencheckerUser",
       "Karma",
       "KarmaWeeklyLeaderboardUser",
@@ -85,131 +65,69 @@ describe("databaseService", () => {
     expect(databaseService.getDb().prepare("SELECT COUNT(*) AS n FROM Server").get().n).toBe(1);
   });
 
-  test("init migrates a v1 database and keeps karma rows", () => {
-    const v1 = new Database(mockDbPath);
-    v1.exec(V1_SCHEMA);
-    v1.prepare("INSERT INTO Karma VALUES (7, 'g1', 'm1', 'author', 'voter', 'e1', 1)").run();
-    v1.pragma("user_version = 1");
-    v1.close();
-
+  test("the schema keeps one karma row per reaction but allows etiquette rows", () => {
     databaseService.init();
-    const db = databaseService.getDb();
-    expect(db.pragma("user_version", { simple: true })).toBe(LATEST_VERSION);
-    expect(db.prepare("SELECT * FROM Karma").get()).toEqual({
-      id: 7,
-      serverId: "g1",
-      messageId: "m1",
-      userId: "author",
-      fromUserId: "voter",
-      emojiId: "e1",
-      value: 1,
-      reason: null,
-      type: 0,
-      created: null
-    });
-    expect(db.prepare("SELECT id, serverId, userId FROM Message").all()).toEqual([
-      { id: "m1", serverId: "g1", userId: "author" }
-    ]);
+    const insert = databaseService
+      .getDb()
+      .prepare(
+        "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      );
+    insert.run("g1", "m1", "author", "voter", "up", 1, null, 0);
+    expect(() => insert.run("g1", "m1", "author", "voter", "up", 1, null, 0)).toThrow(/UNIQUE/);
+    insert.run("g1", null, "author", "voter", null, 1, "nice", 1);
+    insert.run("g1", null, "author", "voter", null, 1, "nice again", 1);
+    expect(databaseService.getDb().prepare("SELECT COUNT(*) AS n FROM Karma").get().n).toBe(3);
+  });
+
+  test("migrations added after the baseline are applied in order", () => {
+    databaseService.init();
+    databaseService.close();
+    const { BASELINE_VERSION, MIGRATIONS } = require("database/migrations");
+    const applied = [];
+    MIGRATIONS.push("CREATE TABLE Extra (x INTEGER)", (db) => applied.push(tables(db).includes("Extra")));
+    databaseService.init();
+    expect(applied).toEqual([true]);
+    expect(version(databaseService.getDb())).toBe(BASELINE_VERSION + 2);
   });
 
   test("a failed migration is rolled back and leaves the version unchanged", () => {
-    const v1 = new Database(mockDbPath);
-    // A Message table with the wrong columns makes migration v2 fail on its last statement,
-    // after it has already dropped and renamed Karma
-    v1.exec(V1_SCHEMA + "CREATE TABLE Message (unrelated INTEGER);");
-    v1.prepare("INSERT INTO Karma VALUES (1, 'g1', 'm1', 'author', 'voter', 'e1', 1)").run();
-    v1.pragma("user_version = 1");
-    v1.close();
-
-    expect(() => databaseService.init()).toThrow();
+    databaseService.init();
     databaseService.close();
+    const { BASELINE_VERSION, MIGRATIONS } = require("database/migrations");
+    MIGRATIONS.push((db) => {
+      db.exec("CREATE TABLE HalfDone (x INTEGER)");
+      throw new Error("migration failed");
+    });
+    expect(() => databaseService.init()).toThrow("migration failed");
+    expect(() => databaseService.getDb()).toThrow("not initialised");
 
     const db = new Database(mockDbPath);
-    expect(db.pragma("user_version", { simple: true })).toBe(1);
-    expect(db.prepare("SELECT messageUserId FROM Karma").get()).toEqual({ messageUserId: "author" });
+    expect(version(db)).toBe(BASELINE_VERSION);
+    expect(tables(db)).not.toContain("HalfDone");
     db.close();
   });
-});
 
-describe("migrations v3 to v5", () => {
-  // Builds a database at an older version by running the real migrations up to it
-  function createDatabaseAtVersion(version) {
+  test("a schema creation that fails part-way is rolled back", () => {
+    // A view named like one of the later tables makes CREATE TABLE Message fail after earlier tables exist
+    const raw = new Database(mockDbPath);
+    raw.exec("CREATE VIEW Message AS SELECT 1 AS x");
+    raw.close();
+
+    expect(() => databaseService.init()).toThrow(/Message/);
     const db = new Database(mockDbPath);
-    for (const migration of require("database/migrations").MIGRATIONS.slice(0, version)) {
-      if (typeof migration === "function") migration(db);
-      else db.exec(migration);
-    }
-    db.pragma(`user_version = ${version}`);
-    return db;
-  }
-
-  test("v3 removes duplicate reaction rows and keeps etiquette rows", () => {
-    const db = createDatabaseAtVersion(2);
-    const insert = db.prepare(
-      "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, reason, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-    );
-    insert.run("g1", "m1", "author", "voter", "up", 1, null, 0);
-    insert.run("g1", "m1", "author", "voter", "up", 1, null, 0);
-    insert.run("g1", "m2", "author", "voter", "up", 1, null, 0);
-    insert.run("g1", null, "author", "voter", null, 1, "nice", 1);
-    insert.run("g1", null, "author", "voter", null, 1, "nice again", 1);
+    expect(version(db)).toBe(0);
+    expect(tables(db)).toEqual([]);
     db.close();
-
-    databaseService.init();
-    const live = databaseService.getDb();
-    expect(live.prepare("SELECT id, messageId, reason FROM Karma ORDER BY id").all()).toEqual([
-      { id: 1, messageId: "m1", reason: null },
-      { id: 3, messageId: "m2", reason: null },
-      { id: 4, messageId: null, reason: "nice" },
-      { id: 5, messageId: null, reason: "nice again" }
-    ]);
-    expect(() =>
-      live
-        .prepare(
-          "INSERT INTO Karma (serverId, messageId, userId, fromUserId, emojiId, value, type) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        )
-        .run("g1", "m1", "author", "voter", "up", 1, 0)
-    ).toThrow(/UNIQUE/);
   });
 
-  test("v4 imports serverConfig.json and userConfig.json", async () => {
-    createDatabaseAtVersion(3).close();
-    fs.writeFileSync(
-      `${mockDataDir}/serverConfig.json`,
-      JSON.stringify({ g1: { clearChannels: ["c1", "c2"], leaderboardChannels: ["l1"] }, g2: {} })
-    );
-    fs.writeFileSync(`${mockDataDir}/userConfig.json`, JSON.stringify({ u1: { invencheckerId: "uid-1" }, u2: {} }));
-
-    databaseService.init();
-    const channels = require("repositories/serverChannel");
-    const invUsers = require("repositories/invencheckerUser");
-    expect(await channels.getChannels("g1", "clearChannels")).toEqual(["c1", "c2"]);
-    expect(await channels.getChannels("g1", "leaderboardChannels")).toEqual(["l1"]);
-    expect(await invUsers.getAllUsers()).toEqual([{ discordId: "u1", uid: "uid-1" }]);
-  });
-
-  test("v5 imports the username cache from sessionState.json", async () => {
-    createDatabaseAtVersion(4).close();
-    fs.writeFileSync(
-      `${mockDataDir}/sessionState.json`,
-      JSON.stringify({
-        usernames: {
-          u1: { username: "Alice", cachedAt: 1000 },
-          u2: { username: "Bob" },
-          u3: { cachedAt: 2000 }
-        }
-      })
-    );
-
-    databaseService.init();
-    expect(databaseService.getDb().prepare("SELECT * FROM UsernameCache").all()).toEqual([
-      { userId: "u1", username: "Alice", cachedAt: 1000 }
-    ]);
-  });
-
-  test("v4 works without any legacy json files", () => {
-    databaseService.init();
-    expect(databaseService.getDb().prepare("SELECT COUNT(*) AS n FROM ServerChannel").get().n).toBe(0);
+  test.each([
+    ["a database with tables but no version", "CREATE TABLE Server (id TEXT PRIMARY KEY)"],
+    ["a database at an older version", "PRAGMA user_version = 4"]
+  ])("init refuses %s, pointing at the commit that can upgrade it", (_label, sql) => {
+    const raw = new Database(mockDbPath);
+    raw.exec(sql);
+    raw.close();
+    expect(() => databaseService.init()).toThrow(/upgrade it with chowbot commit 3fd77de/);
   });
 });
 
@@ -291,7 +209,7 @@ describe("repositories", () => {
     expect(await cache.getUsername("u1", 0)).toBeNull();
   });
 
-  test("sessionStateStorage keeps usernames for 12 hours", async () => {
+  test("usernameCacheService keeps usernames for 12 hours", async () => {
     const { getCachedUsername, setCachedUsername } = require("services/usernameCacheService");
     const now = Date.now();
     const spy = jest.spyOn(Date, "now").mockReturnValue(now);
