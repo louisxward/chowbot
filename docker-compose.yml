@@ -11,6 +11,10 @@ services:
       - invenchecker
     env_file:
       - .env
+    environment:
+      # invenchecker's compose service name on the shared network. localhost would be this
+      # container. A value in .env still wins.
+      INVENCHECKER_API_URL: ${INVENCHECKER_API_URL:-http://invenchecker:33001}
     volumes:
       - /opt/data/chowbot:/app/data
       - /var/log/chowbot:/app/log
